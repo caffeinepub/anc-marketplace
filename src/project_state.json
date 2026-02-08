@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "Build ANC Marketplace: a multi-vendor marketplace platform (Amazon/Shopify/Etsy/eBay-like) with customer/business/seller dashboards, admin control, product & services selling, dropshipping integrations, platform-wide AI assistant for store building/marketing, strict identity/business verification, monetization via per-sale fee (owner exempt), plus an app center and marketing funnel integrations.",
+  "architectural_notes": [
+    "Project name: \"ANC Marketplace\"; copyright: ANC Electronics N More",
+    "PCI compliance requirement",
+    "Support/owner email updated to: anc.electronics.n.services@gmail.com",
+    "Identity verification must be live camera capture (no photo uploads) with ID + selfie match before purchase completion",
+    "Business verification includes EIN, registration, and authorized signer identity verification"
+  ],
+  "known_issues": [
+    "Build/deploy automation failing with messages like \"AI couldn't implement your request\"; scope may need to be broken into smaller deliverables"
+  ],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-create-an-app-center-feature-that-lets-merchants-and-businesses-connect-and-manage-integrations-apps-for-seller-use-including-listing-existing-connected-apps-and-adding-updating-removing-app-records",
+      "title": "Create an App Center feature that lets merchants and businesses connect and manage integrations (apps) for seller use, including listing existing connected apps and adding/updating/removing app records.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-app-center-add-a-workflow-to-connect-a-webhook-url-that-is-an-affiliate-link-and-automatically-create-an-app-entry-derived-from-what-the-link-connects-to-using-best-effort-url-parsing-and-metadata-inference-without-requiring-external-apis",
+      "title": "In the App Center, add a workflow to connect a webhook URL that is an affiliate link and automatically create an app entry derived from what the link connects to (using best-effort URL parsing and metadata inference without requiring external APIs).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-funnel-partner-page-where-the-owner-admin-can-configure-a-funnel-partner-connection-and-merchants-sellers-business-users-can-access-the-configured-partner-link-to-market-and-advertise-their-business-products-and-services-using-marketing-funnels",
+      "title": "Create a Funnel Partner page where the owner/admin can configure a funnel partner connection, and merchants/sellers/business users can access the configured partner link to market and advertise their business, products, and services using marketing funnels.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-site-wide-promotional-banner-across-the-very-top-of-the-app-above-the-existing-sticky-header-navigation-that-displays-the-exact-message-we-have-a-startup-assistance-program-called-anc-apprentice-program-center-if-your-interested-set-an-appointment-today-at-https-calendly-com-anc-electronics-n-services-the-banner-must-include-a-clickable-link-to-https-calendly-com-anc-electronics-n-services-open-in-a-new-tab",
+      "title": "Add a site-wide promotional banner across the very top of the app (above the existing sticky header navigation) that displays the exact message: \"We have a startup assistance program called ANC Apprentice Program Center if your interested set an appointment today at : https://calendly.com/anc-electronics-n-services\". The banner must include a clickable link to https://calendly.com/anc-electronics-n-services (open in a new tab).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-button-directly-below-the-banner-advertisement-as-part-of-the-same-top-of-page-banner-area-labeled-exactly-connect-with-the-appointment-dashboard53-when-clicked-it-must-navigate-the-user-to-a-new-in-app-page-route-for-the-appointment-dashboard-appointment-dashboard53",
+      "title": "Add a button directly below the banner advertisement (as part of the same top-of-page banner area) labeled exactly: \"Connect with the appointment dashboard53\". When clicked, it must navigate the user to a new in-app page/route for the appointment dashboard (\"Appointment Dashboard53\").",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-the-appointment-dashboard53-page-route-and-render-an-embedded-view-of-the-calendly-scheduling-page-https-calendly-com-anc-electronics-n-services-e-g-via-an-iframe-along-with-a-clear-external-link-fallback-that-opens-the-same-url-in-a-new-tab",
+      "title": "Create the \"Appointment Dashboard53\" page/route and render an embedded view of the Calendly scheduling page https://calendly.com/anc-electronics-n-services (e.g., via an iframe) along with a clear external-link fallback that opens the same URL in a new tab.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Create ANC Marketplace core: multi-vendor marketplace with customer, business, and seller dashboards",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Admin section with total control, including Products and Services sections (sellers choose products vs services)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Integrate dropshipping providers so sellers can connect providers and list/post their items",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Platform-wide AI assistant to help users build stores/sites and market/advertise products/services",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Onboarding & verification: free signup; business verification required for businesses; all sellers/merchants must verify identity",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Customer identity verification required to complete purchases: live capture with camera (ID + selfie match), explain verification rationale; payment can be initiated but not completed until verified",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Business verification details: verify EIN, registration, and authorized signer identity",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Monetization: $5 service fee per sale paid to owner; marketplace owner exempt and is the only one allowed to sell without the fee",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "App Center for merchants/businesses to connect and deploy apps for seller use",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "App Center feature: convert connected webhook affiliate links into apps based on link destination",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Marketing funnel page: connect a funnel partner so sellers/businesses can use funnels to market/advertise products and services",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Site-wide banner promoting ANC Apprentice Program Center with Calendly link and appointment dashboard button",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Implement backend support for a per-sale service fee where the marketplace owner is exempt from being charged the fee, and ensure the owner is the only seller that can sell without incurring the fee.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "ANC Marketplace",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

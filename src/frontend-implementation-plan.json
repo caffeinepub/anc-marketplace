@@ -1,0 +1,67 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Site-wide top promotional banner with Appointment Dashboard53 route and embedded Calendly",
+  "requirements": [
+    {
+      "id": "REQ-5",
+      "summary": "Add a site-wide top promotional banner above the sticky header with exact ANC Apprentice Program Center message and a safe external Calendly link.",
+      "acceptanceCriteria": [
+        "On every route, a top-of-page banner appears above the current sticky header in Layout.",
+        "The banner renders the provided text in English exactly as supplied, including the Calendly URL.",
+        "The Calendly URL in the banner is clickable and opens https://calendly.com/anc-electronics-n-services in a new tab/window with safe rel attributes (noopener/noreferrer).",
+        "The banner remains readable on mobile and does not break the existing header layout (nav, login, menus)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Insert a new top-of-page promotional banner section rendered above the existing sticky header. The banner must display the exact provided message text and include an anchor linking to https://calendly.com/anc-electronics-n-services that opens in a new tab with rel=\"noopener noreferrer\". Ensure responsive layout so the sticky header below remains intact on mobile/desktop."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Add a banner-area button labeled exactly \"Connect with the appointment dashboard53\" that client-side navigates to the new Appointment Dashboard53 page/route.",
+      "acceptanceCriteria": [
+        "A button labeled exactly \"Connect with the appointment dashboard53\" appears directly below the banner ad copy in the top banner area.",
+        "Clicking the button routes to an in-app page for the appointment dashboard (e.g., a new route added to the router), without a full page reload.",
+        "The button is usable on mobile and desktop and remains visible even when the sticky header is present."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Within the same top banner area, add a button directly below the ad copy labeled exactly \"Connect with the appointment dashboard53\" that uses TanStack Router navigation (no full reload) to the Appointment Dashboard53 route. Ensure the button remains visible/usable in responsive layouts with the sticky header."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register a new TanStack Router route for the Appointment Dashboard53 page so the banner button can navigate to it via client-side routing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Create the Appointment Dashboard53 page/route with an embedded Calendly view and an explicit external-link fallback to open Calendly in a new tab.",
+      "acceptanceCriteria": [
+        "A new route exists for the Appointment Dashboard53 page and can be reached via the banner button.",
+        "The page displays an embedded Calendly view for https://calendly.com/anc-electronics-n-services.",
+        "The page includes an explicit external-link fallback to open https://calendly.com/anc-electronics-n-services in a new tab with rel=noopener/noreferrer.",
+        "Navigating back to other routes works normally and the global Layout remains consistent."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AppointmentDashboard53.tsx",
+          "operation": "create",
+          "description": "Create the Appointment Dashboard53 page component. Render an embedded Calendly scheduling page for https://calendly.com/anc-electronics-n-services (e.g., iframe) sized to be usable on mobile/desktop, and include a clear external-link fallback that opens the same URL in a new tab with rel=\"noopener noreferrer\"."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import and wire the new AppointmentDashboard53 page into the existing React + TanStack Router route tree with a dedicated path (e.g., /appointment-dashboard53), ensuring it renders within the root Layout and supports normal navigation."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-a-site-wide-promotional-banner-across-the-very-top-of-the-app-above-the-existing-sticky-header-navigation-that-displays-the-exact-message-we-have-a-startup-assistance-program-called-anc-apprentice-program-center-if-your-interested-set-an-appointment-today-at-https-calendly-com-anc-electronics-n-services-the-banner-must-include-a-clickable-link-to-https-calendly-com-anc-electronics-n-services-open-in-a-new-tab",
+      "featureTitle": "Add a site-wide promotional banner across the very top of the app (above the existing sticky header navigation) that displays the exact message: \"We have a startup assistance program called ANC Apprentice Program Center if your interested set an appointment today at : https://calendly.com/anc-electronics-n-services\". The banner must include a clickable link to https://calendly.com/anc-electronics-n-services (open in a new tab).",
+      "files": [
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-button-directly-below-the-banner-advertisement-as-part-of-the-same-top-of-page-banner-area-labeled-exactly-connect-with-the-appointment-dashboard53-when-clicked-it-must-navigate-the-user-to-a-new-in-app-page-route-for-the-appointment-dashboard-appointment-dashboard53",
+      "featureTitle": "Add a button directly below the banner advertisement (as part of the same top-of-page banner area) labeled exactly: \"Connect with the appointment dashboard53\". When clicked, it must navigate the user to a new in-app page/route for the appointment dashboard (\"Appointment Dashboard53\").",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-the-appointment-dashboard53-page-route-and-render-an-embedded-view-of-the-calendly-scheduling-page-https-calendly-com-anc-electronics-n-services-e-g-via-an-iframe-along-with-a-clear-external-link-fallback-that-opens-the-same-url-in-a-new-tab",
+      "featureTitle": "Create the \"Appointment Dashboard53\" page/route and render an embedded view of the Calendly scheduling page https://calendly.com/anc-electronics-n-services (e.g., via an iframe) along with a clear external-link fallback that opens the same URL in a new tab.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/AppointmentDashboard53.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
