@@ -11,15 +11,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
   useGetUnansweredQuestions,
-  useConvertQuestionToKnowledgeEntry,
-  useMarkQuestionAsAnswered,
+  useConvertQuestionToKnowledge,
+  type UnansweredQuestion,
 } from '../../../hooks/useQueries';
-import type { UnansweredQuestion } from '../../../backend';
 
 export default function UnansweredQuestionsAdmin() {
   const { data: unansweredQuestions = [], isLoading } = useGetUnansweredQuestions();
-  const convertQuestion = useConvertQuestionToKnowledgeEntry();
-  const markAnswered = useMarkQuestionAsAnswered();
+  const convertQuestion = useConvertQuestionToKnowledge();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<UnansweredQuestion | null>(null);
@@ -52,22 +50,12 @@ export default function UnansweredQuestionsAdmin() {
       await convertQuestion.mutateAsync({
         questionId: selectedQuestion.id,
         answer: form.answer.trim(),
-        category: form.category.trim(),
       });
       toast.success('Question converted to knowledge entry successfully');
       setDialogOpen(false);
       resetForm();
     } catch (error) {
       toast.error('Failed to convert question');
-    }
-  };
-
-  const handleMarkAnswered = async (questionId: string) => {
-    try {
-      await markAnswered.mutateAsync(questionId);
-      toast.success('Question marked as answered');
-    } catch (error) {
-      toast.error('Failed to mark question as answered');
     }
   };
 
@@ -131,15 +119,6 @@ export default function UnansweredQuestionsAdmin() {
                     >
                       <Plus className="h-4 w-4" />
                       Create Knowledge Entry
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleMarkAnswered(question.id)}
-                      className="gap-2"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      Mark as Answered
                     </Button>
                   </div>
                 </CardContent>

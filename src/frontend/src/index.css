@@ -3,127 +3,108 @@
 @tailwind utilities;
 
 @layer base {
-    :root {
-        --radius: 0.625rem;
-        --background: 0.98 0.005 240;
-        --foreground: 0.15 0.01 240;
-        --card: 1 0 0;
-        --card-foreground: 0.15 0.01 240;
-        --popover: 1 0 0;
-        --popover-foreground: 0.15 0.01 240;
-        --primary: 0.55 0.18 240;
-        --primary-foreground: 0.98 0.005 240;
-        --secondary: 0.92 0.01 240;
-        --secondary-foreground: 0.15 0.01 240;
-        --muted: 0.95 0.01 240;
-        --muted-foreground: 0.50 0.01 240;
-        --accent: 0.88 0.02 200;
-        --accent-foreground: 0.15 0.01 240;
-        --destructive: 0.577 0.245 27.325;
-        --destructive-foreground: 0.985 0 0;
-        --border: 0.90 0.01 240;
-        --input: 0.90 0.01 240;
-        --ring: 0.55 0.18 240;
-        --chart-1: 0.55 0.18 240;
-        --chart-2: 0.65 0.15 200;
-        --chart-3: 0.45 0.12 280;
-        --chart-4: 0.70 0.20 180;
-        --chart-5: 0.60 0.16 220;
-        --sidebar: 0.98 0.005 240;
-        --sidebar-foreground: 0.15 0.01 240;
-        --sidebar-primary: 0.55 0.18 240;
-        --sidebar-primary-foreground: 0.98 0.005 240;
-        --sidebar-accent: 0.92 0.01 240;
-        --sidebar-accent-foreground: 0.15 0.01 240;
-        --sidebar-border: 0.90 0.01 240;
-        --sidebar-ring: 0.55 0.18 240;
-    }
+  :root {
+    --background: 98% 0.01 160;
+    --foreground: 20% 0.02 160;
+    --card: 98% 0.01 160;
+    --card-foreground: 20% 0.02 160;
+    --popover: 98% 0.01 160;
+    --popover-foreground: 20% 0.02 160;
+    --primary: 55% 0.18 160;
+    --primary-foreground: 98% 0.01 160;
+    --secondary: 92% 0.03 160;
+    --secondary-foreground: 20% 0.02 160;
+    --muted: 92% 0.03 160;
+    --muted-foreground: 45% 0.02 160;
+    --accent: 50% 0.15 45;
+    --accent-foreground: 98% 0.01 45;
+    --destructive: 55% 0.20 25;
+    --destructive-foreground: 98% 0.01 25;
+    --border: 88% 0.02 160;
+    --input: 88% 0.02 160;
+    --ring: 55% 0.18 160;
+    --chart-1: 55% 0.18 160;
+    --chart-2: 50% 0.15 45;
+    --chart-3: 60% 0.12 200;
+    --chart-4: 65% 0.10 280;
+    --chart-5: 70% 0.08 320;
+    --radius: 0.5rem;
+    --sidebar: 98% 0.01 160;
+    --sidebar-foreground: 20% 0.02 160;
+    --sidebar-primary: 55% 0.18 160;
+    --sidebar-primary-foreground: 98% 0.01 160;
+    --sidebar-accent: 92% 0.03 160;
+    --sidebar-accent-foreground: 20% 0.02 160;
+    --sidebar-border: 88% 0.02 160;
+    --sidebar-ring: 55% 0.18 160;
+  }
 
-    .dark {
-        --background: 0.12 0.01 240;
-        --foreground: 0.95 0.005 240;
-        --card: 0.18 0.01 240;
-        --card-foreground: 0.95 0.005 240;
-        --popover: 0.15 0.01 240;
-        --popover-foreground: 0.95 0.005 240;
-        --primary: 0.65 0.20 240;
-        --primary-foreground: 0.12 0.01 240;
-        --secondary: 0.22 0.01 240;
-        --secondary-foreground: 0.95 0.005 240;
-        --muted: 0.20 0.01 240;
-        --muted-foreground: 0.60 0.01 240;
-        --accent: 0.28 0.02 200;
-        --accent-foreground: 0.95 0.005 240;
-        --destructive: 0.704 0.191 22.216;
-        --destructive-foreground: 0.95 0.005 240;
-        --border: 0.25 0.01 240;
-        --input: 0.25 0.01 240;
-        --ring: 0.65 0.20 240;
-        --chart-1: 0.65 0.20 240;
-        --chart-2: 0.70 0.18 200;
-        --chart-3: 0.55 0.15 280;
-        --chart-4: 0.75 0.22 180;
-        --chart-5: 0.68 0.18 220;
-        --sidebar: 0.15 0.01 240;
-        --sidebar-foreground: 0.95 0.005 240;
-        --sidebar-primary: 0.65 0.20 240;
-        --sidebar-primary-foreground: 0.95 0.005 240;
-        --sidebar-accent: 0.22 0.01 240;
-        --sidebar-accent-foreground: 0.95 0.005 240;
-        --sidebar-border: 0.25 0.01 240;
-        --sidebar-ring: 0.65 0.20 240;
-    }
-
-    * {
-        @apply border-border;
-    }
-    body {
-        @apply bg-background text-foreground;
-    }
+  .dark {
+    --background: 15% 0.02 160;
+    --foreground: 95% 0.01 160;
+    --card: 18% 0.02 160;
+    --card-foreground: 95% 0.01 160;
+    --popover: 18% 0.02 160;
+    --popover-foreground: 95% 0.01 160;
+    --primary: 60% 0.16 160;
+    --primary-foreground: 15% 0.02 160;
+    --secondary: 25% 0.03 160;
+    --secondary-foreground: 95% 0.01 160;
+    --muted: 25% 0.03 160;
+    --muted-foreground: 65% 0.02 160;
+    --accent: 55% 0.14 45;
+    --accent-foreground: 15% 0.02 45;
+    --destructive: 50% 0.18 25;
+    --destructive-foreground: 95% 0.01 25;
+    --border: 30% 0.03 160;
+    --input: 30% 0.03 160;
+    --ring: 60% 0.16 160;
+    --chart-1: 60% 0.16 160;
+    --chart-2: 55% 0.14 45;
+    --chart-3: 65% 0.11 200;
+    --chart-4: 70% 0.09 280;
+    --chart-5: 75% 0.07 320;
+    --sidebar: 18% 0.02 160;
+    --sidebar-foreground: 95% 0.01 160;
+    --sidebar-primary: 60% 0.16 160;
+    --sidebar-primary-foreground: 15% 0.02 160;
+    --sidebar-accent: 25% 0.03 160;
+    --sidebar-accent-foreground: 95% 0.01 160;
+    --sidebar-border: 30% 0.03 160;
+    --sidebar-ring: 60% 0.16 160;
+  }
 }
 
-@layer components {
-    .logo-text {
-        background: linear-gradient(135deg, 
-            oklch(0.55 0.25 240) 0%, 
-            oklch(0.65 0.28 220) 25%, 
-            oklch(0.70 0.30 200) 50%, 
-            oklch(0.65 0.28 220) 75%, 
-            oklch(0.55 0.25 240) 100%
-        );
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 200% auto;
-        animation: shimmer 3s linear infinite;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
 
-    @keyframes shimmer {
-        0% {
-            background-position: 0% center;
-        }
-        100% {
-            background-position: 200% center;
-        }
-    }
+.logo-text {
+  background: linear-gradient(135deg, oklch(55% 0.18 160), oklch(60% 0.16 180), oklch(55% 0.18 160));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
 
-    .company-name-outline {
-        background: linear-gradient(to right, oklch(var(--primary)), oklch(var(--accent)), oklch(var(--primary)));
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 
-            -2px -2px 0 oklch(0.35 0.15 240),
-            2px -2px 0 oklch(0.35 0.15 240),
-            -2px 2px 0 oklch(0.35 0.15 240),
-            2px 2px 0 oklch(0.35 0.15 240),
-            -3px 0 0 oklch(0.35 0.15 240),
-            3px 0 0 oklch(0.35 0.15 240),
-            0 -3px 0 oklch(0.35 0.15 240),
-            0 3px 0 oklch(0.35 0.15 240);
-        -webkit-text-stroke: 2px oklch(0.35 0.15 240);
-        paint-order: stroke fill;
-    }
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.company-name-outline {
+  -webkit-text-stroke: 1px oklch(55% 0.18 160);
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 8px oklch(55% 0.18 160 / 0.3);
 }

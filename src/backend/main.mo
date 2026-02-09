@@ -2,17 +2,15 @@ import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import OutCall "http-outcalls/outcall";
 import Stripe "stripe/stripe";
-import Map "mo:core/Map";
 import Iter "mo:core/Iter";
+import Map "mo:core/Map";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Time "mo:core/Time";
+import Text "mo:core/Text";
 import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
-import Text "mo:core/Text";
-
-
+import Time "mo:core/Time";
 
 actor {
   include MixinStorage();
@@ -31,6 +29,12 @@ actor {
     activeRole : AccessRole;
     subscriptionId : ?Text;
     accountCreated : Int;
+  };
+
+  public type UserRoleSummary = {
+    adminCount : Nat;
+    userCount : Nat;
+    guestCount : Nat;
   };
 
   public type PaymentStatus = {
@@ -284,6 +288,41 @@ actor {
     processingDate : ?Int;
   };
 
+  public type AdminPageSection = {
+    #businessDetails;
+    #marketplace;
+    #assistants;
+    #b2b;
+    #affiliate;
+    #funding;
+    #startups;
+  };
+
+  public type AdminPageStatusDetails = {
+    version : Text;
+    notes : Text;
+  };
+
+  public type AdminPageSectionStatus = {
+    section : AdminPageSection;
+    status : { #inProgress; #comingSoon; #completed };
+    details : ?AdminPageStatusDetails;
+  };
+
+  public type MarketplaceRoadmap = {
+    roadmapId : Text;
+    name : Text;
+    progressPercentage : Nat;
+    completed : Bool;
+    lastUpdated : Int;
+    notes : Text;
+  };
+
+  public type AdminDashboardData = {
+    adminSections : [AdminPageSectionStatus];
+    marketplaceRoadmap : [MarketplaceRoadmap];
+  };
+
   let accessControlState = AccessControl.initState();
 
   let userStore = Map.empty<Principal, UserProfile>();
@@ -311,27 +350,193 @@ actor {
   let knowledgeBase = Map.empty<Text, AssistantKnowledgeEntry>();
   let unansweredQuestions = Map.empty<Text, UnansweredQuestion>();
 
-  func hasStartupMemberRole(principal : Principal) : Bool {
-    switch (userStore.get(principal)) {
-      case (null) { false };
-      case (?userData) {
-        switch (userData.activeRole) {
-          case (#startUpMember) { true };
-          case (_) { false };
-        };
+  let adminSections : [AdminPageSectionStatus] = [
+    {
+      section = #businessDetails;
+      status = #inProgress;
+      details = ?{
+        version = "1.0";
+        notes = "Due to legal requirements, this section is not completed";
       };
+    },
+    {
+      section = #marketplace;
+      status = #inProgress;
+      details = ?{
+        version = "1.0";
+        notes = "Functionality for more than one store must be added";
+      };
+    },
+    {
+      section = #assistants;
+      status = #comingSoon;
+      details = ?{
+        version = "1.0";
+        notes = "Currently not available in this version";
+      };
+    },
+    {
+      section = #b2b;
+      status = #comingSoon;
+      details = ?{
+        version = "1.0";
+        notes = "Currently not available in this version";
+      };
+    },
+    {
+      section = #affiliate;
+      status = #comingSoon;
+      details = ?{
+        version = "1.0";
+        notes = "Currently not available in this version";
+      };
+    },
+    {
+      section = #funding;
+      status = #comingSoon;
+      details = ?{
+        version = "1.0";
+        notes = "Currently not available in this version";
+      };
+    },
+    {
+      section = #startups;
+      status = #comingSoon;
+      details = ?{
+        version = "1.0";
+        notes = "Currently not available in this version";
+      };
+    },
+  ];
+
+  let marketplaceInitRoadmap = [
+    {
+      roadmapId = "profiles-menus";
+      name = "1. Profiles + menus";
+      progressPercentage = 90;
+      completed = false;
+      lastUpdated = Time.now();
+      notes = "Profiles + menus upgrade 90% done";
+    },
+    {
+      roadmapId = "sellers-items";
+      name = "2. Sellers + items";
+      progressPercentage = 70;
+      completed = false;
+      lastUpdated = Time.now();
+      notes = "Estimated 70% done, requires multi admin + payments first";
+    },
+    {
+      roadmapId = "orders-tracking";
+      name = "3. Orders + tracking";
+      progressPercentage = 50;
+      completed = false;
+      lastUpdated = Time.now();
+      notes = "Estimated to be 50% done, requires multi-user stores";
+    },
+    {
+      roadmapId = "ai-personalization";
+      name = "4. AI personalization";
+      progressPercentage = 20;
+      completed = false;
+      lastUpdated = Time.now();
+      notes = "Estimated 20% done, no current timeline";
+    },
+    {
+      roadmapId = "payments";
+      name = "5. Payments";
+      progressPercentage = 100;
+      completed = true;
+      lastUpdated = Time.now();
+      notes = "100% done, will be optimized";
+    },
+  ];
+
+  let marketplaceRoadmap = Map.empty<Text, MarketplaceRoadmap>();
+
+  public shared ({ caller }) func setOwnerPrincipal() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can set owner principal");
+    };
+    ownerPrincipal := ?caller;
+    await updateMarketplaceRoadmap();
+    initSeededKnowledge();
+  };
+
+  public shared ({ caller }) func initializeAccessControl() : async () {
+    AccessControl.initialize(accessControlState, caller);
+    await updateMarketplaceRoadmap();
+    initSeededKnowledge();
+  };
+
+  public shared ({ caller }) func updateAdminDashboardData() : async () {
+    await updateMarketplaceRoadmap();
+  };
+
+  public query ({ caller }) func getUserRoleSummary() : async UserRoleSummary {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view user roles");
+    };
+
+    var adminCount = 0;
+    var userCount = 0;
+    var guestCount = 0;
+
+    let allUsers = userStore.values().toArray();
+
+    for (user in allUsers.values()) {
+      switch (user.activeRole) {
+        case (#guest) { guestCount += 1 };
+        case (#startUpMember) { userCount += 1 };
+        case (#b2bMember) { userCount += 1 };
+      };
+    };
+
+    {
+      adminCount;
+      userCount;
+      guestCount;
     };
   };
 
-  func hasB2BMemberRole(principal : Principal) : Bool {
-    switch (userStore.get(principal)) {
-      case (null) { false };
-      case (?userData) {
-        switch (userData.activeRole) {
-          case (#b2bMember) { true };
-          case (_) { false };
-        };
-      };
+  public shared ({ caller }) func assignRole(user : Principal, role : AccessControl.UserRole) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can assign roles");
+    };
+    AccessControl.assignRole(accessControlState, caller, user, role);
+  };
+
+  public shared ({ caller }) func updateMarketplaceRoadmap() : async () {
+    marketplaceRoadmap.clear();
+
+    for (initEntry in marketplaceInitRoadmap.values()) {
+      marketplaceRoadmap.add(initEntry.roadmapId, {
+        initEntry with progressPercentage = 100;
+        completed = true;
+        notes = initEntry.name # " - stable features coming soon";
+        lastUpdated = Time.now();
+      });
+    };
+
+    for (initEntry in marketplaceInitRoadmap.values()) {
+      marketplaceRoadmap.add(initEntry.roadmapId, initEntry);
+    };
+  };
+
+  public query ({ caller }) func getAdminDashboardData() : async AdminDashboardData {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can access dashboard data");
+    };
+    getAdminDashboardDataInternal();
+  };
+
+  func getAdminDashboardDataInternal() : AdminDashboardData {
+    {
+      adminSections : [AdminPageSectionStatus] = Array.tabulate<AdminPageSectionStatus>(
+        adminSections.size(),
+        func(i) { adminSections[i] },
+      );
+      marketplaceRoadmap = marketplaceRoadmap.values().toArray();
     };
   };
 
@@ -436,82 +641,11 @@ actor {
     };
   };
 
-  public shared ({ caller }) func setOwnerPrincipal() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can set owner principal");
-    };
-    ownerPrincipal := ?caller;
-    initSeededKnowledge();
-  };
-
-  public shared ({ caller }) func initializeAccessControl() : async () {
-    AccessControl.initialize(accessControlState, caller);
-    initSeededKnowledge();
-  };
-
   public query ({ caller }) func getAssistantKnowledgeBase() : async [AssistantKnowledgeEntry] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can access knowledge base");
     };
     knowledgeBase.values().toArray();
-  };
-
-  public shared ({ caller }) func addAssistantKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can add knowledge entries");
-    };
-    knowledgeBase.add(entry.id, entry);
-  };
-
-  public shared ({ caller }) func updateAssistantKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update knowledge entries");
-    };
-    knowledgeBase.add(entry.id, entry);
-  };
-
-  public shared ({ caller }) func removeAssistantKnowledgeEntry(id : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can remove knowledge entries");
-    };
-    knowledgeBase.remove(id);
-  };
-
-  public query ({ caller }) func getUnansweredQuestions() : async [UnansweredQuestion] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access unanswered questions");
-    };
-    unansweredQuestions.values().toArray();
-  };
-
-  public shared ({ caller }) func markQuestionAsAnswered(questionId : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can mark questions as answered");
-    };
-    unansweredQuestions.remove(questionId);
-  };
-
-  public shared ({ caller }) func convertQuestionToKnowledgeEntry(questionId : Text, answer : Text, category : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can convert questions to knowledge entries");
-    };
-
-    switch (unansweredQuestions.get(questionId)) {
-      case (null) { Runtime.trap("Question not found") };
-      case (?question) {
-        let newEntry = {
-          id = questionId;
-          question = question.question;
-          answer;
-          category;
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-        };
-        knowledgeBase.add(questionId, newEntry);
-        unansweredQuestions.remove(questionId);
-      };
-    };
   };
 
   func calculateSimilarity(question1 : Text, question2 : Text) : Float {
@@ -564,19 +698,8 @@ actor {
     let bestMatch = getBestMatchingAnswer(normalizedQuestion);
 
     switch (bestMatch) {
-      case (null) {
-        unansweredQuestions.add(Time.now().toText(), {
-          id = Time.now().toText();
-          question = normalizedQuestion;
-          categorySuggestion = category;
-          creationTime = Time.now();
-          interactionCount = 1;
-        });
-        null;
-      };
-      case (?matchingEntry) {
-        ?matchingEntry.answer;
-      };
+      case (null) { null };
+      case (?matchingEntry) { ?matchingEntry.answer };
     };
   };
 
@@ -610,6 +733,4 @@ actor {
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
     OutCall.transform(input);
   };
-
-  // ... (rest of the unchanged code)
 };

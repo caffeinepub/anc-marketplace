@@ -89,6 +89,31 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
+export interface MarketplaceRoadmap {
+    progressPercentage: bigint;
+    name: string;
+    completed: boolean;
+    lastUpdated: bigint;
+    roadmapId: string;
+    notes: string;
+}
+export interface _CaffeineStorageCreateCertificateResult {
+    method: string;
+    blob_hash: string;
+}
+export interface AdminPageSectionStatus {
+    status: Variant_completed_comingSoon_inProgress;
+    section: AdminPageSection;
+    details?: AdminPageStatusDetails;
+}
 export interface http_header {
     value: string;
     name: string;
@@ -102,7 +127,7 @@ export interface AssistantKnowledgeEntry {
     isActive: boolean;
     category: string;
 }
-export interface TransformationOutput {
+export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
@@ -114,12 +139,13 @@ export interface ShoppingItem {
     priceInCents: bigint;
     productDescription: string;
 }
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
-}
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
+}
+export interface AdminDashboardData {
+    adminSections: Array<AdminPageSectionStatus>;
+    marketplaceRoadmap: Array<MarketplaceRoadmap>;
 }
 export type StripeSessionStatus = {
     __kind__: "completed";
@@ -133,29 +159,41 @@ export type StripeSessionStatus = {
         error: string;
     };
 };
-export interface _CaffeineStorageCreateCertificateResult {
-    method: string;
-    blob_hash: string;
-}
-export interface UnansweredQuestion {
-    id: string;
-    question: string;
-    creationTime: bigint;
-    interactionCount: bigint;
-    categorySuggestion: string;
-}
 export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
+}
+export interface AdminPageStatusDetails {
+    version: string;
+    notes: string;
+}
+export interface UserRoleSummary {
+    guestCount: bigint;
+    adminCount: bigint;
+    userCount: bigint;
 }
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
+export enum AdminPageSection {
+    b2b = "b2b",
+    marketplace = "marketplace",
+    startups = "startups",
+    assistants = "assistants",
+    businessDetails = "businessDetails",
+    affiliate = "affiliate",
+    funding = "funding"
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
+export enum Variant_completed_comingSoon_inProgress {
+    completed = "completed",
+    comingSoon = "comingSoon",
+    inProgress = "inProgress"
 }
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
@@ -164,23 +202,22 @@ export interface backendInterface {
     _caffeineStorageCreateCertificate(blobHash: string): Promise<_CaffeineStorageCreateCertificateResult>;
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
-    addAssistantKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
     askAssistant(question: string, category: string): Promise<string | null>;
-    convertQuestionToKnowledgeEntry(questionId: string, answer: string, category: string): Promise<void>;
+    assignRole(user: Principal, role: UserRole): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    getAdminDashboardData(): Promise<AdminDashboardData>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
-    getUnansweredQuestions(): Promise<Array<UnansweredQuestion>>;
+    getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
     isStripeConfigured(): Promise<boolean>;
-    markQuestionAsAnswered(questionId: string): Promise<void>;
-    removeAssistantKnowledgeEntry(id: string): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updateAssistantKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
+    updateAdminDashboardData(): Promise<void>;
+    updateMarketplaceRoadmap(): Promise<void>;
 }
-import type { StripeSessionStatus as _StripeSessionStatus, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AdminDashboardData as _AdminDashboardData, AdminPageSection as _AdminPageSection, AdminPageSectionStatus as _AdminPageSectionStatus, AdminPageStatusDetails as _AdminPageStatusDetails, MarketplaceRoadmap as _MarketplaceRoadmap, StripeSessionStatus as _StripeSessionStatus, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -267,20 +304,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addAssistantKnowledgeEntry(arg0: AssistantKnowledgeEntry): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.addAssistantKnowledgeEntry(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.addAssistantKnowledgeEntry(arg0);
-            return result;
-        }
-    }
     async askAssistant(arg0: string, arg1: string): Promise<string | null> {
         if (this.processError) {
             try {
@@ -295,17 +318,17 @@ export class Backend implements backendInterface {
             return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
         }
     }
-    async convertQuestionToKnowledgeEntry(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async assignRole(arg0: Principal, arg1: UserRole): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.convertQuestionToKnowledgeEntry(arg0, arg1, arg2);
+                const result = await this.actor.assignRole(arg0, to_candid_UserRole_n9(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.convertQuestionToKnowledgeEntry(arg0, arg1, arg2);
+            const result = await this.actor.assignRole(arg0, to_candid_UserRole_n9(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -321,6 +344,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.createCheckoutSession(arg0, arg1, arg2);
             return result;
+        }
+    }
+    async getAdminDashboardData(): Promise<AdminDashboardData> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdminDashboardData();
+                return from_candid_AdminDashboardData_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdminDashboardData();
+            return from_candid_AdminDashboardData_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>> {
@@ -341,27 +378,27 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getStripeSessionStatus(arg0);
-                return from_candid_StripeSessionStatus_n9(this._uploadFile, this._downloadFile, result);
+                return from_candid_StripeSessionStatus_n20(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStripeSessionStatus(arg0);
-            return from_candid_StripeSessionStatus_n9(this._uploadFile, this._downloadFile, result);
+            return from_candid_StripeSessionStatus_n20(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getUnansweredQuestions(): Promise<Array<UnansweredQuestion>> {
+    async getUserRoleSummary(): Promise<UserRoleSummary> {
         if (this.processError) {
             try {
-                const result = await this.actor.getUnansweredQuestions();
+                const result = await this.actor.getUserRoleSummary();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getUnansweredQuestions();
+            const result = await this.actor.getUserRoleSummary();
             return result;
         }
     }
@@ -390,34 +427,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isStripeConfigured();
-            return result;
-        }
-    }
-    async markQuestionAsAnswered(arg0: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.markQuestionAsAnswered(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.markQuestionAsAnswered(arg0);
-            return result;
-        }
-    }
-    async removeAssistantKnowledgeEntry(arg0: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.removeAssistantKnowledgeEntry(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.removeAssistantKnowledgeEntry(arg0);
             return result;
         }
     }
@@ -463,26 +472,52 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateAssistantKnowledgeEntry(arg0: AssistantKnowledgeEntry): Promise<void> {
+    async updateAdminDashboardData(): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateAssistantKnowledgeEntry(arg0);
+                const result = await this.actor.updateAdminDashboardData();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateAssistantKnowledgeEntry(arg0);
+            const result = await this.actor.updateAdminDashboardData();
+            return result;
+        }
+    }
+    async updateMarketplaceRoadmap(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateMarketplaceRoadmap();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateMarketplaceRoadmap();
             return result;
         }
     }
 }
-function from_candid_StripeSessionStatus_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
-    return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+function from_candid_AdminDashboardData_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdminDashboardData): AdminDashboardData {
+    return from_candid_record_n12(_uploadFile, _downloadFile, value);
+}
+function from_candid_AdminPageSectionStatus_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdminPageSectionStatus): AdminPageSectionStatus {
+    return from_candid_record_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_AdminPageSection_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdminPageSection): AdminPageSection {
+    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+}
+function from_candid_StripeSessionStatus_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
 }
 function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: __CaffeineStorageRefillResult): _CaffeineStorageRefillResult {
     return from_candid_record_n5(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_AdminPageStatusDetails]): AdminPageStatusDetails | null {
+    return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];
@@ -493,7 +528,40 @@ function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    adminSections: Array<_AdminPageSectionStatus>;
+    marketplaceRoadmap: Array<_MarketplaceRoadmap>;
+}): {
+    adminSections: Array<AdminPageSectionStatus>;
+    marketplaceRoadmap: Array<MarketplaceRoadmap>;
+} {
+    return {
+        adminSections: from_candid_vec_n13(_uploadFile, _downloadFile, value.adminSections),
+        marketplaceRoadmap: value.marketplaceRoadmap
+    };
+}
+function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status: {
+        completed: null;
+    } | {
+        comingSoon: null;
+    } | {
+        inProgress: null;
+    };
+    section: _AdminPageSection;
+    details: [] | [_AdminPageStatusDetails];
+}): {
+    status: Variant_completed_comingSoon_inProgress;
+    section: AdminPageSection;
+    details?: AdminPageStatusDetails;
+} {
+    return {
+        status: from_candid_variant_n16(_uploadFile, _downloadFile, value.status),
+        section: from_candid_AdminPageSection_n17(_uploadFile, _downloadFile, value.section),
+        details: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.details))
+    };
+}
+function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     userPrincipal: [] | [string];
     response: string;
 }): {
@@ -517,7 +585,33 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         topped_up_amount: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.topped_up_amount))
     };
 }
-function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    completed: null;
+} | {
+    comingSoon: null;
+} | {
+    inProgress: null;
+}): Variant_completed_comingSoon_inProgress {
+    return "completed" in value ? Variant_completed_comingSoon_inProgress.completed : "comingSoon" in value ? Variant_completed_comingSoon_inProgress.comingSoon : "inProgress" in value ? Variant_completed_comingSoon_inProgress.inProgress : value;
+}
+function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    b2b: null;
+} | {
+    marketplace: null;
+} | {
+    startups: null;
+} | {
+    assistants: null;
+} | {
+    businessDetails: null;
+} | {
+    affiliate: null;
+} | {
+    funding: null;
+}): AdminPageSection {
+    return "b2b" in value ? AdminPageSection.b2b : "marketplace" in value ? AdminPageSection.marketplace : "startups" in value ? AdminPageSection.startups : "assistants" in value ? AdminPageSection.assistants : "businessDetails" in value ? AdminPageSection.businessDetails : "affiliate" in value ? AdminPageSection.affiliate : "funding" in value ? AdminPageSection.funding : value;
+}
+function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     completed: {
         userPrincipal: [] | [string];
         response: string;
@@ -540,11 +634,17 @@ function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "completed" in value ? {
         __kind__: "completed",
-        completed: from_candid_record_n11(_uploadFile, _downloadFile, value.completed)
+        completed: from_candid_record_n22(_uploadFile, _downloadFile, value.completed)
     } : "failed" in value ? {
         __kind__: "failed",
         failed: value.failed
     } : value;
+}
+function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdminPageSectionStatus>): Array<AdminPageSectionStatus> {
+    return value.map((x)=>from_candid_AdminPageSectionStatus_n14(_uploadFile, _downloadFile, x));
+}
+function to_candid_UserRole_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n10(_uploadFile, _downloadFile, value);
 }
 function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation): __CaffeineStorageRefillInformation {
     return to_candid_record_n3(_uploadFile, _downloadFile, value);
@@ -560,6 +660,21 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     return {
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
+}
+function to_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
 }
 export interface CreateActorOptions {
     agent?: Agent;

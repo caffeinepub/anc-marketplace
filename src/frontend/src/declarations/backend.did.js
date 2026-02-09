@@ -19,6 +19,52 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const ShoppingItem = IDL.Record({
+  'productName' : IDL.Text,
+  'currency' : IDL.Text,
+  'quantity' : IDL.Nat,
+  'priceInCents' : IDL.Nat,
+  'productDescription' : IDL.Text,
+});
+export const AdminPageSection = IDL.Variant({
+  'b2b' : IDL.Null,
+  'marketplace' : IDL.Null,
+  'startups' : IDL.Null,
+  'assistants' : IDL.Null,
+  'businessDetails' : IDL.Null,
+  'affiliate' : IDL.Null,
+  'funding' : IDL.Null,
+});
+export const AdminPageStatusDetails = IDL.Record({
+  'version' : IDL.Text,
+  'notes' : IDL.Text,
+});
+export const AdminPageSectionStatus = IDL.Record({
+  'status' : IDL.Variant({
+    'completed' : IDL.Null,
+    'comingSoon' : IDL.Null,
+    'inProgress' : IDL.Null,
+  }),
+  'section' : AdminPageSection,
+  'details' : IDL.Opt(AdminPageStatusDetails),
+});
+export const MarketplaceRoadmap = IDL.Record({
+  'progressPercentage' : IDL.Nat,
+  'name' : IDL.Text,
+  'completed' : IDL.Bool,
+  'lastUpdated' : IDL.Int,
+  'roadmapId' : IDL.Text,
+  'notes' : IDL.Text,
+});
+export const AdminDashboardData = IDL.Record({
+  'adminSections' : IDL.Vec(AdminPageSectionStatus),
+  'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
+});
 export const AssistantKnowledgeEntry = IDL.Record({
   'id' : IDL.Text,
   'question' : IDL.Text,
@@ -28,13 +74,6 @@ export const AssistantKnowledgeEntry = IDL.Record({
   'isActive' : IDL.Bool,
   'category' : IDL.Text,
 });
-export const ShoppingItem = IDL.Record({
-  'productName' : IDL.Text,
-  'currency' : IDL.Text,
-  'quantity' : IDL.Nat,
-  'priceInCents' : IDL.Nat,
-  'productDescription' : IDL.Text,
-});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -42,12 +81,10 @@ export const StripeSessionStatus = IDL.Variant({
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
 });
-export const UnansweredQuestion = IDL.Record({
-  'id' : IDL.Text,
-  'question' : IDL.Text,
-  'creationTime' : IDL.Int,
-  'interactionCount' : IDL.Nat,
-  'categorySuggestion' : IDL.Text,
+export const UserRoleSummary = IDL.Record({
+  'guestCount' : IDL.Nat,
+  'adminCount' : IDL.Nat,
+  'userCount' : IDL.Nat,
 });
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
@@ -99,37 +136,27 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-  'addAssistantKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
   'askAssistant' : IDL.Func(
       [IDL.Text, IDL.Text],
       [IDL.Opt(IDL.Text)],
       ['query'],
     ),
-  'convertQuestionToKnowledgeEntry' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text],
-      [],
-      [],
-    ),
+  'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
       [IDL.Text],
       [],
     ),
+  'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
   'getAssistantKnowledgeBase' : IDL.Func(
       [],
       [IDL.Vec(AssistantKnowledgeEntry)],
       ['query'],
     ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-  'getUnansweredQuestions' : IDL.Func(
-      [],
-      [IDL.Vec(UnansweredQuestion)],
-      ['query'],
-    ),
+  'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
   'initializeAccessControl' : IDL.Func([], [], []),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-  'markQuestionAsAnswered' : IDL.Func([IDL.Text], [], []),
-  'removeAssistantKnowledgeEntry' : IDL.Func([IDL.Text], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'transform' : IDL.Func(
@@ -137,7 +164,8 @@ export const idlService = IDL.Service({
       [TransformationOutput],
       ['query'],
     ),
-  'updateAssistantKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
+  'updateAdminDashboardData' : IDL.Func([], [], []),
+  'updateMarketplaceRoadmap' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -154,6 +182,52 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const ShoppingItem = IDL.Record({
+    'productName' : IDL.Text,
+    'currency' : IDL.Text,
+    'quantity' : IDL.Nat,
+    'priceInCents' : IDL.Nat,
+    'productDescription' : IDL.Text,
+  });
+  const AdminPageSection = IDL.Variant({
+    'b2b' : IDL.Null,
+    'marketplace' : IDL.Null,
+    'startups' : IDL.Null,
+    'assistants' : IDL.Null,
+    'businessDetails' : IDL.Null,
+    'affiliate' : IDL.Null,
+    'funding' : IDL.Null,
+  });
+  const AdminPageStatusDetails = IDL.Record({
+    'version' : IDL.Text,
+    'notes' : IDL.Text,
+  });
+  const AdminPageSectionStatus = IDL.Record({
+    'status' : IDL.Variant({
+      'completed' : IDL.Null,
+      'comingSoon' : IDL.Null,
+      'inProgress' : IDL.Null,
+    }),
+    'section' : AdminPageSection,
+    'details' : IDL.Opt(AdminPageStatusDetails),
+  });
+  const MarketplaceRoadmap = IDL.Record({
+    'progressPercentage' : IDL.Nat,
+    'name' : IDL.Text,
+    'completed' : IDL.Bool,
+    'lastUpdated' : IDL.Int,
+    'roadmapId' : IDL.Text,
+    'notes' : IDL.Text,
+  });
+  const AdminDashboardData = IDL.Record({
+    'adminSections' : IDL.Vec(AdminPageSectionStatus),
+    'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
+  });
   const AssistantKnowledgeEntry = IDL.Record({
     'id' : IDL.Text,
     'question' : IDL.Text,
@@ -163,13 +237,6 @@ export const idlFactory = ({ IDL }) => {
     'isActive' : IDL.Bool,
     'category' : IDL.Text,
   });
-  const ShoppingItem = IDL.Record({
-    'productName' : IDL.Text,
-    'currency' : IDL.Text,
-    'quantity' : IDL.Nat,
-    'priceInCents' : IDL.Nat,
-    'productDescription' : IDL.Text,
-  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -177,12 +244,10 @@ export const idlFactory = ({ IDL }) => {
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
   });
-  const UnansweredQuestion = IDL.Record({
-    'id' : IDL.Text,
-    'question' : IDL.Text,
-    'creationTime' : IDL.Int,
-    'interactionCount' : IDL.Nat,
-    'categorySuggestion' : IDL.Text,
+  const UserRoleSummary = IDL.Record({
+    'guestCount' : IDL.Nat,
+    'adminCount' : IDL.Nat,
+    'userCount' : IDL.Nat,
   });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
@@ -231,37 +296,27 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-    'addAssistantKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
     'askAssistant' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Opt(IDL.Text)],
         ['query'],
       ),
-    'convertQuestionToKnowledgeEntry' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text],
-        [],
-        [],
-      ),
+    'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
         [IDL.Text],
         [],
       ),
+    'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
     'getAssistantKnowledgeBase' : IDL.Func(
         [],
         [IDL.Vec(AssistantKnowledgeEntry)],
         ['query'],
       ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-    'getUnansweredQuestions' : IDL.Func(
-        [],
-        [IDL.Vec(UnansweredQuestion)],
-        ['query'],
-      ),
+    'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
     'initializeAccessControl' : IDL.Func([], [], []),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-    'markQuestionAsAnswered' : IDL.Func([IDL.Text], [], []),
-    'removeAssistantKnowledgeEntry' : IDL.Func([IDL.Text], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'transform' : IDL.Func(
@@ -269,11 +324,8 @@ export const idlFactory = ({ IDL }) => {
         [TransformationOutput],
         ['query'],
       ),
-    'updateAssistantKnowledgeEntry' : IDL.Func(
-        [AssistantKnowledgeEntry],
-        [],
-        [],
-      ),
+    'updateAdminDashboardData' : IDL.Func([], [], []),
+    'updateMarketplaceRoadmap' : IDL.Func([], [], []),
   });
 };
 

@@ -1,56 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useGetStoreBuilderConfig, useUpdateStoreBuilderConfig, useListStoreTemplates, useGetGlobalDomainPurchaseLink, useCreateStoreBuilderCheckoutSession } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetStoreBuilderConfig, useSaveStoreBuilderConfig, useListStoreTemplates, useGetGlobalDomainPurchaseLink, useCreateStoreBuilderCheckoutSession } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Wrench, Check, ExternalLink, Palette, Image as ImageIcon, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Store, Palette, Globe, ExternalLink, Info, CheckCircle2, Loader } from 'lucide-react';
 import { toast } from 'sonner';
-import { StoreCustomization, BrandingAsset, AssetType, StoreBuilderConfig } from '../types';
-import { STORE_BUILDER_PRICING, PRICING_MODEL } from '@/lib/pricingCopy';
+import { PRICING_MODEL, STORE_BUILDER_PRICING } from '../lib/pricingCopy';
 
 export default function StoreBuilderPage() {
   const { identity } = useInternetIdentity();
-  const { data: storeConfig, isLoading } = useGetStoreBuilderConfig();
-  const { data: templates = [] } = useListStoreTemplates();
-  const { data: globalDomainLink } = useGetGlobalDomainPurchaseLink();
-  const saveConfig = useSaveStoreBuilderConfig();
+  const { data: config, isLoading: configLoading } = useGetStoreBuilderConfig();
+  const { data: templates = [], isLoading: templatesLoading } = useListStoreTemplates();
+  const { data: domainLink } = useGetGlobalDomainPurchaseLink();
+  const updateConfig = useUpdateStoreBuilderConfig();
   const createCheckout = useCreateStoreBuilderCheckoutSession();
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [brandName, setBrandName] = useState('');
   const [tagline, setTagline] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#3B82F6');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [bannerUrl, setBannerUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#000000');
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   const isAuthenticated = !!identity;
-  const hasSubscription = storeConfig?.subscriptionActive || false;
-
-  useEffect(() => {
-    if (storeConfig) {
-      setSelectedTemplateId(storeConfig.selectedTemplateId);
-      setBrandName(storeConfig.customization.brandName);
-      setTagline(storeConfig.customization.tagline);
-      setPrimaryColor(storeConfig.customization.primaryColor);
-
-      const logoAsset = storeConfig.customization.assets.find(a => a.type_.__kind__ === 'logo');
-      const bannerAsset = storeConfig.customization.assets.find(a => a.type_.__kind__ === 'banner');
-      
-      if (logoAsset) setLogoUrl(logoAsset.url);
-      if (bannerAsset) setBannerUrl(bannerAsset.url);
-    }
-  }, [storeConfig]);
+  const hasActiveSubscription = config?.subscriptionActive || false;
 
   const handleSubscribe = async () => {
     try {
       const session = await createCheckout.mutateAsync();
-      if (!session?.url) {
-        throw new Error('Stripe session missing url');
-      }
+      if (!session?.url) throw new Error('Stripe session missing url');
       window.location.href = session.url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to start checkout');
@@ -58,42 +39,23 @@ export default function StoreBuilderPage() {
   };
 
   const handleSaveCustomization = async () => {
-    if (!selectedTemplateId) {
-      toast.error('Please select a template first');
+    if (!brandName.trim()) {
+      toast.error('Please enter a brand name');
       return;
     }
 
-    const assets: BrandingAsset[] = [];
-    if (logoUrl) {
-      assets.push({
-        id: `logo-${Date.now()}`,
-        url: logoUrl,
-        type_: { __kind__: 'logo' },
-      });
-    }
-    if (bannerUrl) {
-      assets.push({
-        id: `banner-${Date.now()}`,
-        url: bannerUrl,
-        type_: { __kind__: 'banner' },
-      });
-    }
-
-    const customization: StoreCustomization = {
-      brandName,
-      tagline,
-      primaryColor,
-      assets,
-    };
-
     try {
-      const config: StoreBuilderConfig = {
-        subscriptionActive: true,
-        selectedTemplateId: selectedTemplateId,
-        customization,
-        domainPurchaseLink: globalDomainLink || null,
-      };
-      await saveConfig.mutateAsync(config);
+      await updateConfig.mutateAsync({
+        subscriptionActive: hasActiveSubscription,
+        selectedTemplateId: selectedTemplate,
+        customization: {
+          brandName: brandName.trim(),
+          tagline: tagline.trim(),
+          primaryColor,
+          assets: [],
+        },
+        domainPurchaseLink: domainLink || null,
+      });
       toast.success('Store customization saved successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to save customization');
@@ -104,69 +66,21 @@ export default function StoreBuilderPage() {
     return (
       <div className="container mx-auto py-12 px-4">
         <Alert>
-          <AlertDescription>Please log in to access the Store Builder.</AlertDescription>
+          <Info className="h-4 w-4" />
+          <AlertDescription>Please log in to access Store Builder.</AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (configLoading || templatesLoading) {
     return (
       <div className="container mx-auto py-12 px-4">
-        <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasSubscription) {
-    return (
-      <div className="container mx-auto py-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Alert className="mb-6 bg-primary/5 border-primary/20">
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Optional upgrade:</strong> The Store Builder is only needed if you want to convert your marketplace store into a standalone website or app. You can continue selling on the marketplace for free with just the $5 per-sale service fee.
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <Wrench className="h-8 w-8 text-primary" />
-                <CardTitle>Store Builder Subscription</CardTitle>
-              </div>
-              <CardDescription>
-                {STORE_BUILDER_PRICING.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <h3 className="font-semibold">What's Included:</h3>
-                <ul className="space-y-2">
-                  {STORE_BUILDER_PRICING.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">${STORE_BUILDER_PRICING.monthlyPrice.toFixed(2)}</span>
-                <span className="text-muted-foreground">/month</span>
-              </div>
-              <Alert>
-                <AlertDescription className="text-sm">
-                  This is the only monthly fee in our platform. Marketplace selling remains free with just a $5 service fee per sale.
-                </AlertDescription>
-              </Alert>
-              <Button onClick={handleSubscribe} className="w-full" disabled={createCheckout.isPending}>
-                {createCheckout.isPending ? 'Processing...' : 'Subscribe Now'}
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading Store Builder...</p>
+          </div>
         </div>
       </div>
     );
@@ -174,180 +88,189 @@ export default function StoreBuilderPage() {
 
   return (
     <div className="container mx-auto py-12 px-4">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Store Builder</h1>
-        <p className="text-muted-foreground">Build and customize your standalone website or app</p>
-      </div>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Store Builder</h1>
+          <p className="text-muted-foreground">
+            {STORE_BUILDER_PRICING.description}
+          </p>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
+        <Alert className="mb-6">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Optional Upgrade</AlertTitle>
+          <AlertDescription>
+            {PRICING_MODEL.faqMonthlyFees}
+          </AlertDescription>
+        </Alert>
+
+        {!hasActiveSubscription ? (
           <Card>
             <CardHeader>
-              <CardTitle>Choose Template</CardTitle>
-              <CardDescription>Select a template for your store</CardDescription>
+              <CardTitle>Subscribe to Store Builder</CardTitle>
+              <CardDescription>
+                Unlock standalone website/app conversion for {PRICING_MODEL.standaloneWebsiteSubscription}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                    selectedTemplateId === template.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => setSelectedTemplateId(template.id)}
-                >
-                  <div className="flex items-start justify-between mb-2">
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                {STORE_BUILDER_PRICING.features.map((feature, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                      <p className="font-medium">{feature}</p>
                     </div>
-                    <Badge variant={template.type_.__kind__ === 'ecommerce' ? 'default' : 'secondary'}>
-                      {template.type_.__kind__ === 'ecommerce' ? 'E-commerce' : 'Service'}
-                    </Badge>
                   </div>
-                  {template.previewImage && (
-                    <img
-                      src={template.previewImage}
-                      alt={template.name}
-                      className="w-full h-32 object-cover rounded-md mt-2"
-                    />
+                ))}
+              </div>
+              <Button onClick={handleSubscribe} disabled={createCheckout.isPending} className="w-full">
+                {createCheckout.isPending ? (
+                  <>
+                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>Subscribe for {PRICING_MODEL.standaloneWebsiteSubscription}</>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Tabs defaultValue="templates" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="templates">
+                <Store className="h-4 w-4 mr-2" />
+                Templates
+              </TabsTrigger>
+              <TabsTrigger value="customize">
+                <Palette className="h-4 w-4 mr-2" />
+                Customize
+              </TabsTrigger>
+              <TabsTrigger value="domain">
+                <Globe className="h-4 w-4 mr-2" />
+                Domain
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="templates">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Choose a Template</CardTitle>
+                  <CardDescription>Select a template for your store</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {templates.length === 0 ? (
+                    <p className="text-center py-12 text-muted-foreground">
+                      No templates available yet
+                    </p>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {templates.map((template) => (
+                        <Card
+                          key={template.id}
+                          className={`cursor-pointer transition-all ${
+                            selectedTemplate === template.id ? 'ring-2 ring-primary' : ''
+                          }`}
+                          onClick={() => setSelectedTemplate(template.id)}
+                        >
+                          <CardHeader>
+                            <img
+                              src={template.previewImage}
+                              alt={template.name}
+                              className="w-full h-48 object-cover rounded-lg mb-4"
+                            />
+                            <CardTitle>{template.name}</CardTitle>
+                            <CardDescription>{template.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <Badge>{template.type_.__kind__}</Badge>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Branding
-              </CardTitle>
-              <CardDescription>Customize your store's appearance</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="brandName">Brand Name</Label>
-                <Input
-                  id="brandName"
-                  value={brandName}
-                  onChange={(e) => setBrandName(e.target.value)}
-                  placeholder="Your Brand Name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tagline">Tagline</Label>
-                <Input
-                  id="tagline"
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  placeholder="Your brand tagline"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="primaryColor">Primary Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="primaryColor"
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-20 h-10"
-                  />
-                  <Input
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    placeholder="#3B82F6"
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <TabsContent value="customize">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Customize Your Store</CardTitle>
+                  <CardDescription>Set up your brand identity</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="brandName">Brand Name</Label>
+                    <Input
+                      id="brandName"
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value)}
+                      placeholder="Your Brand Name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tagline">Tagline</Label>
+                    <Input
+                      id="tagline"
+                      value={tagline}
+                      onChange={(e) => setTagline(e.target.value)}
+                      placeholder="Your Brand Tagline"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryColor">Primary Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="primaryColor"
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="w-20 h-10"
+                      />
+                      <Input
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        placeholder="#000000"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleSaveCustomization} disabled={updateConfig.isPending}>
+                    {updateConfig.isPending ? 'Saving...' : 'Save Customization'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="h-5 w-5" />
-                Assets
-              </CardTitle>
-              <CardDescription>Upload your logo and banner</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="logoUrl">Logo URL</Label>
-                <Input
-                  id="logoUrl"
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bannerUrl">Banner URL</Label>
-                <Input
-                  id="bannerUrl"
-                  value={bannerUrl}
-                  onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button onClick={handleSaveCustomization} className="w-full" disabled={saveConfig.isPending}>
-            {saveConfig.isPending ? 'Saving...' : 'Save Customization'}
-          </Button>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>See how your store will look</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-lg p-6 space-y-4" style={{ borderColor: primaryColor }}>
-                {logoUrl && (
-                  <img src={logoUrl} alt="Logo" className="h-16 object-contain" />
-                )}
-                <div>
-                  <h2 className="text-2xl font-bold" style={{ color: primaryColor }}>
-                    {brandName || 'Your Brand Name'}
-                  </h2>
-                  <p className="text-muted-foreground">{tagline || 'Your tagline here'}</p>
-                </div>
-                {bannerUrl && (
-                  <img src={bannerUrl} alt="Banner" className="w-full h-32 object-cover rounded-md" />
-                )}
-                <div className="flex gap-2">
-                  <div className="h-10 w-24 rounded" style={{ backgroundColor: primaryColor }} />
-                  <div className="h-10 w-24 rounded bg-muted" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {globalDomainLink && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Domain Purchase</CardTitle>
-                <CardDescription>Get a custom domain for your store</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => window.open(globalDomainLink, '_blank')}
-                  variant="outline"
-                  className="w-full gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Purchase Domain
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+            <TabsContent value="domain">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Custom Domain</CardTitle>
+                  <CardDescription>Connect your own domain name</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Purchase and connect a custom domain to your store for a professional web presence.
+                  </p>
+                  {domainLink && (
+                    <Button asChild>
+                      <a href={domainLink} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Purchase Domain
+                      </a>
+                    </Button>
+                  )}
+                  {!domainLink && (
+                    <p className="text-sm text-muted-foreground">
+                      Domain purchase link not configured yet. Contact support for assistance.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

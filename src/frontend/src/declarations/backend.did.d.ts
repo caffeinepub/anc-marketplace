@@ -10,6 +10,25 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AdminDashboardData {
+  'adminSections' : Array<AdminPageSectionStatus>,
+  'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
+}
+export type AdminPageSection = { 'b2b' : null } |
+  { 'marketplace' : null } |
+  { 'startups' : null } |
+  { 'assistants' : null } |
+  { 'businessDetails' : null } |
+  { 'affiliate' : null } |
+  { 'funding' : null };
+export interface AdminPageSectionStatus {
+  'status' : { 'completed' : null } |
+    { 'comingSoon' : null } |
+    { 'inProgress' : null },
+  'section' : AdminPageSection,
+  'details' : [] | [AdminPageStatusDetails],
+}
+export interface AdminPageStatusDetails { 'version' : string, 'notes' : string }
 export interface AssistantKnowledgeEntry {
   'id' : string,
   'question' : string,
@@ -18,6 +37,14 @@ export interface AssistantKnowledgeEntry {
   'answer' : string,
   'isActive' : boolean,
   'category' : string,
+}
+export interface MarketplaceRoadmap {
+  'progressPercentage' : bigint,
+  'name' : string,
+  'completed' : boolean,
+  'lastUpdated' : bigint,
+  'roadmapId' : string,
+  'notes' : string,
 }
 export interface ShoppingItem {
   'productName' : string,
@@ -43,12 +70,13 @@ export interface TransformationOutput {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
-export interface UnansweredQuestion {
-  'id' : string,
-  'question' : string,
-  'creationTime' : bigint,
-  'interactionCount' : bigint,
-  'categorySuggestion' : string,
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
+export interface UserRoleSummary {
+  'guestCount' : bigint,
+  'adminCount' : bigint,
+  'userCount' : bigint,
 }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
@@ -83,33 +111,23 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
-  'addAssistantKnowledgeEntry' : ActorMethod<
-    [AssistantKnowledgeEntry],
-    undefined
-  >,
   'askAssistant' : ActorMethod<[string, string], [] | [string]>,
-  'convertQuestionToKnowledgeEntry' : ActorMethod<
-    [string, string, string],
-    undefined
-  >,
+  'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
-  'getUnansweredQuestions' : ActorMethod<[], Array<UnansweredQuestion>>,
+  'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
-  'markQuestionAsAnswered' : ActorMethod<[string], undefined>,
-  'removeAssistantKnowledgeEntry' : ActorMethod<[string], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateAssistantKnowledgeEntry' : ActorMethod<
-    [AssistantKnowledgeEntry],
-    undefined
-  >,
+  'updateAdminDashboardData' : ActorMethod<[], undefined>,
+  'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -1,39 +1,140 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Role-based dropdown header navigation + site-wide Privacy Policy menu item",
+  "title": "Functional Admin Dashboard wiring (bootstrap, role management, deep links, roadmap refresh, consistent theme)",
   "requirements": [
     {
-      "id": "REQ-35",
-      "summary": "Replace the current flat header navigation with grouped dropdown menus for Customer vs Sellers & Businesses (desktop + mobile Sheet), without breaking existing header features or route paths.",
+      "id": "REQ-1",
+      "summary": "Add an owner/admin bootstrap UX that can initialize access control from the Admin Dashboard and gracefully handle unauthorized admin calls.",
       "acceptanceCriteria": [
-        "On desktop, the header navigation contains a “Customer” dropdown that includes links to at least: Store (/store), Customer FAQ (/customer-faq), Customer Blog (/customer-blog).",
-        "On desktop, the header navigation contains a “Sellers & Businesses” dropdown that includes links to at least: Store Builder (/store-builder), App Center (/app-center), Funnels (/funnels), Sellers & Businesses FAQ (/sellers-businesses-faq), Sellers & Businesses Blog (/sellers-businesses-blog), Affiliate (/affiliate).",
-        "The dropdown navigation is also available from the mobile menu (Sheet) so mobile users can reach the same pages.",
-        "Existing navigation elements (top promotional banner, the “Connect with the appointment dashboard53” button, user profile dropdown) continue to work as before.",
-        "Links navigate using TanStack Router navigation (no full page reload)."
+        "When no admin is initialized yet, an authenticated user can complete a one-time initialization flow that calls backend admin bootstrap methods (e.g., initializeAccessControl / setOwnerPrincipal).",
+        "After initialization, non-admin callers are rejected by backend admin APIs with an explicit unauthorized error, and the frontend shows a clear access-denied state instead of crashing.",
+        "After initialization, the Admin Dashboard loads for admins without manual backend calls from the console."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Implement real React Query mutations for the admin bootstrap flow using backend capabilities initializeAccessControl() and setOwnerPrincipal(); ensure errors from backend traps are surfaced as safe, user-facing messages (e.g., unauthorized vs not-initialized), and invalidate/refetch admin-related queries on success."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Add a one-time 'Initialize Admin Access' UI state when admin calls fail due to missing initialization (or when admin status cannot be determined yet) that lets an authenticated user run the bootstrap mutations; keep a clear Access Denied state for true unauthorized users and prevent crashes on backend trap errors."
+        },
+        {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Refactor header navigation to use grouped dropdown menus: implement a “Customer” dropdown and a “Sellers & Businesses” dropdown, using the existing shadcn-ui DropdownMenu components (do not edit files under frontend/src/components/ui). Verify the component's usage instructions before implementing. Ensure all items use TanStack Router's navigate({ to: ... }) and keep all existing route paths unchanged. Update the mobile Sheet menu to expose the same grouped navigation (e.g., using the same DropdownMenu patterns or clearly grouped sections within the Sheet) while keeping the promo banner, appointment-dashboard53 button, and user profile dropdown behavior intact."
+          "description": "Ensure logout clears cached admin/auth-related queries consistently so a subsequent user sees the correct bootstrap/denied/admin state after identity changes (do not change immutable auth/provider bootstrap files)."
         }
       ]
     },
     {
-      "id": "REQ-36",
-      "summary": "Add a site-wide header dropdown menu item that always links to the existing Privacy Policy page, regardless of auth status or role, without changing the existing footer link.",
+      "id": "REQ-2",
+      "summary": "Replace placeholder admin/role-management hooks with real actor-backed hooks so the Users tab loads, summarizes roles, and assigns roles end-to-end with proper permission error handling.",
       "acceptanceCriteria": [
-        "A Privacy Policy navigation item is available in the header as part of a dropdown menu and is visible to unauthenticated and authenticated users.",
-        "Clicking the Privacy Policy item routes to /privacy-policy and renders the existing PrivacyPolicyPage.",
-        "The existing footer link to Privacy Policy remains intact and continues to work."
+        "Admin Dashboard \u001a Users tab successfully loads a list of users and their roles without showing placeholder errors (e.g., \"User role management not yet available\").",
+        "Admins can assign/update a user's access role and/or system role, and the UI reflects the changes after mutation (via query invalidation/refetch).",
+        "Non-admin callers cannot list users or assign roles; backend rejects the call and frontend displays a permission error."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Align TypeScript backendInterface typings with the Motoko admin/role-management capabilities required by the Users tab (e.g., list users with roles and assign roles). Keep typings consistent with existing UI expectations so hooks can call real actor methods."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Replace placeholder/throwing implementations for role-management hooks (admin role checks, list users with roles, role summary, assign roles) with real actor calls; add query invalidation/refetch so mutations immediately update Users tab data; normalize permission errors into a consistent 'permission denied' UI-safe error."
+        },
+        {
+          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
+          "operation": "modify",
+          "description": "Update the Users tab UI to rely on the real hooks (no placeholder errors), show a clear permission error state for non-admins, and ensure successful role assignment triggers visible updates (via existing query invalidation/refetch) without requiring manual refresh."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Deep-link Admin Dashboard tabs by syncing the router search param (tab=...) with the tab state and Admin Quick Access links.",
+      "acceptanceCriteria": [
+        "Clicking each Admin Quick Access menu item (Settings/Users/Knowledge Base/Questions/Roadmap) opens /admin and activates the matching tab.",
+        "Direct navigation to /admin with a tab search parameter loads the matching tab on first render.",
+        "Changing tabs in the Admin Dashboard updates internal state without breaking deep-link behavior."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Read the router search param (e.g., tab) on first render to set the active AdminDashboard tab; when the user changes tabs, update the router search param to preserve deep links and browser navigation behavior."
+        },
+        {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Add a header dropdown (or add a site-wide item within an existing header dropdown) that includes a “Privacy Policy” item wired to navigate({ to: '/privacy-policy' }) and rendered for all users (authenticated or not, any role). Use existing shadcn-ui DropdownMenu components (read-only UI sources); Verify the component's usage instructions before implementing. Do not remove or alter the existing footer Privacy Policy link/button."
+          "description": "Verify Admin Quick Access items continue to navigate to /admin with the correct search param and remain compatible with the AdminDashboard tab/search syncing after the change."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Ensure the Roadmap admin section renders backend-provided roadmap data and can trigger an update/refresh action that refetches displayed data, with permission-safe error handling.",
+      "acceptanceCriteria": [
+        "Admin Dashboard Roadmap tab renders roadmap entries using backend-provided AdminDashboardData.",
+        "If the UI provides a refresh/update control, it successfully calls updateMarketplaceRoadmap and the roadmap list updates afterward.",
+        "Non-admin callers cannot fetch or update roadmap data."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure getAdminDashboardData querying and updateMarketplaceRoadmap mutation properly invalidate/refetch the adminDashboardData query and convert backend authorization traps into a permission error state usable by the UI."
+        },
+        {
+          "path": "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
+          "operation": "modify",
+          "description": "Add an admin-visible refresh/update control that triggers the existing roadmap update mutation and provides loading/success/error feedback; after success, ensure the list reflects updated backend data (via query invalidation/refetch) and handle unauthorized errors without crashing."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Pass the necessary props/state into the Roadmap tab (as needed) so the Roadmap section can refresh data and display permission-safe error states consistent with the rest of the Admin Dashboard."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Apply a coherent, distinctive Admin Dashboard theme (not blue/purple-dominant) with consistent typography, spacing, and component styling while keeping all modified copy in English.",
+      "acceptanceCriteria": [
+        "Admin Dashboard, its tabs, and key admin components share a consistent theme (backgrounds, card styling, headings, spacing).",
+        "The palette is not predominantly blue/purple (e.g., keep the existing green/teal/earthy accents consistent with current tokens).",
+        "All visible UI copy in the modified areas is English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Adjust global CSS variables/tokens and any existing brand utilities to better support a cohesive admin look (earthy/teal/emerald accents, consistent surface/contrast), ensuring the resulting palette is not blue/purple-dominant and remains consistent with existing Tailwind/shadcn usage."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Refine Tailwind theme extensions (colors/spacing/typography as already configured) to support the updated admin styling consistently across cards, tabs, badges, and alerts without editing shadcn component source files under frontend/src/components/ui."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Unify Admin Dashboard layout styling (page background, header, tab list, section spacing) to match the updated theme; ensure all modified UI copy remains English."
+        },
+        {
+          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
+          "operation": "modify",
+          "description": "Apply consistent themed styling for summary cards, user rows, badges, and dialogs (using composed shadcn components only) so the Users tab matches the Admin Dashboard theme; ensure any modified/added text remains English."
+        },
+        {
+          "path": "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
+          "operation": "modify",
+          "description": "Apply consistent themed styling for roadmap cards, status badges, and progress presentation (using composed shadcn components only) so the Roadmap tab matches the Admin Dashboard theme; ensure any modified/added text remains English."
         }
       ]
     }

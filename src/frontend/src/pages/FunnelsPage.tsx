@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import {
-  useGetMerchantFunnelPartner,
-  useSetMerchantFunnelPartner,
+  useGetFunnelPartner,
+  useSetFunnelPartner,
   useIsCallerAdmin,
 } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,15 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ExternalLink, TrendingUp, Settings, Loader } from 'lucide-react';
+import { ExternalLink, TrendingUp, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function FunnelsPage() {
   const { identity } = useInternetIdentity();
-  const { data: funnelPartner, isLoading } = useGetMerchantFunnelPartner();
+  const { data: funnelPartner, isLoading } = useGetFunnelPartner();
   const { data: isAdmin } = useIsCallerAdmin();
-  const setFunnelPartner = useSetMerchantFunnelPartner();
+  const setFunnelPartner = useSetFunnelPartner();
 
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [partnerForm, setPartnerForm] = useState({
@@ -179,7 +179,6 @@ export default function FunnelsPage() {
           </Card>
         )}
 
-        {/* Configuration Dialog (Admin Only) */}
         {isAdmin && (
           <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
             <DialogContent>
@@ -189,28 +188,24 @@ export default function FunnelsPage() {
                   Set up or update your marketing funnel partner configuration
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="partnerName">Partner Name *</Label>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="partnerName">Partner Name</Label>
                   <Input
                     id="partnerName"
                     value={partnerForm.partnerName}
                     onChange={(e) => setPartnerForm({ ...partnerForm, partnerName: e.target.value })}
-                    placeholder="e.g., ClickFunnels, Kartra, etc."
+                    placeholder="e.g., Funnels"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="partnerLink">Partner Link *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="partnerLink">Partner Link</Label>
                   <Input
                     id="partnerLink"
                     value={partnerForm.partnerLink}
                     onChange={(e) => setPartnerForm({ ...partnerForm, partnerLink: e.target.value })}
-                    placeholder="https://your-funnel-partner.com"
-                    type="url"
+                    placeholder="https://..."
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Enter the URL where users can access the funnel partner platform
-                  </p>
                 </div>
               </div>
               <DialogFooter>
@@ -218,10 +213,7 @@ export default function FunnelsPage() {
                   Cancel
                 </Button>
                 <Button onClick={handleSaveConfig} disabled={setFunnelPartner.isPending}>
-                  {setFunnelPartner.isPending && (
-                    <Loader className="h-4 w-4 mr-2 animate-spin" />
-                  )}
-                  Save Configuration
+                  {setFunnelPartner.isPending ? 'Saving...' : 'Save Configuration'}
                 </Button>
               </DialogFooter>
             </DialogContent>

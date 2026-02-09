@@ -1,17 +1,20 @@
 import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
-import { useInternetIdentity } from './hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from './hooks/useQueries';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/sonner';
+import { InternetIdentityProvider } from './hooks/useInternetIdentity';
+import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
 import StartupDashboard from './pages/StartupDashboard';
 import B2BDashboard from './pages/B2BDashboard';
 import AdminDashboard from './pages/AdminDashboard';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailure from './pages/PaymentFailure';
 import AppCenterPage from './pages/AppCenterPage';
 import FunnelsPage from './pages/FunnelsPage';
-import AppointmentDashboard53 from './pages/AppointmentDashboard53';
 import StoreBuilderPage from './pages/StoreBuilderPage';
+import AppointmentDashboard53 from './pages/AppointmentDashboard53';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
 import CustomerFAQ from './pages/CustomerFAQ';
 import SellersBusinessesFAQ from './pages/SellersBusinessesFAQ';
 import CustomerBlog from './pages/CustomerBlog';
@@ -21,13 +24,24 @@ import SellersBusinessesBlogPost from './pages/SellersBusinessesBlogPost';
 import PciCompliancePage from './pages/PciCompliancePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AffiliateDashboardPage from './pages/AffiliateDashboardPage';
-import ProfileSetup from './components/ProfileSetup';
-import Layout from './components/Layout';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
+import CustomerProfileHome from './pages/CustomerProfileHome';
+import CustomerWishlistPage from './pages/CustomerWishlistPage';
+import CustomerFavoritesPage from './pages/CustomerFavoritesPage';
+import CustomerSettingsPage from './pages/CustomerSettingsPage';
+import CustomerPurchaseHistoryPage from './pages/CustomerPurchaseHistoryPage';
+import CustomerMessagesPage from './pages/CustomerMessagesPage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const rootRoute = createRootRoute({
-  component: Layout,
+  component: () => <Layout><RouterProvider router={router} /></Layout>,
 });
 
 const indexRoute = createRoute({
@@ -42,22 +56,27 @@ const storeRoute = createRoute({
   component: StorePage,
 });
 
-const startupRoute = createRoute({
+const startupDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/startup-dashboard',
   component: StartupDashboard,
 });
 
-const b2bRoute = createRoute({
+const b2bDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/b2b-dashboard',
   component: B2BDashboard,
 });
 
-const adminRoute = createRoute({
+const adminDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
   component: AdminDashboard,
+  validateSearch: (search: Record<string, unknown>): { tab?: string } => {
+    return {
+      tab: typeof search.tab === 'string' ? search.tab : undefined,
+    };
+  },
 });
 
 const appCenterRoute = createRoute({
@@ -82,6 +101,18 @@ const appointmentDashboard53Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/appointment-dashboard53',
   component: AppointmentDashboard53,
+});
+
+const paymentSuccessRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/payment-success',
+  component: PaymentSuccess,
+});
+
+const paymentFailureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/payment-failure',
+  component: PaymentFailure,
 });
 
 const customerFAQRoute = createRoute({
@@ -132,34 +163,60 @@ const privacyPolicyRoute = createRoute({
   component: PrivacyPolicyPage,
 });
 
-const affiliateRoute = createRoute({
+const affiliateDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/affiliate',
+  path: '/affiliate-dashboard',
   component: AffiliateDashboardPage,
 });
 
-const paymentSuccessRoute = createRoute({
+const customerProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/payment-success',
-  component: PaymentSuccess,
+  path: '/customer-profile',
+  component: CustomerProfileHome,
 });
 
-const paymentFailureRoute = createRoute({
+const customerWishlistRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/payment-failure',
-  component: PaymentFailure,
+  path: '/customer-wishlist',
+  component: CustomerWishlistPage,
+});
+
+const customerFavoritesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-favorites',
+  component: CustomerFavoritesPage,
+});
+
+const customerSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-settings',
+  component: CustomerSettingsPage,
+});
+
+const customerPurchasesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-purchases',
+  component: CustomerPurchaseHistoryPage,
+});
+
+const customerMessagesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-messages',
+  component: CustomerMessagesPage,
 });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   storeRoute,
-  startupRoute,
-  b2bRoute,
-  adminRoute,
+  startupDashboardRoute,
+  b2bDashboardRoute,
+  adminDashboardRoute,
   appCenterRoute,
   funnelsRoute,
   storeBuilderRoute,
   appointmentDashboard53Route,
+  paymentSuccessRoute,
+  paymentFailureRoute,
   customerFAQRoute,
   sellersBusinessesFAQRoute,
   customerBlogRoute,
@@ -168,9 +225,13 @@ const routeTree = rootRoute.addChildren([
   sellersBusinessesBlogPostRoute,
   pciComplianceRoute,
   privacyPolicyRoute,
-  affiliateRoute,
-  paymentSuccessRoute,
-  paymentFailureRoute,
+  affiliateDashboardRoute,
+  customerProfileRoute,
+  customerWishlistRoute,
+  customerFavoritesRoute,
+  customerSettingsRoute,
+  customerPurchasesRoute,
+  customerMessagesRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -182,29 +243,14 @@ declare module '@tanstack/react-router' {
 }
 
 export default function App() {
-  const { identity, isInitializing } = useInternetIdentity();
-  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
-
-  const isAuthenticated = !!identity;
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
-
-  if (isInitializing) {
-    return (
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="flex h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {showProfileSetup ? <ProfileSetup /> : <RouterProvider router={router} />}
-      <Toaster />
+      <QueryClientProvider client={queryClient}>
+        <InternetIdentityProvider>
+          <RouterProvider router={router} />
+          <Toaster />
+        </InternetIdentityProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

@@ -12,17 +12,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
   useGetAssistantKnowledgeBase,
-  useAddAssistantKnowledgeEntry,
-  useUpdateAssistantKnowledgeEntry,
-  useRemoveAssistantKnowledgeEntry,
+  useAddKnowledgeEntry,
+  useUpdateKnowledgeEntry,
+  useDeleteKnowledgeEntry,
 } from '../../../hooks/useQueries';
 import type { AssistantKnowledgeEntry } from '../../../backend';
 
 export default function AssistantKnowledgeBaseAdmin() {
   const { data: knowledgeBase = [], isLoading } = useGetAssistantKnowledgeBase();
-  const addEntry = useAddAssistantKnowledgeEntry();
-  const updateEntry = useUpdateAssistantKnowledgeEntry();
-  const removeEntry = useRemoveAssistantKnowledgeEntry();
+  const addEntry = useAddKnowledgeEntry();
+  const updateEntry = useUpdateKnowledgeEntry();
+  const removeEntry = useDeleteKnowledgeEntry();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<AssistantKnowledgeEntry | null>(null);

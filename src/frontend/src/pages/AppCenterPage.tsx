@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetAllAppIntegrations, useAddAppIntegrationRecord, useUpdateAppIntegrationRecord, useRemoveAppIntegrationRecord, useAddWebhookIntegrationRecord } from '../hooks/useQueries';
+import { useListAppIntegrations, useAddAppIntegration, useUpdateAppIntegration, useDeleteAppIntegration } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,11 +14,10 @@ import type { AppIntegrationRecord, Variant_active_inactive_error_syncing } from
 
 export default function AppCenterPage() {
   const { identity } = useInternetIdentity();
-  const { data: apps = [], isLoading } = useGetAllAppIntegrations();
-  const addApp = useAddAppIntegrationRecord();
-  const updateApp = useUpdateAppIntegrationRecord();
-  const removeApp = useRemoveAppIntegrationRecord();
-  const addWebhook = useAddWebhookIntegrationRecord();
+  const { data: apps = [], isLoading } = useListAppIntegrations();
+  const addApp = useAddAppIntegration();
+  const updateApp = useUpdateAppIntegration();
+  const removeApp = useDeleteAppIntegration();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<AppIntegrationRecord | null>(null);
@@ -94,15 +93,6 @@ export default function AppCenterPage() {
       toast.success('App integration removed successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove app integration');
-    }
-  };
-
-  const handleConvertWebhook = async (webhookUrl: string) => {
-    try {
-      await addWebhook.mutateAsync(webhookUrl);
-      toast.success('Webhook converted to app integration successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to convert webhook');
     }
   };
 

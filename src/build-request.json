@@ -1,69 +1,111 @@
 {
   "kind": "build_request",
-  "title": "Add role-based dropdown navigation for all built pages and site-wide Privacy Policy link",
+  "title": "Proceed to next phase: make Admin Dashboard fully functional (real backend wiring, owner/admin setup, role management)",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-35",
-      "text": "Update the main header navigation (desktop and mobile) so users can access all previously built pages via dropdown menus, with customer pages grouped under a Customer dropdown and seller/business pages grouped under a Sellers & Businesses dropdown.",
-      "target": "frontend",
+      "id": "REQ-1",
+      "text": "Implement an owner/admin bootstrap flow so the first authorized principal can initialize Access Control and set the owner principal from the UI, and ensure subsequent admin-only actions are gated by backend admin permission checks.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "That is good now how do you access the rest of the pages we built? For the sellers and the customers can you put all the pages in the drop down menu? The sellers and business pagers in their menu and the customers pages in the customers menus?"
+          "Yes"
         ]
       },
       "acceptanceCriteria": [
-        "On desktop, the header navigation contains a “Customer” dropdown that includes links to at least: Store (/store), Customer FAQ (/customer-faq), Customer Blog (/customer-blog).",
-        "On desktop, the header navigation contains a “Sellers & Businesses” dropdown that includes links to at least: Store Builder (/store-builder), App Center (/app-center), Funnels (/funnels), Sellers & Businesses FAQ (/sellers-businesses-faq), Sellers & Businesses Blog (/sellers-businesses-blog), Affiliate (/affiliate).",
-        "The dropdown navigation is also available from the mobile menu (Sheet) so mobile users can reach the same pages.",
-        "Existing navigation elements (top promotional banner, the “Connect with the appointment dashboard53” button, user profile dropdown) continue to work as before.",
-        "Links navigate using TanStack Router navigation (no full page reload)."
+        "When no admin is initialized yet, an authenticated user can complete a one-time initialization flow that calls backend admin bootstrap methods (e.g., initializeAccessControl / setOwnerPrincipal).",
+        "After initialization, non-admin callers are rejected by backend admin APIs with an explicit unauthorized error, and the frontend shows a clear access-denied state instead of crashing.",
+        "After initialization, the Admin Dashboard loads for admins without manual backend calls from the console."
       ]
     },
     {
-      "id": "REQ-36",
-      "text": "Add a site-wide dropdown menu option in the header navigation that links to the Privacy Policy page (/privacy-policy) and is visible regardless of authentication status and active role.",
-      "target": "frontend",
+      "id": "REQ-2",
+      "text": "Replace placeholder/throwing admin and role-management React Query hooks with real implementations backed by Motoko actor methods, so the Admin Dashboard Users tab works end-to-end (list users, view role summary, and assign roles).",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "Also there needs to be a menu option in the drop down site wide for the privacy policy."
+          "Yes"
         ]
       },
       "acceptanceCriteria": [
-        "A Privacy Policy navigation item is available in the header as part of a dropdown menu and is visible to unauthenticated and authenticated users.",
-        "Clicking the Privacy Policy item routes to /privacy-policy and renders the existing PrivacyPolicyPage.",
-        "The existing footer link to Privacy Policy remains intact and continues to work."
+        "Admin Dashboard \u001a Users tab successfully loads a list of users and their roles without showing placeholder errors (e.g., \"User role management not yet available\").",
+        "Admins can assign/update a user's access role and/or system role, and the UI reflects the changes after mutation (via query invalidation/refetch).",
+        "Non-admin callers cannot list users or assign roles; backend rejects the call and frontend displays a permission error."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure Admin Quick Access links open the Admin Dashboard with the correct active tab by reading and syncing the router search param (e.g., /admin?tab=users) with the AdminDashboard tab state.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking each Admin Quick Access menu item (Settings/Users/Knowledge Base/Questions/Roadmap) opens /admin and activates the matching tab.",
+        "Direct navigation to /admin with a tab search parameter loads the matching tab on first render.",
+        "Changing tabs in the Admin Dashboard updates internal state without breaking deep-link behavior."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Confirm Marketplace Roadmap admin section is fully wired: Admin Dashboard loads roadmap data from getAdminDashboardData, and the \"update roadmap\" action (if present in UI) triggers the backend updateMarketplaceRoadmap and refreshes displayed roadmap data.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin Dashboard Roadmap tab renders roadmap entries using backend-provided AdminDashboardData.",
+        "If the UI provides a refresh/update control, it successfully calls updateMarketplaceRoadmap and the roadmap list updates afterward.",
+        "Non-admin callers cannot fetch or update roadmap data."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Apply a coherent, distinctive visual theme consistently across the Admin Dashboard experience (colors, typography, spacing, component styling), avoiding a blue/purple-dominant palette, while keeping all user-facing text in English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin Dashboard, its tabs, and key admin components share a consistent theme (backgrounds, card styling, headings, spacing).",
+        "The palette is not predominantly blue/purple (e.g., keep the existing green/teal/earthy accents consistent with current tokens).",
+        "All visible UI copy in the modified areas is English."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (read-only UI component sources).",
-    "Do not modify immutable frontend hook entrypoints: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
-    "Keep the existing TanStack Router route paths unchanged (e.g., /privacy-policy, /customer-faq, /sellers-businesses-faq, /appointment-dashboard53)."
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo).",
+    "Do not edit files under frontend/src/components/ui (compose existing shadcn components instead).",
+    "Do not edit immutable frontend hook/provider bootstrap files: frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx."
   ],
   "nonGoals": [
-    "Do not add new pages/routes beyond updating navigation access to existing pages.",
-    "Do not change authentication/authorization rules for accessing protected pages (e.g., Admin, Startup Dashboard, B2B Dashboard).",
-    "Do not implement new backend APIs or change backend state for navigation changes."
+    "Implementing the full marketplace (multi-seller catalog, full order lifecycle, real-time messaging).",
+    "Adding third-party authentication providers (anything other than Internet Identity).",
+    "Adding external databases or non-Motoko backend services."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

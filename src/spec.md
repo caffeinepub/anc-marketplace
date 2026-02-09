@@ -1,14 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Make all previously built pages easily accessible from the site header via role-grouped dropdown navigation (desktop and mobile), and add a site-wide Privacy Policy menu option.
+**Goal:** Make the Admin Dashboard fully functional end-to-end by wiring it to real Motoko backend methods, adding an owner/admin bootstrap flow, enabling real role management, ensuring deep-linked tabs work, and applying a consistent non-blue/purple visual theme.
 
 **Planned changes:**
-- Update the main header navigation (desktop) to include dropdown menus:
-  - “Customer” dropdown linking to Store (/store), Customer FAQ (/customer-faq), Customer Blog (/customer-blog).
-  - “Sellers & Businesses” dropdown linking to Store Builder (/store-builder), App Center (/app-center), Funnels (/funnels), Sellers & Businesses FAQ (/sellers-businesses-faq), Sellers & Businesses Blog (/sellers-businesses-blog), Affiliate (/affiliate).
-- Update the mobile menu (Sheet) to provide the same dropdown navigation options/links as desktop.
-- Add a site-wide dropdown menu option linking to Privacy Policy (/privacy-policy), visible for both unauthenticated and authenticated users, without removing the existing footer link.
-- Ensure navigation uses TanStack Router link navigation (no full page reload) and that existing header elements (promo banner, “Connect with the appointment dashboard53” button, user profile dropdown) continue to work as-is.
+- Add a one-time owner/admin initialization flow in the UI that calls backend admin bootstrap methods to initialize access control and set the owner principal, then gate all admin actions with backend admin permission checks.
+- Replace placeholder/throwing Admin Dashboard and role-management React Query hooks with real implementations backed by Motoko actor methods so the Users tab can list users, show role summaries, and assign/update roles with proper refetch/invalidation.
+- Ensure non-admin callers are rejected by backend admin APIs with explicit unauthorized errors, and show a clear access-denied state in the frontend (no crashes).
+- Sync Admin Quick Access links and Admin Dashboard tab state via router search params (e.g., `/admin?tab=users`) to support deep linking and correct initial tab activation.
+- Confirm the Roadmap admin tab is fully wired: load roadmap data from backend-provided AdminDashboardData and (if present) trigger `updateMarketplaceRoadmap` to refresh displayed roadmap entries.
+- Apply a coherent, distinctive Admin Dashboard visual theme (colors/typography/spacing/component styling) that avoids a predominantly blue/purple palette and keeps all user-facing text in English.
 
-**User-visible outcome:** Users on desktop and mobile can open the “Customer” and “Sellers & Businesses” dropdowns to reach all key existing pages, and can always access the Privacy Policy from the header dropdown menu.
+**User-visible outcome:** An authenticated first-time admin can initialize ownership from the UI, admins can open `/admin` (including deep-linked tabs), view/update users and roles, and view/refresh roadmap data; non-admins see a clear permission-denied experience.

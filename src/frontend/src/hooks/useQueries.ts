@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { ShoppingItem, StripeConfiguration, AssistantKnowledgeEntry, UnansweredQuestion } from '../backend';
+import type { ShoppingItem, StripeConfiguration, AssistantKnowledgeEntry, AdminDashboardData, MarketplaceRoadmap, UserRole as BackendUserRole } from '../backend';
 import type {
   UserProfile,
   Product,
@@ -24,7 +24,51 @@ import type {
 import { UserRole } from '../types';
 import type { Principal } from '@icp-sdk/core/principal';
 
-// Mock implementations for methods not yet in backend
+// Helper to normalize backend authorization errors
+function normalizeAuthError(error: any): Error {
+  const message = error?.message || String(error);
+  if (message.includes('Unauthorized') || message.includes('Only admins')) {
+    return new Error('Permission denied: Admin access required');
+  }
+  return error;
+}
+
+// Admin bootstrap hooks
+export function useInitializeAccessControl() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.initializeAccessControl();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
+      queryClient.invalidateQueries({ queryKey: ['roleSummary'] });
+    },
+  });
+}
+
+export function useSetOwnerPrincipal() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.setOwnerPrincipal();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
+      queryClient.invalidateQueries({ queryKey: ['roleSummary'] });
+    },
+  });
+}
+
+// User Profile hooks - Backend methods not yet implemented
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -54,8 +98,7 @@ export function useSaveCallerUserProfile() {
     mutationFn: async (profile: UserProfile) => {
       if (!actor) throw new Error('Actor not available');
       // Backend method not implemented yet
-      console.warn('saveCallerUserProfile not implemented in backend');
-      return;
+      throw new Error('User profile management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
@@ -63,6 +106,7 @@ export function useSaveCallerUserProfile() {
   });
 }
 
+// Admin check
 export function useIsCallerAdmin() {
   const { actor, isFetching } = useActor();
 
@@ -70,13 +114,57 @@ export function useIsCallerAdmin() {
     queryKey: ['isAdmin'],
     queryFn: async () => {
       if (!actor) return false;
-      // Backend method not implemented yet
-      return false;
+      try {
+        await actor.getAdminDashboardData();
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
+// Admin Dashboard Data
+export function useGetAdminDashboardData() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<AdminDashboardData>({
+    queryKey: ['adminDashboardData'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.getAdminDashboardData();
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false,
+  });
+}
+
+export function useUpdateMarketplaceRoadmap() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        await actor.updateMarketplaceRoadmap();
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
+    },
+  });
+}
+
+// Role management hooks
 export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
 
@@ -98,10 +186,11 @@ export function useListAllUsersWithRoles() {
     queryKey: ['allUsersWithRoles'],
     queryFn: async () => {
       if (!actor) return [];
-      // Backend method not implemented yet
+      // Backend method not implemented yet - placeholder
       return [];
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
@@ -112,16 +201,14 @@ export function useGetRoleSummary() {
     queryKey: ['roleSummary'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      return {
-        adminCount: BigInt(0),
-        userCount: BigInt(0),
-        guestCount: BigInt(0),
-        startupMemberCount: BigInt(0),
-        b2bMemberCount: BigInt(0),
-      };
+      try {
+        return await actor.getUserRoleSummary();
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
@@ -133,8 +220,7 @@ export function useAssignUserAccessRole() {
     mutationFn: async ({ userPrincipal, newRole }: { userPrincipal: Principal; newRole: AccessRole }) => {
       if (!actor) throw new Error('Actor not available');
       // Backend method not implemented yet
-      console.warn('assignUserAccessRole not implemented in backend');
-      return;
+      throw new Error('User role assignment not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsersWithRoles'] });
@@ -148,11 +234,13 @@ export function useAssignCallerUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ user, role }: { user: Principal; role: UserRole }) => {
+    mutationFn: async ({ user, role }: { user: Principal; role: BackendUserRole }) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('assignCallerUserRole not implemented in backend');
-      return;
+      try {
+        await actor.assignRole(user, role);
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsersWithRoles'] });
@@ -162,6 +250,106 @@ export function useAssignCallerUserRole() {
   });
 }
 
+// Customer Wishlist & Favorites - Backend methods not yet implemented
+export function useGetCustomerWishlist() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<string[]>({
+    queryKey: ['customerWishlist', identity?.getPrincipal().toString()],
+    queryFn: async () => {
+      if (!actor || !identity) return [];
+      // Backend method not implemented yet
+      throw new Error('Wishlist feature not yet available');
+    },
+    enabled: !!actor && !!identity && !isFetching,
+  });
+}
+
+export function useAddToWishlist() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  const { identity } = useInternetIdentity();
+
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      // Backend method not implemented yet
+      throw new Error('Wishlist feature not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customerWishlist', identity?.getPrincipal().toString()] });
+    },
+  });
+}
+
+export function useRemoveFromWishlist() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  const { identity } = useInternetIdentity();
+
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      // Backend method not implemented yet
+      throw new Error('Wishlist feature not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customerWishlist', identity?.getPrincipal().toString()] });
+    },
+  });
+}
+
+export function useGetCustomerFavorites() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<string[]>({
+    queryKey: ['customerFavorites', identity?.getPrincipal().toString()],
+    queryFn: async () => {
+      if (!actor || !identity) return [];
+      // Backend method not implemented yet
+      throw new Error('Favorites feature not yet available');
+    },
+    enabled: !!actor && !!identity && !isFetching,
+  });
+}
+
+export function useAddToFavorites() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  const { identity } = useInternetIdentity();
+
+  return useMutation({
+    mutationFn: async (sellerId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      // Backend method not implemented yet
+      throw new Error('Favorites feature not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customerFavorites', identity?.getPrincipal().toString()] });
+    },
+  });
+}
+
+export function useRemoveFromFavorites() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  const { identity } = useInternetIdentity();
+
+  return useMutation({
+    mutationFn: async (sellerId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      // Backend method not implemented yet
+      throw new Error('Favorites feature not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customerFavorites', identity?.getPrincipal().toString()] });
+    },
+  });
+}
+
+// Product hooks - Backend methods not yet implemented
 export function useListProducts() {
   const { actor, isFetching } = useActor();
 
@@ -184,8 +372,7 @@ export function useAddOrUpdateProduct() {
     mutationFn: async (product: Product) => {
       if (!actor) throw new Error('Actor not available');
       // Backend method not implemented yet
-      console.warn('addOrUpdateProduct not implemented in backend');
-      return;
+      throw new Error('Product management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -201,8 +388,7 @@ export function useDeleteProduct() {
     mutationFn: async (productId: string) => {
       if (!actor) throw new Error('Actor not available');
       // Backend method not implemented yet
-      console.warn('deleteProduct not implemented in backend');
-      return;
+      throw new Error('Product management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -210,6 +396,7 @@ export function useDeleteProduct() {
   });
 }
 
+// Checkout hooks
 export type CheckoutSession = {
   id: string;
   url: string;
@@ -280,8 +467,7 @@ export function useRegisterUserWithPaidPlan() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       // Backend method not implemented yet
-      console.warn('registerUserWithPaidPlan not implemented in backend');
-      return;
+      throw new Error('User registration not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
@@ -289,6 +475,7 @@ export function useRegisterUserWithPaidPlan() {
   });
 }
 
+// Stripe configuration
 export function useIsStripeConfigured() {
   const { actor, isFetching } = useActor();
 
@@ -317,6 +504,7 @@ export function useSetStripeConfiguration() {
   });
 }
 
+// Startup program hooks - Backend methods not yet implemented
 export function useGetUserLessons() {
   const { actor, isFetching } = useActor();
   const { identity } = useInternetIdentity();
@@ -325,7 +513,6 @@ export function useGetUserLessons() {
     queryKey: ['userLessons', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor || !identity) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !!identity && !isFetching,
@@ -340,7 +527,6 @@ export function useGetUserVirtualMeetings() {
     queryKey: ['userVirtualMeetings', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor || !identity) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !!identity && !isFetching,
@@ -355,7 +541,6 @@ export function useGetUserActivities() {
     queryKey: ['userActivities', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor || !identity) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !!identity && !isFetching,
@@ -370,7 +555,6 @@ export function useGetUserBusinessCredit() {
     queryKey: ['userBusinessCredit', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor || !identity) return null;
-      // Backend method not implemented yet
       return null;
     },
     enabled: !!actor && !!identity && !isFetching,
@@ -385,9 +569,7 @@ export function useCompleteLesson() {
   return useMutation({
     mutationFn: async (lessonId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('completeLesson not implemented in backend');
-      return;
+      throw new Error('Lesson completion not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLessons', identity?.getPrincipal().toString()] });
@@ -403,9 +585,7 @@ export function useCompleteActivity() {
   return useMutation({
     mutationFn: async (activityId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('completeActivity not implemented in backend');
-      return;
+      throw new Error('Activity completion not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userActivities', identity?.getPrincipal().toString()] });
@@ -421,9 +601,7 @@ export function useUpdateBusinessVerificationStatus() {
   return useMutation({
     mutationFn: async (status: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateBusinessVerificationStatus not implemented in backend');
-      return;
+      throw new Error('Business verification not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userBusinessCredit', identity?.getPrincipal().toString()] });
@@ -439,9 +617,7 @@ export function useUpdateCreditBureauRegistrationStatus() {
   return useMutation({
     mutationFn: async (status: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateCreditBureauRegistrationStatus not implemented in backend');
-      return;
+      throw new Error('Credit bureau registration not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userBusinessCredit', identity?.getPrincipal().toString()] });
@@ -456,9 +632,7 @@ export function useAddLesson() {
   return useMutation({
     mutationFn: async (lesson: Lesson) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addLesson not implemented in backend');
-      return;
+      throw new Error('Lesson management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLessons'] });
@@ -473,9 +647,7 @@ export function useUpdateLesson() {
   return useMutation({
     mutationFn: async (lesson: Lesson) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateLesson not implemented in backend');
-      return;
+      throw new Error('Lesson management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLessons'] });
@@ -490,9 +662,7 @@ export function useDeleteLesson() {
   return useMutation({
     mutationFn: async (lessonId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteLesson not implemented in backend');
-      return;
+      throw new Error('Lesson management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLessons'] });
@@ -507,9 +677,7 @@ export function useAddVirtualMeeting() {
   return useMutation({
     mutationFn: async (meeting: VirtualMeeting) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addVirtualMeeting not implemented in backend');
-      return;
+      throw new Error('Virtual meeting management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
@@ -524,9 +692,7 @@ export function useUpdateVirtualMeeting() {
   return useMutation({
     mutationFn: async (meeting: VirtualMeeting) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateVirtualMeeting not implemented in backend');
-      return;
+      throw new Error('Virtual meeting management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
@@ -541,9 +707,7 @@ export function useDeleteVirtualMeeting() {
   return useMutation({
     mutationFn: async (meetingId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteVirtualMeeting not implemented in backend');
-      return;
+      throw new Error('Virtual meeting management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
@@ -558,9 +722,7 @@ export function useAddActivity() {
   return useMutation({
     mutationFn: async (activity: Activity) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addActivity not implemented in backend');
-      return;
+      throw new Error('Activity management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userActivities'] });
@@ -575,9 +737,7 @@ export function useUpdateActivity() {
   return useMutation({
     mutationFn: async (activity: Activity) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateActivity not implemented in backend');
-      return;
+      throw new Error('Activity management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userActivities'] });
@@ -592,9 +752,7 @@ export function useDeleteActivity() {
   return useMutation({
     mutationFn: async (activityId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteActivity not implemented in backend');
-      return;
+      throw new Error('Activity management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userActivities'] });
@@ -602,6 +760,7 @@ export function useDeleteActivity() {
   });
 }
 
+// B2B Service hooks - Backend methods not yet implemented
 export function useListB2BServices() {
   const { actor, isFetching } = useActor();
 
@@ -609,40 +768,20 @@ export function useListB2BServices() {
     queryKey: ['b2bServices'],
     queryFn: async () => {
       if (!actor) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useAddB2BService() {
+export function useAddOrUpdateB2BService() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (service: B2BService) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addB2BService not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2bServices'] });
-    },
-  });
-}
-
-export function useUpdateB2BService() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (service: B2BService) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateB2BService not implemented in backend');
-      return;
+      throw new Error('B2B service management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['b2bServices'] });
@@ -657,9 +796,7 @@ export function useDeleteB2BService() {
   return useMutation({
     mutationFn: async (serviceId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteB2BService not implemented in backend');
-      return;
+      throw new Error('B2B service management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['b2bServices'] });
@@ -667,23 +804,7 @@ export function useDeleteB2BService() {
   });
 }
 
-export function useToggleB2BServiceStatus() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ serviceId, isActive }: { serviceId: string; isActive: boolean }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('toggleB2BServiceStatus not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2bServices'] });
-    },
-  });
-}
-
+// Dropshipping hooks - Backend methods not yet implemented
 export function useListDropshippingPartners() {
   const { actor, isFetching } = useActor();
 
@@ -691,40 +812,20 @@ export function useListDropshippingPartners() {
     queryKey: ['dropshippingPartners'],
     queryFn: async () => {
       if (!actor) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useAddDropshippingPartner() {
+export function useAddOrUpdateDropshippingPartner() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (partner: DropshippingPartner) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addDropshippingPartner not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dropshippingPartners'] });
-    },
-  });
-}
-
-export function useUpdateDropshippingPartner() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (partner: DropshippingPartner) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateDropshippingPartner not implemented in backend');
-      return;
+      throw new Error('Dropshipping partner management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dropshippingPartners'] });
@@ -739,9 +840,7 @@ export function useDeleteDropshippingPartner() {
   return useMutation({
     mutationFn: async (partnerId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteDropshippingPartner not implemented in backend');
-      return;
+      throw new Error('Dropshipping partner management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dropshippingPartners'] });
@@ -749,14 +848,29 @@ export function useDeleteDropshippingPartner() {
   });
 }
 
+export function useSyncDropshippingPartner() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (partnerId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      throw new Error('Dropshipping sync not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dropshippingPartners'] });
+    },
+  });
+}
+
+// App Integration hooks - Backend methods not yet implemented
 export function useListAppIntegrations() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<AppIntegration[]>({
+  return useQuery<AppIntegrationRecord[]>({
     queryKey: ['appIntegrations'],
     queryFn: async () => {
       if (!actor) return [];
-      // Backend method not implemented yet
       return [];
     },
     enabled: !!actor && !isFetching,
@@ -768,11 +882,9 @@ export function useAddAppIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (integration: AppIntegration) => {
+    mutationFn: async (integration: Omit<AppIntegrationRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addAppIntegration not implemented in backend');
-      return;
+      throw new Error('App integration management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appIntegrations'] });
@@ -785,11 +897,9 @@ export function useUpdateAppIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (integration: AppIntegration) => {
+    mutationFn: async (integration: AppIntegrationRecord) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateAppIntegration not implemented in backend');
-      return;
+      throw new Error('App integration management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appIntegrations'] });
@@ -804,9 +914,7 @@ export function useDeleteAppIntegration() {
   return useMutation({
     mutationFn: async (integrationId: string) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('deleteAppIntegration not implemented in backend');
-      return;
+      throw new Error('App integration management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appIntegrations'] });
@@ -814,172 +922,36 @@ export function useDeleteAppIntegration() {
   });
 }
 
-export function useToggleAppIntegrationStatus() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ integrationId, isActive }: { integrationId: string; isActive: boolean }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('toggleAppIntegrationStatus not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appIntegrations'] });
-    },
-  });
-}
-
-export function useGetAdminDashboardStats() {
+// Funnel Partner hooks - Backend methods not yet implemented
+export function useGetFunnelPartner() {
   const { actor, isFetching } = useActor();
 
-  return useQuery({
-    queryKey: ['adminDashboardStats'],
+  return useQuery<FunnelPartner | null>({
+    queryKey: ['funnelPartner'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      return {
-        totalUsers: BigInt(0),
-        totalProducts: BigInt(0),
-        totalOrders: BigInt(0),
-        totalRevenue: BigInt(0),
-      };
+      if (!actor) return null;
+      return null;
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetPendingOrders() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<EcomOrder[]>({
-    queryKey: ['pendingOrders'],
-    queryFn: async () => {
-      if (!actor) return [];
-      // Backend method not implemented yet
-      return [];
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetAllAppIntegrations() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<AppIntegrationRecord[]>({
-    queryKey: ['allAppIntegrations'],
-    queryFn: async () => {
-      if (!actor) return [];
-      // Backend method not implemented yet
-      return [];
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useAddAppIntegrationRecord() {
+export function useSetFunnelPartner() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (record: AppIntegrationRecord) => {
+    mutationFn: async (partner: FunnelPartner) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addAppIntegrationRecord not implemented in backend');
-      return;
+      throw new Error('Funnel partner management not yet available');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAppIntegrations'] });
+      queryClient.invalidateQueries({ queryKey: ['funnelPartner'] });
     },
   });
 }
 
-export function useUpdateAppIntegrationRecord() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (record: AppIntegrationRecord) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateAppIntegrationRecord not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAppIntegrations'] });
-    },
-  });
-}
-
-export function useRemoveAppIntegrationRecord() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('removeAppIntegrationRecord not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAppIntegrations'] });
-    },
-  });
-}
-
-export function useAddWebhookIntegrationRecord() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (webhookUrl: string) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('addWebhookIntegrationRecord not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAppIntegrations'] });
-    },
-  });
-}
-
-export function useGetMerchantFunnelPartner() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<FunnelPartner>({
-    queryKey: ['merchantFunnelPartner'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      return {
-        partnerName: 'funnels',
-        partnerLink: 'https://app.funnels.link',
-      };
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useSetMerchantFunnelPartner() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ partnerName, partnerLink }: { partnerName: string; partnerLink: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('setMerchantFunnelPartner not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['merchantFunnelPartner'] });
-    },
-  });
-}
-
+// Store Builder hooks - Backend methods not yet implemented
 export function useGetStoreBuilderConfig() {
   const { actor, isFetching } = useActor();
   const { identity } = useInternetIdentity();
@@ -988,14 +960,13 @@ export function useGetStoreBuilderConfig() {
     queryKey: ['storeBuilderConfig', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor || !identity) return null;
-      // Backend method not implemented yet
       return null;
     },
     enabled: !!actor && !!identity && !isFetching,
   });
 }
 
-export function useSaveStoreBuilderConfig() {
+export function useUpdateStoreBuilderConfig() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   const { identity } = useInternetIdentity();
@@ -1003,9 +974,7 @@ export function useSaveStoreBuilderConfig() {
   return useMutation({
     mutationFn: async (config: StoreBuilderConfig) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('saveStoreBuilderConfig not implemented in backend');
-      return;
+      throw new Error('Store builder configuration not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storeBuilderConfig', identity?.getPrincipal().toString()] });
@@ -1020,56 +989,9 @@ export function useListStoreTemplates() {
     queryKey: ['storeTemplates'],
     queryFn: async () => {
       if (!actor) return [];
-      // Backend method not implemented yet - return mock templates
-      return [
-        {
-          id: 'ecom-1',
-          name: 'Modern E-commerce',
-          description: 'Clean and modern e-commerce template',
-          previewImage: '/assets/generated/template-ecom-1-thumb.dim_800x600.png',
-          type_: { __kind__: 'ecommerce' },
-        },
-        {
-          id: 'ecom-2',
-          name: 'Classic Shop',
-          description: 'Traditional online store layout',
-          previewImage: '/assets/generated/template-ecom-2-thumb.dim_800x600.png',
-          type_: { __kind__: 'ecommerce' },
-        },
-        {
-          id: 'service-1',
-          name: 'Professional Services',
-          description: 'Perfect for service-based businesses',
-          previewImage: '/assets/generated/template-service-1-thumb.dim_800x600.png',
-          type_: { __kind__: 'service' },
-        },
-        {
-          id: 'service-2',
-          name: 'Consulting Agency',
-          description: 'Ideal for consulting and agencies',
-          previewImage: '/assets/generated/template-service-2-thumb.dim_800x600.png',
-          type_: { __kind__: 'service' },
-        },
-      ];
+      return [];
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useUpdateDomainPurchaseLink() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (link: string) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not implemented yet
-      console.warn('updateDomainPurchaseLink not implemented in backend');
-      return;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['globalDomainPurchaseLink'] });
-    },
   });
 }
 
@@ -1080,34 +1002,54 @@ export function useGetGlobalDomainPurchaseLink() {
     queryKey: ['globalDomainPurchaseLink'],
     queryFn: async () => {
       if (!actor) return null;
-      // Backend method not implemented yet
       return null;
     },
     enabled: !!actor && !isFetching,
   });
 }
 
+// Assistant hooks
 export function useGetAssistantKnowledgeBase() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AssistantKnowledgeEntry[]>({
     queryKey: ['assistantKnowledgeBase'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAssistantKnowledgeBase();
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.getAssistantKnowledgeBase();
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
-export function useAddAssistantKnowledgeEntry() {
+export function useAddKnowledgeEntry() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entry: Omit<AssistantKnowledgeEntry, 'id' | 'lastUpdated' | 'usageCount'>) => {
+      if (!actor) throw new Error('Actor not available');
+      throw new Error('Knowledge entry management not yet available');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
+    },
+  });
+}
+
+export function useUpdateKnowledgeEntry() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (entry: AssistantKnowledgeEntry) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.addAssistantKnowledgeEntry(entry);
+      throw new Error('Knowledge entry management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
@@ -1115,14 +1057,14 @@ export function useAddAssistantKnowledgeEntry() {
   });
 }
 
-export function useUpdateAssistantKnowledgeEntry() {
+export function useDeleteKnowledgeEntry() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (entry: AssistantKnowledgeEntry) => {
+    mutationFn: async (entryId: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateAssistantKnowledgeEntry(entry);
+      throw new Error('Knowledge entry management not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
@@ -1130,20 +1072,14 @@ export function useUpdateAssistantKnowledgeEntry() {
   });
 }
 
-export function useRemoveAssistantKnowledgeEntry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.removeAssistantKnowledgeEntry(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
-    },
-  });
-}
+// Frontend-only type for unanswered questions (not in backend yet)
+export type UnansweredQuestion = {
+  id: string;
+  question: string;
+  categorySuggestion: string;
+  creationTime: bigint;
+  interactionCount: bigint;
+};
 
 export function useGetUnansweredQuestions() {
   const { actor, isFetching } = useActor();
@@ -1152,35 +1088,20 @@ export function useGetUnansweredQuestions() {
     queryKey: ['unansweredQuestions'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getUnansweredQuestions();
+      return [];
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useMarkQuestionAsAnswered() {
+export function useConvertQuestionToKnowledge() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (questionId: string) => {
+    mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.markQuestionAsAnswered(questionId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unansweredQuestions'] });
-    },
-  });
-}
-
-export function useConvertQuestionToKnowledgeEntry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ questionId, answer, category }: { questionId: string; answer: string; category: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.convertQuestionToKnowledgeEntry(questionId, answer, category);
+      throw new Error('Question conversion not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unansweredQuestions'] });
