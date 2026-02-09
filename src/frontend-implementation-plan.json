@@ -1,140 +1,42 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Functional Admin Dashboard wiring (bootstrap, role management, deep links, roadmap refresh, consistent theme)",
+  "title": "Update theme from green to navy blue",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add an owner/admin bootstrap UX that can initialize access control from the Admin Dashboard and gracefully handle unauthorized admin calls.",
+      "summary": "Replace green-based global theme tokens and custom green styles with a navy-blue palette for light and dark modes.",
       "acceptanceCriteria": [
-        "When no admin is initialized yet, an authenticated user can complete a one-time initialization flow that calls backend admin bootstrap methods (e.g., initializeAccessControl / setOwnerPrincipal).",
-        "After initialization, non-admin callers are rejected by backend admin APIs with an explicit unauthorized error, and the frontend shows a clear access-denied state instead of crashing.",
-        "After initialization, the Admin Dashboard loads for admins without manual backend calls from the console."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Implement real React Query mutations for the admin bootstrap flow using backend capabilities initializeAccessControl() and setOwnerPrincipal(); ensure errors from backend traps are surfaced as safe, user-facing messages (e.g., unauthorized vs not-initialized), and invalidate/refetch admin-related queries on success."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Add a one-time 'Initialize Admin Access' UI state when admin calls fail due to missing initialization (or when admin status cannot be determined yet) that lets an authenticated user run the bootstrap mutations; keep a clear Access Denied state for true unauthorized users and prevent crashes on backend trap errors."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Ensure logout clears cached admin/auth-related queries consistently so a subsequent user sees the correct bootstrap/denied/admin state after identity changes (do not change immutable auth/provider bootstrap files)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Replace placeholder admin/role-management hooks with real actor-backed hooks so the Users tab loads, summarizes roles, and assigns roles end-to-end with proper permission error handling.",
-      "acceptanceCriteria": [
-        "Admin Dashboard \u001a Users tab successfully loads a list of users and their roles without showing placeholder errors (e.g., \"User role management not yet available\").",
-        "Admins can assign/update a user's access role and/or system role, and the UI reflects the changes after mutation (via query invalidation/refetch).",
-        "Non-admin callers cannot list users or assign roles; backend rejects the call and frontend displays a permission error."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Align TypeScript backendInterface typings with the Motoko admin/role-management capabilities required by the Users tab (e.g., list users with roles and assign roles). Keep typings consistent with existing UI expectations so hooks can call real actor methods."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Replace placeholder/throwing implementations for role-management hooks (admin role checks, list users with roles, role summary, assign roles) with real actor calls; add query invalidation/refetch so mutations immediately update Users tab data; normalize permission errors into a consistent 'permission denied' UI-safe error."
-        },
-        {
-          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
-          "operation": "modify",
-          "description": "Update the Users tab UI to rely on the real hooks (no placeholder errors), show a clear permission error state for non-admins, and ensure successful role assignment triggers visible updates (via existing query invalidation/refetch) without requiring manual refresh."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Deep-link Admin Dashboard tabs by syncing the router search param (tab=...) with the tab state and Admin Quick Access links.",
-      "acceptanceCriteria": [
-        "Clicking each Admin Quick Access menu item (Settings/Users/Knowledge Base/Questions/Roadmap) opens /admin and activates the matching tab.",
-        "Direct navigation to /admin with a tab search parameter loads the matching tab on first render.",
-        "Changing tabs in the Admin Dashboard updates internal state without breaking deep-link behavior."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Read the router search param (e.g., tab) on first render to set the active AdminDashboard tab; when the user changes tabs, update the router search param to preserve deep links and browser navigation behavior."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Verify Admin Quick Access items continue to navigate to /admin with the correct search param and remain compatible with the AdminDashboard tab/search syncing after the change."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Ensure the Roadmap admin section renders backend-provided roadmap data and can trigger an update/refresh action that refetches displayed data, with permission-safe error handling.",
-      "acceptanceCriteria": [
-        "Admin Dashboard Roadmap tab renders roadmap entries using backend-provided AdminDashboardData.",
-        "If the UI provides a refresh/update control, it successfully calls updateMarketplaceRoadmap and the roadmap list updates afterward.",
-        "Non-admin callers cannot fetch or update roadmap data."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure getAdminDashboardData querying and updateMarketplaceRoadmap mutation properly invalidate/refetch the adminDashboardData query and convert backend authorization traps into a permission error state usable by the UI."
-        },
-        {
-          "path": "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
-          "operation": "modify",
-          "description": "Add an admin-visible refresh/update control that triggers the existing roadmap update mutation and provides loading/success/error feedback; after success, ensure the list reflects updated backend data (via query invalidation/refetch) and handle unauthorized errors without crashing."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Pass the necessary props/state into the Roadmap tab (as needed) so the Roadmap section can refresh data and display permission-safe error states consistent with the rest of the Admin Dashboard."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Apply a coherent, distinctive Admin Dashboard theme (not blue/purple-dominant) with consistent typography, spacing, and component styling while keeping all modified copy in English.",
-      "acceptanceCriteria": [
-        "Admin Dashboard, its tabs, and key admin components share a consistent theme (backgrounds, card styling, headings, spacing).",
-        "The palette is not predominantly blue/purple (e.g., keep the existing green/teal/earthy accents consistent with current tokens).",
-        "All visible UI copy in the modified areas is English."
+        "In frontend/src/index.css, CSS variables that currently produce a green primary theme (e.g., --primary, --ring, --sidebar-primary and related foreground/accent variables as appropriate) are updated to a navy-blue palette for both :root and .dark.",
+        "Any custom CSS using the previous green color (e.g., .logo-text gradient and .company-name-outline stroke/shadow) is updated to match the navy-blue theme.",
+        "Primary buttons/links/focus rings and sidebar highlights render in navy blue throughout the app without introducing unreadable contrast in light or dark mode."
       ],
       "file_operations": [
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Adjust global CSS variables/tokens and any existing brand utilities to better support a cohesive admin look (earthy/teal/emerald accents, consistent surface/contrast), ensuring the resulting palette is not blue/purple-dominant and remains consistent with existing Tailwind/shadcn usage."
+          "description": "Update the global OKLCH theme variables to a navy-blue hue across both :root and .dark (including --primary, --ring, --sidebar-primary, and related background/foreground/secondary/muted/sidebar tokens that currently use the green hue), and replace custom green styles (.logo-text gradient and .company-name-outline stroke/shadow) with navy-blue equivalents while preserving readable contrast."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Align PWA/browser theme metadata colors with the new navy blue brand color.",
+      "acceptanceCriteria": [
+        "frontend/index.html meta name=\"theme-color\" and msapplication-TileColor are updated from the current blue value to the chosen navy blue hex value.",
+        "frontend/public/manifest.json theme_color is updated from the current value to the same navy blue hex value used in index.html.",
+        "After the change, the browser UI/PWA theme color reflects navy blue when the app is loaded/installed."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Change the meta theme color metadata to match the chosen navy blue hex value (update both meta name=\"theme-color\" and meta name=\"msapplication-TileColor\" to the same navy color)."
         },
         {
-          "path": "frontend/tailwind.config.js",
+          "path": "frontend/public/manifest.json",
           "operation": "modify",
-          "description": "Refine Tailwind theme extensions (colors/spacing/typography as already configured) to support the updated admin styling consistently across cards, tabs, badges, and alerts without editing shadcn component source files under frontend/src/components/ui."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Unify Admin Dashboard layout styling (page background, header, tab list, section spacing) to match the updated theme; ensure all modified UI copy remains English."
-        },
-        {
-          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
-          "operation": "modify",
-          "description": "Apply consistent themed styling for summary cards, user rows, badges, and dialogs (using composed shadcn components only) so the Users tab matches the Admin Dashboard theme; ensure any modified/added text remains English."
-        },
-        {
-          "path": "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
-          "operation": "modify",
-          "description": "Apply consistent themed styling for roadmap cards, status badges, and progress presentation (using composed shadcn components only) so the Roadmap tab matches the Admin Dashboard theme; ensure any modified/added text remains English."
+          "description": "Update manifest.json theme_color to the same navy blue hex value used in frontend/index.html so installed PWA and browser UI reflect navy blue."
         }
       ]
     }

@@ -4,74 +4,74 @@
 
 @layer base {
   :root {
-    --background: 98% 0.01 160;
-    --foreground: 20% 0.02 160;
-    --card: 98% 0.01 160;
-    --card-foreground: 20% 0.02 160;
-    --popover: 98% 0.01 160;
-    --popover-foreground: 20% 0.02 160;
-    --primary: 55% 0.18 160;
-    --primary-foreground: 98% 0.01 160;
-    --secondary: 92% 0.03 160;
-    --secondary-foreground: 20% 0.02 160;
-    --muted: 92% 0.03 160;
-    --muted-foreground: 45% 0.02 160;
+    --background: 98% 0.01 250;
+    --foreground: 20% 0.02 250;
+    --card: 98% 0.01 250;
+    --card-foreground: 20% 0.02 250;
+    --popover: 98% 0.01 250;
+    --popover-foreground: 20% 0.02 250;
+    --primary: 45% 0.15 250;
+    --primary-foreground: 98% 0.01 250;
+    --secondary: 92% 0.03 250;
+    --secondary-foreground: 20% 0.02 250;
+    --muted: 92% 0.03 250;
+    --muted-foreground: 45% 0.02 250;
     --accent: 50% 0.15 45;
     --accent-foreground: 98% 0.01 45;
     --destructive: 55% 0.20 25;
     --destructive-foreground: 98% 0.01 25;
-    --border: 88% 0.02 160;
-    --input: 88% 0.02 160;
-    --ring: 55% 0.18 160;
-    --chart-1: 55% 0.18 160;
+    --border: 88% 0.02 250;
+    --input: 88% 0.02 250;
+    --ring: 45% 0.15 250;
+    --chart-1: 45% 0.15 250;
     --chart-2: 50% 0.15 45;
     --chart-3: 60% 0.12 200;
     --chart-4: 65% 0.10 280;
     --chart-5: 70% 0.08 320;
     --radius: 0.5rem;
-    --sidebar: 98% 0.01 160;
-    --sidebar-foreground: 20% 0.02 160;
-    --sidebar-primary: 55% 0.18 160;
-    --sidebar-primary-foreground: 98% 0.01 160;
-    --sidebar-accent: 92% 0.03 160;
-    --sidebar-accent-foreground: 20% 0.02 160;
-    --sidebar-border: 88% 0.02 160;
-    --sidebar-ring: 55% 0.18 160;
+    --sidebar: 98% 0.01 250;
+    --sidebar-foreground: 20% 0.02 250;
+    --sidebar-primary: 45% 0.15 250;
+    --sidebar-primary-foreground: 98% 0.01 250;
+    --sidebar-accent: 92% 0.03 250;
+    --sidebar-accent-foreground: 20% 0.02 250;
+    --sidebar-border: 88% 0.02 250;
+    --sidebar-ring: 45% 0.15 250;
   }
 
   .dark {
-    --background: 15% 0.02 160;
-    --foreground: 95% 0.01 160;
-    --card: 18% 0.02 160;
-    --card-foreground: 95% 0.01 160;
-    --popover: 18% 0.02 160;
-    --popover-foreground: 95% 0.01 160;
-    --primary: 60% 0.16 160;
-    --primary-foreground: 15% 0.02 160;
-    --secondary: 25% 0.03 160;
-    --secondary-foreground: 95% 0.01 160;
-    --muted: 25% 0.03 160;
-    --muted-foreground: 65% 0.02 160;
+    --background: 15% 0.02 250;
+    --foreground: 95% 0.01 250;
+    --card: 18% 0.02 250;
+    --card-foreground: 95% 0.01 250;
+    --popover: 18% 0.02 250;
+    --popover-foreground: 95% 0.01 250;
+    --primary: 55% 0.14 250;
+    --primary-foreground: 15% 0.02 250;
+    --secondary: 25% 0.03 250;
+    --secondary-foreground: 95% 0.01 250;
+    --muted: 25% 0.03 250;
+    --muted-foreground: 65% 0.02 250;
     --accent: 55% 0.14 45;
     --accent-foreground: 15% 0.02 45;
     --destructive: 50% 0.18 25;
     --destructive-foreground: 95% 0.01 25;
-    --border: 30% 0.03 160;
-    --input: 30% 0.03 160;
-    --ring: 60% 0.16 160;
-    --chart-1: 60% 0.16 160;
+    --border: 30% 0.03 250;
+    --input: 30% 0.03 250;
+    --ring: 55% 0.14 250;
+    --chart-1: 55% 0.14 250;
     --chart-2: 55% 0.14 45;
     --chart-3: 65% 0.11 200;
     --chart-4: 70% 0.09 280;
     --chart-5: 75% 0.07 320;
-    --sidebar: 18% 0.02 160;
-    --sidebar-foreground: 95% 0.01 160;
-    --sidebar-primary: 60% 0.16 160;
-    --sidebar-primary-foreground: 15% 0.02 160;
-    --sidebar-accent: 25% 0.03 160;
-    --sidebar-accent-foreground: 95% 0.01 160;
-    --sidebar-border: 30% 0.03 160;
-    --sidebar-ring: 60% 0.16 160;
+    --sidebar: 18% 0.02 250;
+    --sidebar-foreground: 95% 0.01 250;
+    --sidebar-primary: 55% 0.14 250;
+    --sidebar-primary-foreground: 15% 0.02 250;
+    --sidebar-accent: 25% 0.03 250;
+    --sidebar-accent-foreground: 95% 0.01 250;
+    --sidebar-border: 30% 0.03 250;
+    --sidebar-ring: 55% 0.14 250;
   }
 }
 
@@ -86,7 +86,7 @@
 }
 
 .logo-text {
-  background: linear-gradient(135deg, oklch(55% 0.18 160), oklch(60% 0.16 180), oklch(55% 0.18 160));
+  background: linear-gradient(135deg, oklch(45% 0.15 250), oklch(55% 0.14 260), oklch(45% 0.15 250));
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -104,7 +104,7 @@
 }
 
 .company-name-outline {
-  -webkit-text-stroke: 1px oklch(55% 0.18 160);
+  -webkit-text-stroke: 1px oklch(45% 0.15 250);
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 8px oklch(55% 0.18 160 / 0.3);
+  text-shadow: 0 0 8px oklch(45% 0.15 250 / 0.3);
 }

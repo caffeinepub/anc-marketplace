@@ -3,6 +3,8 @@ import { Send, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useAskAssistant } from '../../hooks/useAssistant';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -13,12 +15,15 @@ type Message = {
   showEscalation?: boolean;
 };
 
+type AssistantMode = 'Customer' | 'Seller' | 'Website/App Builder';
+
 export default function AssistantChatPanel() {
+  const [mode, setMode] = useState<AssistantMode>('Customer');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m the ANC Assistant. I can help you with questions about our services, the startup assistance program, e-commerce solutions, and more. How can I help you today?',
+      content: 'Hello! I\'m the ANC Assistant. I can help customers with purchasing and support, sellers with onboarding and selling, and guide you through our Website & App Builder. Select your mode above and ask me anything!',
     },
   ]);
   const [input, setInput] = useState('');
@@ -48,7 +53,7 @@ export default function AssistantChatPanel() {
     try {
       const answer = await askAssistant.mutateAsync({
         question: input.trim(),
-        category: 'General',
+        category: mode,
       });
 
       const assistantMessage: Message = {
@@ -80,6 +85,24 @@ export default function AssistantChatPanel() {
 
   return (
     <div className="flex flex-col h-full">
+      <div className="p-4 border-b bg-muted/30">
+        <div className="space-y-2">
+          <Label htmlFor="assistant-mode" className="text-sm font-medium">
+            Assistant Mode
+          </Label>
+          <Select value={mode} onValueChange={(value) => setMode(value as AssistantMode)}>
+            <SelectTrigger id="assistant-mode" className="w-full">
+              <SelectValue placeholder="Select mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Customer">Customer Help</SelectItem>
+              <SelectItem value="Seller">Seller Help</SelectItem>
+              <SelectItem value="Website/App Builder">Website & App Builder</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((message) => (
@@ -131,7 +154,7 @@ export default function AssistantChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything..."
+            placeholder={`Ask about ${mode.toLowerCase()} help...`}
             disabled={isTyping}
             className="flex-1"
           />

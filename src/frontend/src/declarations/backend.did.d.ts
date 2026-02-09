@@ -10,6 +10,9 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type AccessRole = { 'b2bMember' : null } |
+  { 'startUpMember' : null } |
+  { 'guest' : null };
 export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
@@ -37,6 +40,11 @@ export interface AssistantKnowledgeEntry {
   'answer' : string,
   'isActive' : boolean,
   'category' : string,
+}
+export interface FunnelPartner {
+  'partnerName' : string,
+  'signupLink' : string,
+  'profileLink' : string,
 }
 export interface MarketplaceRoadmap {
   'progressPercentage' : bigint,
@@ -69,6 +77,13 @@ export interface TransformationOutput {
   'status' : bigint,
   'body' : Uint8Array,
   'headers' : Array<http_header>,
+}
+export interface UserProfile {
+  'accountCreated' : bigint,
+  'fullName' : string,
+  'email' : string,
+  'subscriptionId' : [] | [string],
+  'activeRole' : AccessRole,
 }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -112,6 +127,7 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   'askAssistant' : ActorMethod<[string, string], [] | [string]>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
@@ -119,14 +135,21 @@ export interface _SERVICE {
   >,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getFunnelPartner' : ActorMethod<[], FunnelPartner>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
+  'updateFunnelPartner' : ActorMethod<[FunnelPartner], undefined>,
   'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

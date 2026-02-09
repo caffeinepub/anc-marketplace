@@ -158,11 +158,6 @@ export type Variant_active_inactive_error_syncing = {
   __kind__: 'syncing';
 };
 
-export interface FunnelPartner {
-  partnerName: string;
-  partnerLink: string;
-}
-
 export interface StoreTemplate {
   id: string;
   name: string;

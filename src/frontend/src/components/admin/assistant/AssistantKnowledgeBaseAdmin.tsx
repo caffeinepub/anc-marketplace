@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
-  useGetAssistantKnowledgeBase,
+  useGetKnowledgeBase,
   useAddKnowledgeEntry,
   useUpdateKnowledgeEntry,
   useDeleteKnowledgeEntry,
@@ -19,7 +19,7 @@ import {
 import type { AssistantKnowledgeEntry } from '../../../backend';
 
 export default function AssistantKnowledgeBaseAdmin() {
-  const { data: knowledgeBase = [], isLoading } = useGetAssistantKnowledgeBase();
+  const { data: knowledgeBase = [], isLoading } = useGetKnowledgeBase();
   const addEntry = useAddKnowledgeEntry();
   const updateEntry = useUpdateKnowledgeEntry();
   const removeEntry = useDeleteKnowledgeEntry();

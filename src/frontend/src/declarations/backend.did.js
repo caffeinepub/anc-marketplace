@@ -74,6 +74,23 @@ export const AssistantKnowledgeEntry = IDL.Record({
   'isActive' : IDL.Bool,
   'category' : IDL.Text,
 });
+export const AccessRole = IDL.Variant({
+  'b2bMember' : IDL.Null,
+  'startUpMember' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const UserProfile = IDL.Record({
+  'accountCreated' : IDL.Int,
+  'fullName' : IDL.Text,
+  'email' : IDL.Text,
+  'subscriptionId' : IDL.Opt(IDL.Text),
+  'activeRole' : AccessRole,
+});
+export const FunnelPartner = IDL.Record({
+  'partnerName' : IDL.Text,
+  'signupLink' : IDL.Text,
+  'profileLink' : IDL.Text,
+});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -141,6 +158,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Text)],
       ['query'],
     ),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
@@ -153,10 +171,20 @@ export const idlService = IDL.Service({
       [IDL.Vec(AssistantKnowledgeEntry)],
       ['query'],
     ),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
   'initializeAccessControl' : IDL.Func([], [], []),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'transform' : IDL.Func(
@@ -165,6 +193,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'updateAdminDashboardData' : IDL.Func([], [], []),
+  'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
   'updateMarketplaceRoadmap' : IDL.Func([], [], []),
 });
 
@@ -237,6 +266,23 @@ export const idlFactory = ({ IDL }) => {
     'isActive' : IDL.Bool,
     'category' : IDL.Text,
   });
+  const AccessRole = IDL.Variant({
+    'b2bMember' : IDL.Null,
+    'startUpMember' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const UserProfile = IDL.Record({
+    'accountCreated' : IDL.Int,
+    'fullName' : IDL.Text,
+    'email' : IDL.Text,
+    'subscriptionId' : IDL.Opt(IDL.Text),
+    'activeRole' : AccessRole,
+  });
+  const FunnelPartner = IDL.Record({
+    'partnerName' : IDL.Text,
+    'signupLink' : IDL.Text,
+    'profileLink' : IDL.Text,
+  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -301,6 +347,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Text)],
         ['query'],
       ),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
@@ -313,10 +360,20 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(AssistantKnowledgeEntry)],
         ['query'],
       ),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
     'initializeAccessControl' : IDL.Func([], [], []),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'transform' : IDL.Func(
@@ -325,6 +382,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'updateAdminDashboardData' : IDL.Func([], [], []),
+    'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
     'updateMarketplaceRoadmap' : IDL.Func([], [], []),
   });
 };

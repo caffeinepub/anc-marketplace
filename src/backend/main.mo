@@ -12,6 +12,9 @@ import Order "mo:core/Order";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
 
+import List "mo:core/List";
+
+
 actor {
   include MixinStorage();
 
@@ -202,7 +205,8 @@ actor {
 
   public type FunnelPartner = {
     partnerName : Text;
-    partnerLink : Text;
+    signupLink : Text;
+    profileLink : Text;
   };
 
   public type StoreTemplate = {
@@ -323,6 +327,15 @@ actor {
     marketplaceRoadmap : [MarketplaceRoadmap];
   };
 
+  public type AssistantCategory = {
+    #general;
+    #ecommerce;
+    #startupProgram;
+    #b2b;
+    #marketingTools;
+    #affiliateProgram;
+  };
+
   let accessControlState = AccessControl.initState();
 
   let userStore = Map.empty<Principal, UserProfile>();
@@ -343,8 +356,9 @@ actor {
   var ownerPrincipal : ?Principal = null;
   var saleServiceFee : Nat = 500; // $5 fee represented in cents
   var merchantFunnelPartner : FunnelPartner = {
-    partnerName = "funnels";
-    partnerLink = "https://app.funnels.link";
+    partnerName = "ClickFunnels";
+    signupLink = "https://clickfunnels.com/signup-flow?aff=anc_marketplace_sellers";
+    profileLink = "https://app.clickfunnels.com/my-profile";
   };
 
   let knowledgeBase = Map.empty<Text, AssistantKnowledgeEntry>();
@@ -454,6 +468,45 @@ actor {
 
   let marketplaceRoadmap = Map.empty<Text, MarketplaceRoadmap>();
 
+  public shared ({ caller }) func initializeAccessControl() : async () {
+    AccessControl.initialize(accessControlState, caller);
+    await updateMarketplaceRoadmap();
+    initSeededKnowledge();
+  };
+
+  public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
+    AccessControl.getUserRole(accessControlState, caller);
+  };
+
+  public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
+    AccessControl.assignRole(accessControlState, caller, user, role);
+  };
+
+  public query ({ caller }) func isCallerAdmin() : async Bool {
+    AccessControl.isAdmin(accessControlState, caller);
+  };
+
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    userStore.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userStore.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userStore.add(caller, profile);
+  };
+
   public shared ({ caller }) func setOwnerPrincipal() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can set owner principal");
@@ -463,13 +516,10 @@ actor {
     initSeededKnowledge();
   };
 
-  public shared ({ caller }) func initializeAccessControl() : async () {
-    AccessControl.initialize(accessControlState, caller);
-    await updateMarketplaceRoadmap();
-    initSeededKnowledge();
-  };
-
   public shared ({ caller }) func updateAdminDashboardData() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update dashboard data");
+    };
     await updateMarketplaceRoadmap();
   };
 
@@ -542,30 +592,12 @@ actor {
 
   func initSeededKnowledge() {
     if (knowledgeBase.isEmpty()) {
-      let entries = [
+      let generalEntries = [
         {
           id = "anc_general_info";
           question = "What is ANC Electronics N Services?";
           answer = "ANC Electronics N Services is a digital transformation platform offering a suite of business solutions including e-commerce, startup assistance, B2B services, and educational content for entrepreneurs and businesses. ANC was established in Texas and now operates in both Texas and Georgia.";
           category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-        },
-        {
-          id = "anc_apprentice_program";
-          question = "What is the ANC Apprentice Program Center?";
-          answer = "The ANC Apprentice Program Center provides a comprehensive startup assistance program including educational content, virtual meetings, activities, and business credit building resources. It serves as a dedicated learning and development hub for entrepreneurs.";
-          category = "Startup Program";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-        },
-        {
-          id = "anc_ecommerce";
-          question = "What e-commerce services does ANC offer?";
-          answer = "ANC offers a suite of e-commerce solutions including store builder templates, product catalog management, payment processing, and dropshipping partnerships with third-party suppliers.";
-          category = "Ecommerce";
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
@@ -589,24 +621,6 @@ actor {
           usageCount = 0;
         },
         {
-          id = "anc_motto";
-          question = "What is ANC's motto?";
-          answer = "The core motto of ANC is 'Build the Bridge to Success', and the company is committed to empowering entrepreneurs and helping businesses thrive.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-        },
-        {
-          id = "anc_marketplace_pricing";
-          question = "What is ANC's marketplace pricing model?";
-          answer = "Store access and service access are free; the charge is a $5 service fee per sale. There is no monthly bill unless the user converts their online store/service profile into a standalone website or app, which costs $10/month.";
-          category = "Ecommerce";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-        },
-        {
           id = "anc_contacts";
           question = "How does ANC handle payments and copyright matters?";
           answer = "ANC does not process seller/merchant money directly. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any of these issues, and service fees will be refunded accordingly.";
@@ -624,6 +638,30 @@ actor {
           isActive = true;
           usageCount = 0;
         },
+      ];
+
+      let ecommerceEntries = [
+        {
+          id = "anc_ecommerce";
+          question = "What e-commerce services does ANC offer?";
+          answer = "ANC offers a suite of e-commerce solutions including store builder templates, product catalog management, payment processing, and dropshipping partnerships with third-party suppliers.";
+          category = "Ecommerce";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+        },
+        {
+          id = "anc_marketplace_pricing";
+          question = "What is ANC's marketplace pricing model?";
+          answer = "Store access and service access are free; the charge is a $5 service fee per sale. There is no monthly bill unless the user converts their online store/service profile into a standalone website or app, which costs $10/month.";
+          category = "Ecommerce";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+        },
+      ];
+
+      let marketingEntries = [
         {
           id = "anc_marketing_platforms";
           question = "What marketing platforms does ANC support?";
@@ -635,7 +673,29 @@ actor {
         },
       ];
 
-      for (entry in entries.values()) {
+      let startupEntries = [
+        {
+          id = "anc_apprentice_program";
+          question = "What is the ANC Apprentice Program Center?";
+          answer = "The ANC Apprentice Program Center provides a comprehensive startup assistance program including educational content, virtual meetings, activities, and business credit building resources. It serves as a dedicated learning and development hub for entrepreneurs.";
+          category = "Startup Program";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+        },
+      ];
+
+      // Manually add all entries
+      for (entry in generalEntries.values()) {
+        knowledgeBase.add(entry.id, entry);
+      };
+      for (entry in ecommerceEntries.values()) {
+        knowledgeBase.add(entry.id, entry);
+      };
+      for (entry in marketingEntries.values()) {
+        knowledgeBase.add(entry.id, entry);
+      };
+      for (entry in startupEntries.values()) {
         knowledgeBase.add(entry.id, entry);
       };
     };
@@ -677,15 +737,18 @@ actor {
     };
   };
 
-  func getBestMatchingAnswer(question : Text) : ?AssistantKnowledgeEntry {
+  func getBestMatchingAnswer(question : Text, category : Text) : ?AssistantKnowledgeEntry {
+    let categoryLower = category.toLower();
     var bestMatch : ?AssistantKnowledgeEntry = null;
     var bestScore : Float = 0.0;
 
     for ((_, entry) in knowledgeBase.entries()) {
-      let score = calculateSimilarity(question, entry.question);
-      if (score > bestScore and score > 0.5) {
-        bestMatch := ?entry;
-        bestScore := score;
+      if (entry.category.toLower().startsWith(#text(categoryLower))) {
+        let score = calculateSimilarity(question, entry.question);
+        if (score > bestScore and score > 0.5) {
+          bestMatch := ?entry;
+          bestScore := score;
+        };
       };
     };
 
@@ -695,7 +758,7 @@ actor {
   public query ({ caller }) func askAssistant(question : Text, category : Text) : async ?Text {
     let normalizedQuestion = question.toLower();
 
-    let bestMatch = getBestMatchingAnswer(normalizedQuestion);
+    let bestMatch = getBestMatchingAnswer(normalizedQuestion, category);
 
     switch (bestMatch) {
       case (null) { null };
@@ -722,12 +785,32 @@ actor {
     };
   };
 
-  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check session status");
+    };
     await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
   };
 
   public shared ({ caller }) func createCheckoutSession(items : [ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create checkout sessions");
+    };
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+  };
+
+  public query ({ caller }) func getFunnelPartner() : async FunnelPartner {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access funnel partners");
+    };
+    merchantFunnelPartner;
+  };
+
+  public shared ({ caller }) func updateFunnelPartner(partner : FunnelPartner) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update funnel partners");
+    };
+    merchantFunnelPartner := partner;
   };
 
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, CheckCircle, Plus } from 'lucide-react';
+import { MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import {
   useConvertQuestionToKnowledge,
   type UnansweredQuestion,
 } from '../../../hooks/useQueries';
+import type { AssistantKnowledgeEntry } from '../../../backend';
 
 export default function UnansweredQuestionsAdmin() {
   const { data: unansweredQuestions = [], isLoading } = useGetUnansweredQuestions();
@@ -47,9 +48,19 @@ export default function UnansweredQuestionsAdmin() {
     }
 
     try {
+      const entry: AssistantKnowledgeEntry = {
+        id: `KB-${Date.now()}`,
+        question: selectedQuestion.question,
+        answer: form.answer.trim(),
+        category: form.category.trim(),
+        isActive: true,
+        lastUpdated: BigInt(Date.now() * 1000000),
+        usageCount: BigInt(0),
+      };
+
       await convertQuestion.mutateAsync({
         questionId: selectedQuestion.id,
-        answer: form.answer.trim(),
+        entry,
       });
       toast.success('Question converted to knowledge entry successfully');
       setDialogOpen(false);

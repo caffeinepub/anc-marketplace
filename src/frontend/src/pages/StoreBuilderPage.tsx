@@ -1,84 +1,64 @@
 import { useState } from 'react';
-import { useGetStoreBuilderConfig, useUpdateStoreBuilderConfig, useListStoreTemplates, useGetGlobalDomainPurchaseLink, useCreateStoreBuilderCheckoutSession } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useGetStoreBuilderConfig, useUpdateStoreBuilderConfig, useListStoreTemplates, useCreateStoreBuilderCheckoutSession } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Store, Palette, Globe, ExternalLink, Info, CheckCircle2, Loader } from 'lucide-react';
+import { CheckCircle2, Store, Palette, Globe, Info, ExternalLink, Monitor, Smartphone, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { PRICING_MODEL, STORE_BUILDER_PRICING } from '../lib/pricingCopy';
+import { Separator } from '@/components/ui/separator';
 
 export default function StoreBuilderPage() {
   const { identity } = useInternetIdentity();
   const { data: config, isLoading: configLoading } = useGetStoreBuilderConfig();
   const { data: templates = [], isLoading: templatesLoading } = useListStoreTemplates();
-  const { data: domainLink } = useGetGlobalDomainPurchaseLink();
   const updateConfig = useUpdateStoreBuilderConfig();
   const createCheckout = useCreateStoreBuilderCheckoutSession();
 
-  const [brandName, setBrandName] = useState('');
-  const [tagline, setTagline] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#000000');
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const isAuthenticated = !!identity;
-  const hasActiveSubscription = config?.subscriptionActive || false;
+  const isSubscribed = config?.subscriptionActive || false;
 
   const handleSubscribe = async () => {
+    setIsProcessing(true);
     try {
       const session = await createCheckout.mutateAsync();
-      if (!session?.url) throw new Error('Stripe session missing url');
+      if (!session?.url) {
+        throw new Error('Stripe session missing url');
+      }
       window.location.href = session.url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to start checkout');
-    }
-  };
-
-  const handleSaveCustomization = async () => {
-    if (!brandName.trim()) {
-      toast.error('Please enter a brand name');
-      return;
-    }
-
-    try {
-      await updateConfig.mutateAsync({
-        subscriptionActive: hasActiveSubscription,
-        selectedTemplateId: selectedTemplate,
-        customization: {
-          brandName: brandName.trim(),
-          tagline: tagline.trim(),
-          primaryColor,
-          assets: [],
-        },
-        domainPurchaseLink: domainLink || null,
-      });
-      toast.success('Store customization saved successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save customization');
+      setIsProcessing(false);
     }
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="container mx-auto py-12 px-4">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>Please log in to access Store Builder.</AlertDescription>
-        </Alert>
+      <div className="container py-12">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Store Builder</CardTitle>
+            <CardDescription>Please log in to access Store Builder</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              The Store Builder allows you to convert your marketplace store into a standalone website or app. Please log in to continue.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (configLoading || templatesLoading) {
     return (
-      <div className="container mx-auto py-12 px-4">
+      <div className="container py-12">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
             <p className="text-muted-foreground">Loading Store Builder...</p>
           </div>
         </div>
@@ -87,190 +67,294 @@ export default function StoreBuilderPage() {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
+    <div className="container py-12">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div>
           <h1 className="text-4xl font-bold mb-2">Store Builder</h1>
           <p className="text-muted-foreground">
-            {STORE_BUILDER_PRICING.description}
+            Convert your marketplace store into a standalone website or mobile app
           </p>
         </div>
 
-        <Alert className="mb-6">
+        <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>Optional Upgrade</AlertTitle>
           <AlertDescription>
-            {PRICING_MODEL.faqMonthlyFees}
+            Store Builder is an <strong>optional $10/month subscription</strong> that lets you convert your marketplace store into a standalone website or app. 
+            You can continue selling on the marketplace for free with just a $5 per-sale service fee.
           </AlertDescription>
         </Alert>
 
-        {!hasActiveSubscription ? (
-          <Card>
+        {isSubscribed ? (
+          <Card className="border-primary">
             <CardHeader>
-              <CardTitle>Subscribe to Store Builder</CardTitle>
-              <CardDescription>
-                Unlock standalone website/app conversion for {PRICING_MODEL.standaloneWebsiteSubscription}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Store Builder Active</CardTitle>
+                    <CardDescription>Your subscription is active</CardDescription>
+                  </div>
+                </div>
+                <Badge variant="default">Subscribed</Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-4">
-                {STORE_BUILDER_PRICING.features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{feature}</p>
-                    </div>
-                  </div>
-                ))}
+              <p className="text-muted-foreground">
+                You have access to all Store Builder features. Choose a template and customize your standalone store.
+              </p>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <Store className="h-8 w-8 text-primary mb-2" />
+                    <CardTitle className="text-base">Choose Template</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Select from professional templates designed for e-commerce and services
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <Palette className="h-8 w-8 text-primary mb-2" />
+                    <CardTitle className="text-base">Customize Design</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Brand your store with custom colors, logos, and content
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <Globe className="h-8 w-8 text-primary mb-2" />
+                    <CardTitle className="text-base">Launch Website</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Deploy your standalone store and connect a custom domain
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <Button onClick={handleSubscribe} disabled={createCheckout.isPending} className="w-full">
-                {createCheckout.isPending ? (
-                  <>
-                    <Loader className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>Subscribe for {PRICING_MODEL.standaloneWebsiteSubscription}</>
-                )}
-              </Button>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Template selection and customization features are coming soon. Your subscription ensures early access when available.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="templates" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="templates">
-                <Store className="h-4 w-4 mr-2" />
-                Templates
-              </TabsTrigger>
-              <TabsTrigger value="customize">
-                <Palette className="h-4 w-4 mr-2" />
-                Customize
-              </TabsTrigger>
-              <TabsTrigger value="domain">
-                <Globe className="h-4 w-4 mr-2" />
-                Domain
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="templates">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Choose a Template</CardTitle>
-                  <CardDescription>Select a template for your store</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {templates.length === 0 ? (
-                    <p className="text-center py-12 text-muted-foreground">
-                      No templates available yet
-                    </p>
-                  ) : (
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {templates.map((template) => (
-                        <Card
-                          key={template.id}
-                          className={`cursor-pointer transition-all ${
-                            selectedTemplate === template.id ? 'ring-2 ring-primary' : ''
-                          }`}
-                          onClick={() => setSelectedTemplate(template.id)}
-                        >
-                          <CardHeader>
-                            <img
-                              src={template.previewImage}
-                              alt={template.name}
-                              className="w-full h-48 object-cover rounded-lg mb-4"
-                            />
-                            <CardTitle>{template.name}</CardTitle>
-                            <CardDescription>{template.description}</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <Badge>{template.type_.__kind__}</Badge>
-                          </CardContent>
-                        </Card>
-                      ))}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Store className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Upgrade to Store Builder</CardTitle>
+                  <CardDescription>$10/month - Cancel anytime</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold">What's included:</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Standalone Website</p>
+                      <p className="text-sm text-muted-foreground">
+                        Convert your marketplace store into an independent website
+                      </p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="customize">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customize Your Store</CardTitle>
-                  <CardDescription>Set up your brand identity</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="brandName">Brand Name</Label>
-                    <Input
-                      id="brandName"
-                      value={brandName}
-                      onChange={(e) => setBrandName(e.target.value)}
-                      placeholder="Your Brand Name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tagline">Tagline</Label>
-                    <Input
-                      id="tagline"
-                      value={tagline}
-                      onChange={(e) => setTagline(e.target.value)}
-                      placeholder="Your Brand Tagline"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="primaryColor">Primary Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="primaryColor"
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-20 h-10"
-                      />
-                      <Input
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        placeholder="#000000"
-                        className="flex-1"
-                      />
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Mobile App Conversion</p>
+                      <p className="text-sm text-muted-foreground">
+                        Turn your store into a mobile app for iOS and Android
+                      </p>
                     </div>
-                  </div>
-                  <Button onClick={handleSaveCustomization} disabled={updateConfig.isPending}>
-                    {updateConfig.isPending ? 'Saving...' : 'Save Customization'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Professional Templates</p>
+                      <p className="text-sm text-muted-foreground">
+                        Choose from beautifully designed templates for any business
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Custom Branding</p>
+                      <p className="text-sm text-muted-foreground">
+                        Add your logo, colors, and brand identity
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Custom Domain Support</p>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your own domain name to your store
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
 
-            <TabsContent value="domain">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Custom Domain</CardTitle>
-                  <CardDescription>Connect your own domain name</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Purchase and connect a custom domain to your store for a professional web presence.
-                  </p>
-                  {domainLink && (
-                    <Button asChild>
-                      <a href={domainLink} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Purchase Domain
-                      </a>
-                    </Button>
-                  )}
-                  {!domainLink && (
-                    <p className="text-sm text-muted-foreground">
-                      Domain purchase link not configured yet. Contact support for assistance.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Remember:</strong> You don't need Store Builder to sell on the marketplace. 
+                  This is only for creating a standalone website or app version of your store.
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={handleSubscribe}
+                disabled={isProcessing}
+                size="lg"
+                className="w-full"
+              >
+                {isProcessing ? 'Processing...' : 'Subscribe for $10/month'}
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Secure payment powered by Stripe. Cancel anytime from your account settings.
+              </p>
+            </CardContent>
+          </Card>
         )}
+
+        <Separator className="my-8" />
+
+        {/* Website & App Builder Section */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Website & App Builder</h2>
+            <p className="text-muted-foreground">
+              Build standalone websites and mobile apps with our guided builder tools
+            </p>
+          </div>
+
+          {!isSubscribed && (
+            <Alert>
+              <Sparkles className="h-4 w-4" />
+              <AlertTitle>Subscription Required</AlertTitle>
+              <AlertDescription>
+                The Website & App Builder features require an active Store Builder subscription ($10/month). 
+                Subscribe above to unlock these powerful tools.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Standalone Website Builder */}
+            <Card className={!isSubscribed ? 'opacity-60' : ''}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Monitor className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Standalone Website</CardTitle>
+                    <Badge variant="outline" className="mt-1">Coming Soon</Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Create a fully independent website for your business with our step-by-step builder.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Build Process:</h4>
+                  <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
+                    <li>Pick a professional template that fits your business</li>
+                    <li>Customize branding with your logo, colors, and content</li>
+                    <li>Preview your website across desktop and mobile devices</li>
+                    <li>Launch your site and connect a custom domain</li>
+                  </ol>
+                </div>
+
+                <div className="pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    disabled={!isSubscribed}
+                  >
+                    {isSubscribed ? 'Start Building Website' : 'Subscribe to Unlock'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Standalone App Builder */}
+            <Card className={!isSubscribed ? 'opacity-60' : ''}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Standalone App</CardTitle>
+                    <Badge variant="outline" className="mt-1">Coming Soon</Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Transform your business into a native mobile app for iOS and Android platforms.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Build Process:</h4>
+                  <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
+                    <li>Choose an app template optimized for mobile</li>
+                    <li>Customize app branding, icons, and splash screens</li>
+                    <li>Preview your app on iOS and Android simulators</li>
+                    <li>Launch to app stores with guided submission</li>
+                  </ol>
+                </div>
+
+                <div className="pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    disabled={!isSubscribed}
+                  >
+                    {isSubscribed ? 'Start Building App' : 'Subscribe to Unlock'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {isSubscribed && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Website and App Builder tools are currently in development. As a subscriber, you'll get early access 
+                as soon as these features launch. We'll notify you when they're ready!
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       </div>
     </div>
   );

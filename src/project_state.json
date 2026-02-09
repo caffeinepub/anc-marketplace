@@ -4,51 +4,34 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-implement-an-owner-admin-bootstrap-flow-so-the-first-authorized-principal-can-initialize-access-control-and-set-the-owner-principal-from-the-ui-and-ensure-subsequent-admin-only-actions-are-gated-by-backend-admin-permission-checks",
-      "title": "Implement an owner/admin bootstrap flow so the first authorized principal can initialize Access Control and set the owner principal from the UI, and ensure subsequent admin-only actions are gated by backend admin permission checks.",
+      "id": "feature-update-the-global-ui-theme-so-the-primary-brand-color-is-navy-blue-not-green-across-light-and-dark-modes-including-primary-ring-sidebar-variables-and-any-custom-gradient-outline-styles-that-currently-use-the-green-hue",
+      "title": "Update the global UI theme so the primary brand color is navy blue (not green) across light and dark modes, including primary/ring/sidebar variables and any custom gradient/outline styles that currently use the green hue.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-replace-placeholder-throwing-admin-and-role-management-react-query-hooks-with-real-implementations-backed-by-motoko-actor-methods-so-the-admin-dashboard-users-tab-works-end-to-end-list-users-view-role-summary-and-assign-roles",
-      "title": "Replace placeholder/throwing admin and role-management React Query hooks with real implementations backed by Motoko actor methods, so the Admin Dashboard Users tab works end-to-end (list users, view role summary, and assign roles).",
+      "id": "feature-update-pwa-browser-theme-metadata-colors-to-match-the-new-navy-blue-theme-color",
+      "title": "Update PWA/browser theme metadata colors to match the new navy blue theme color.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
-    },
-    {
-      "id": "feature-ensure-admin-quick-access-links-open-the-admin-dashboard-with-the-correct-active-tab-by-reading-and-syncing-the-router-search-param-e-g-admin-tab-users-with-the-admindashboard-tab-state",
-      "title": "Ensure Admin Quick Access links open the Admin Dashboard with the correct active tab by reading and syncing the router search param (e.g., /admin?tab=users) with the AdminDashboard tab state.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-confirm-marketplace-roadmap-admin-section-is-fully-wired-admin-dashboard-loads-roadmap-data-from-getadmindashboarddata-and-the-update-roadmap-action-if-present-in-ui-triggers-the-backend-updatemarketplaceroadmap-and-refreshes-displayed-roadmap-data",
-      "title": "Confirm Marketplace Roadmap admin section is fully wired: Admin Dashboard loads roadmap data from getAdminDashboardData, and the \"update roadmap\" action (if present in UI) triggers the backend updateMarketplaceRoadmap and refreshes displayed roadmap data.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-apply-a-coherent-distinctive-visual-theme-consistently-across-the-admin-dashboard-experience-colors-typography-spacing-component-styling-avoiding-a-blue-purple-dominant-palette-while-keeping-all-user-facing-text-in-english",
-      "title": "Apply a coherent, distinctive visual theme consistently across the Admin Dashboard experience (colors, typography, spacing, component styling), avoiding a blue/purple-dominant palette, while keeping all user-facing text in English.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Proceed to next phase: make Admin Dashboard fully functional (real backend wiring, owner/admin setup, role management)",
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Change the app theme color from green to navy blue",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Change app theme color from green to navy blue",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

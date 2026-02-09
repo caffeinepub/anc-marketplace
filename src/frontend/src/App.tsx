@@ -1,8 +1,6 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
-import { InternetIdentityProvider } from './hooks/useInternetIdentity';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
@@ -30,18 +28,13 @@ import CustomerFavoritesPage from './pages/CustomerFavoritesPage';
 import CustomerSettingsPage from './pages/CustomerSettingsPage';
 import CustomerPurchaseHistoryPage from './pages/CustomerPurchaseHistoryPage';
 import CustomerMessagesPage from './pages/CustomerMessagesPage';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import AppLaunchPage from './pages/AppLaunchPage';
+import RuntimeErrorBoundary from './components/RuntimeErrorBoundary';
+import RouterErrorScreen from './components/RouterErrorScreen';
 
 const rootRoute = createRootRoute({
-  component: () => <Layout><RouterProvider router={router} /></Layout>,
+  component: Layout,
+  errorComponent: RouterErrorScreen,
 });
 
 const indexRoute = createRoute({
@@ -205,6 +198,18 @@ const customerMessagesRoute = createRoute({
   component: CustomerMessagesPage,
 });
 
+const appLaunchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/app-launch',
+  component: AppLaunchPage,
+  validateSearch: (search: Record<string, unknown>): { url?: string; title?: string } => {
+    return {
+      url: typeof search.url === 'string' ? search.url : undefined,
+      title: typeof search.title === 'string' ? search.title : undefined,
+    };
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   storeRoute,
@@ -232,6 +237,7 @@ const routeTree = rootRoute.addChildren([
   customerSettingsRoute,
   customerPurchasesRoute,
   customerMessagesRoute,
+  appLaunchRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -244,13 +250,11 @@ declare module '@tanstack/react-router' {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <InternetIdentityProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </InternetIdentityProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <RuntimeErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <RouterProvider router={router} />
+        <Toaster />
+      </ThemeProvider>
+    </RuntimeErrorBoundary>
   );
 }

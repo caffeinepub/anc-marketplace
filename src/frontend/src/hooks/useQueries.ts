@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { ShoppingItem, StripeConfiguration, AssistantKnowledgeEntry, AdminDashboardData, MarketplaceRoadmap, UserRole as BackendUserRole } from '../backend';
+import type { ShoppingItem, StripeConfiguration, AssistantKnowledgeEntry, AdminDashboardData, MarketplaceRoadmap, UserRole as BackendUserRole, FunnelPartner as BackendFunnelPartner } from '../backend';
 import type {
   UserProfile,
   Product,
@@ -17,7 +17,6 @@ import type {
   AppIntegration,
   UserWithRole,
   AppIntegrationRecord,
-  FunnelPartner,
   StoreBuilderConfig,
   StoreTemplate,
 } from '../types';
@@ -609,157 +608,6 @@ export function useUpdateBusinessVerificationStatus() {
   });
 }
 
-export function useUpdateCreditBureauRegistrationStatus() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  const { identity } = useInternetIdentity();
-
-  return useMutation({
-    mutationFn: async (status: string) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Credit bureau registration not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userBusinessCredit', identity?.getPrincipal().toString()] });
-    },
-  });
-}
-
-export function useAddLesson() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (lesson: Lesson) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Lesson management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userLessons'] });
-    },
-  });
-}
-
-export function useUpdateLesson() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (lesson: Lesson) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Lesson management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userLessons'] });
-    },
-  });
-}
-
-export function useDeleteLesson() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (lessonId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Lesson management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userLessons'] });
-    },
-  });
-}
-
-export function useAddVirtualMeeting() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (meeting: VirtualMeeting) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Virtual meeting management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
-    },
-  });
-}
-
-export function useUpdateVirtualMeeting() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (meeting: VirtualMeeting) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Virtual meeting management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
-    },
-  });
-}
-
-export function useDeleteVirtualMeeting() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (meetingId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Virtual meeting management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userVirtualMeetings'] });
-    },
-  });
-}
-
-export function useAddActivity() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (activity: Activity) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Activity management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userActivities'] });
-    },
-  });
-}
-
-export function useUpdateActivity() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (activity: Activity) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Activity management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userActivities'] });
-    },
-  });
-}
-
-export function useDeleteActivity() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (activityId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Activity management not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userActivities'] });
-    },
-  });
-}
-
 // B2B Service hooks - Backend methods not yet implemented
 export function useListB2BServices() {
   const { actor, isFetching } = useActor();
@@ -848,21 +696,6 @@ export function useDeleteDropshippingPartner() {
   });
 }
 
-export function useSyncDropshippingPartner() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (partnerId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Dropshipping sync not yet available');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dropshippingPartners'] });
-    },
-  });
-}
-
 // App Integration hooks - Backend methods not yet implemented
 export function useListAppIntegrations() {
   const { actor, isFetching } = useActor();
@@ -882,7 +715,7 @@ export function useAddAppIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (integration: Omit<AppIntegrationRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (integration: AppIntegrationRecord) => {
       if (!actor) throw new Error('Actor not available');
       throw new Error('App integration management not yet available');
     },
@@ -922,15 +755,15 @@ export function useDeleteAppIntegration() {
   });
 }
 
-// Funnel Partner hooks - Backend methods not yet implemented
+// Funnel Partner hooks
 export function useGetFunnelPartner() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<FunnelPartner | null>({
+  return useQuery<BackendFunnelPartner>({
     queryKey: ['funnelPartner'],
     queryFn: async () => {
-      if (!actor) return null;
-      return null;
+      if (!actor) throw new Error('Actor not available');
+      return actor.getFunnelPartner();
     },
     enabled: !!actor && !isFetching,
   });
@@ -941,9 +774,13 @@ export function useSetFunnelPartner() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (partner: FunnelPartner) => {
+    mutationFn: async (partner: BackendFunnelPartner) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Funnel partner management not yet available');
+      try {
+        await actor.updateFunnelPartner(partner);
+      } catch (error) {
+        throw normalizeAuthError(error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['funnelPartner'] });
@@ -952,6 +789,19 @@ export function useSetFunnelPartner() {
 }
 
 // Store Builder hooks - Backend methods not yet implemented
+export function useListStoreTemplates() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<StoreTemplate[]>({
+    queryKey: ['storeTemplates'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return [];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export function useGetStoreBuilderConfig() {
   const { actor, isFetching } = useActor();
   const { identity } = useInternetIdentity();
@@ -974,7 +824,7 @@ export function useUpdateStoreBuilderConfig() {
   return useMutation({
     mutationFn: async (config: StoreBuilderConfig) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Store builder configuration not yet available');
+      throw new Error('Store Builder configuration not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storeBuilderConfig', identity?.getPrincipal().toString()] });
@@ -982,38 +832,12 @@ export function useUpdateStoreBuilderConfig() {
   });
 }
 
-export function useListStoreTemplates() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<StoreTemplate[]>({
-    queryKey: ['storeTemplates'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return [];
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetGlobalDomainPurchaseLink() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<string | null>({
-    queryKey: ['globalDomainPurchaseLink'],
-    queryFn: async () => {
-      if (!actor) return null;
-      return null;
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// Assistant hooks
-export function useGetAssistantKnowledgeBase() {
+// Assistant Knowledge Base hooks
+export function useGetKnowledgeBase() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AssistantKnowledgeEntry[]>({
-    queryKey: ['assistantKnowledgeBase'],
+    queryKey: ['knowledgeBase'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       try {
@@ -1032,12 +856,12 @@ export function useAddKnowledgeEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (entry: Omit<AssistantKnowledgeEntry, 'id' | 'lastUpdated' | 'usageCount'>) => {
+    mutationFn: async (entry: AssistantKnowledgeEntry) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Knowledge entry management not yet available');
+      throw new Error('Knowledge base management not yet available');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] });
     },
   });
 }
@@ -1049,10 +873,10 @@ export function useUpdateKnowledgeEntry() {
   return useMutation({
     mutationFn: async (entry: AssistantKnowledgeEntry) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Knowledge entry management not yet available');
+      throw new Error('Knowledge base management not yet available');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] });
     },
   });
 }
@@ -1064,15 +888,15 @@ export function useDeleteKnowledgeEntry() {
   return useMutation({
     mutationFn: async (entryId: string) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Knowledge entry management not yet available');
+      throw new Error('Knowledge base management not yet available');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] });
     },
   });
 }
 
-// Frontend-only type for unanswered questions (not in backend yet)
+// Frontend-only type for unanswered questions (not yet backed by backend)
 export type UnansweredQuestion = {
   id: string;
   question: string;
@@ -1099,13 +923,13 @@ export function useConvertQuestionToKnowledge() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
+    mutationFn: async ({ questionId, entry }: { questionId: string; entry: AssistantKnowledgeEntry }) => {
       if (!actor) throw new Error('Actor not available');
       throw new Error('Question conversion not yet available');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unansweredQuestions'] });
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] });
     },
   });
 }

@@ -29,6 +29,11 @@ export interface http_header {
     value: string;
     name: string;
 }
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface AssistantKnowledgeEntry {
     id: string;
     question: string;
@@ -38,10 +43,10 @@ export interface AssistantKnowledgeEntry {
     isActive: boolean;
     category: string;
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
+export interface FunnelPartner {
+    partnerName: string;
+    signupLink: string;
+    profileLink: string;
 }
 export interface ShoppingItem {
     productName: string;
@@ -83,6 +88,18 @@ export interface UserRoleSummary {
     adminCount: bigint;
     userCount: bigint;
 }
+export interface UserProfile {
+    accountCreated: bigint;
+    fullName: string;
+    email: string;
+    subscriptionId?: string;
+    activeRole: AccessRole;
+}
+export enum AccessRole {
+    b2bMember = "b2bMember",
+    startUpMember = "startUpMember",
+    guest = "guest"
+}
 export enum AdminPageSection {
     b2b = "b2b",
     marketplace = "marketplace",
@@ -104,17 +121,25 @@ export enum Variant_completed_comingSoon_inProgress {
 }
 export interface backendInterface {
     askAssistant(question: string, category: string): Promise<string | null>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignRole(user: Principal, role: UserRole): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getFunnelPartner(): Promise<FunnelPartner>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
+    isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
+    updateFunnelPartner(partner: FunnelPartner): Promise<void>;
     updateMarketplaceRoadmap(): Promise<void>;
 }

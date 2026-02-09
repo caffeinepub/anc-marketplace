@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-an-owner-admin-bootstrap-flow-so-the-first-authorized-principal-can-initialize-access-control-and-set-the-owner-principal-from-the-ui-and-ensure-subsequent-admin-only-actions-are-gated-by-backend-admin-permission-checks",
-      "featureTitle": "Implement an owner/admin bootstrap flow so the first authorized principal can initialize Access Control and set the owner principal from the UI, and ensure subsequent admin-only actions are gated by backend admin permission checks.",
+      "featureId": "feature-update-the-global-ui-theme-so-the-primary-brand-color-is-navy-blue-not-green-across-light-and-dark-modes-including-primary-ring-sidebar-variables-and-any-custom-gradient-outline-styles-that-currently-use-the-green-hue",
+      "featureTitle": "Update the global UI theme so the primary brand color is navy blue (not green) across light and dark modes, including primary/ring/sidebar variables and any custom gradient/outline styles that currently use the green hue.",
       "files": [
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/AdminDashboard.tsx"
+        "frontend/src/index.css"
       ],
       "components": [
         "authorization@3.0.0",
@@ -26,11 +24,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-replace-placeholder-throwing-admin-and-role-management-react-query-hooks-with-real-implementations-backed-by-motoko-actor-methods-so-the-admin-dashboard-users-tab-works-end-to-end-list-users-view-role-summary-and-assign-roles",
-      "featureTitle": "Replace placeholder/throwing admin and role-management React Query hooks with real implementations backed by Motoko actor methods, so the Admin Dashboard Users tab works end-to-end (list users, view role summary, and assign roles).",
+      "featureId": "feature-update-pwa-browser-theme-metadata-colors-to-match-the-new-navy-blue-theme-color",
+      "featureTitle": "Update PWA/browser theme metadata colors to match the new navy blue theme color.",
       "files": [
-        "frontend/src/components/admin/UserRoleManagement.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/index.html",
+        "frontend/public/manifest.json"
       ],
       "components": [
         "authorization@3.0.0",
@@ -45,79 +43,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-admin-quick-access-links-open-the-admin-dashboard-with-the-correct-active-tab-by-reading-and-syncing-the-router-search-param-e-g-admin-tab-users-with-the-admindashboard-tab-state",
-      "featureTitle": "Ensure Admin Quick Access links open the Admin Dashboard with the correct active tab by reading and syncing the router search param (e.g., /admin?tab=users) with the AdminDashboard tab state.",
-      "files": [
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/pages/AdminDashboard.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-confirm-marketplace-roadmap-admin-section-is-fully-wired-admin-dashboard-loads-roadmap-data-from-getadmindashboarddata-and-the-update-roadmap-action-if-present-in-ui-triggers-the-backend-updatemarketplaceroadmap-and-refreshes-displayed-roadmap-data",
-      "featureTitle": "Confirm Marketplace Roadmap admin section is fully wired: Admin Dashboard loads roadmap data from getAdminDashboardData, and the \"update roadmap\" action (if present in UI) triggers the backend updateMarketplaceRoadmap and refreshes displayed roadmap data.",
-      "files": [
-        "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/AdminDashboard.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-apply-a-coherent-distinctive-visual-theme-consistently-across-the-admin-dashboard-experience-colors-typography-spacing-component-styling-avoiding-a-blue-purple-dominant-palette-while-keeping-all-user-facing-text-in-english",
-      "featureTitle": "Apply a coherent, distinctive visual theme consistently across the Admin Dashboard experience (colors, typography, spacing, component styling), avoiding a blue/purple-dominant palette, while keeping all user-facing text in English.",
-      "files": [
-        "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
-        "frontend/src/components/admin/UserRoleManagement.tsx",
-        "frontend/src/index.css",
-        "frontend/src/pages/AdminDashboard.tsx",
-        "frontend/tailwind.config.js"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
       ],
       "confidence": "high"
     }
