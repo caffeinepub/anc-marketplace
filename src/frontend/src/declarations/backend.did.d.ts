@@ -10,114 +10,21 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export type AccessRole = { 'b2bMember' : null } |
-  { 'startUpMember' : null } |
-  { 'guest' : null };
-export interface Activity {
+export interface AssistantKnowledgeEntry {
   'id' : string,
-  'title' : string,
-  'isCompleted' : boolean,
-  'description' : string,
-  'resourceLink' : string,
-}
-export interface AppIntegration {
-  'id' : string,
-  'name' : string,
-  'createdAt' : bigint,
-  'description' : string,
+  'question' : string,
+  'usageCount' : bigint,
+  'lastUpdated' : bigint,
+  'answer' : string,
   'isActive' : boolean,
-  'updatedAt' : bigint,
-  'apiCredentials' : string,
   'category' : string,
 }
-export interface AppIntegrationRecord {
-  'id' : string,
-  'status' : { 'active' : null } |
-    { 'inactive' : null } |
-    { 'error' : null } |
-    { 'syncing' : null },
-  'name' : string,
-  'createdAt' : bigint,
-  'description' : string,
-  'updatedAt' : bigint,
-  'iconUrl' : string,
-  'webhookUrl' : string,
-}
-export interface B2BService {
-  'id' : string,
-  'name' : string,
-  'createdAt' : bigint,
-  'description' : string,
-  'isActive' : boolean,
-  'updatedAt' : bigint,
-  'category' : string,
-  'pricingModel' : string,
-}
-export interface BusinessCreditData {
-  'completionPercentage' : number,
-  'businessVerificationStatus' : string,
-  'creditBureauRegistrationStatus' : string,
-}
-export interface DropshippingPartner {
-  'id' : string,
-  'healthMetrics' : {
-    'failedSyncs' : bigint,
-    'successfulSyncs' : bigint,
-    'uptimePercent' : number,
-    'lastSyncTime' : [] | [bigint],
-  },
-  'name' : string,
-  'apiKey' : string,
-  'apiUrl' : string,
-  'connectionStatus' : { 'disconnected' : null } |
-    { 'connected' : null },
-}
-export interface EcomOrder {
-  'status' : OrderStatus,
-  'customerPrincipal' : [] | [Principal],
-  'orderId' : string,
-  'totalAmount' : bigint,
-  'products' : Array<string>,
-}
-export interface EducationalContent {
-  'virtualMeetings' : Array<VirtualMeeting>,
-  'activities' : Array<Activity>,
-  'lessons' : Array<Lesson>,
-}
-export interface FunnelPartner {
-  'partnerLink' : string,
-  'partnerName' : string,
-}
-export interface Lesson {
-  'id' : string,
-  'title' : string,
-  'content' : string,
-  'description' : string,
-  'videoLink' : [] | [string],
-}
-export type OrderStatus = { 'cancelled' : null } |
-  { 'pending' : null } |
-  { 'completed' : null } |
-  { 'inProgress' : null };
-export interface Product {
-  'id' : string,
-  'inStock' : bigint,
-  'name' : string,
-  'description' : string,
-  'image' : [] | [string],
-  'priceCents' : bigint,
-}
-export interface ShoppingCart { 'products' : Array<string> }
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
   'quantity' : bigint,
   'priceInCents' : bigint,
   'productDescription' : string,
-}
-export interface StartupProgramData {
-  'businessCredit' : BusinessCreditData,
-  'educationalContent' : EducationalContent,
 }
 export interface StripeConfiguration {
   'allowedCountries' : Array<string>,
@@ -136,27 +43,12 @@ export interface TransformationOutput {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
-export interface UserProfile {
-  'accountCreated' : bigint,
-  'fullName' : string,
-  'email' : string,
-  'subscriptionId' : [] | [string],
-  'activeRole' : AccessRole,
-}
-export type UserRole = { 'admin' : null } |
-  { 'user' : null } |
-  { 'guest' : null };
-export interface UserWithRole {
-  'principal' : Principal,
-  'profile' : UserProfile,
-  'systemRole' : UserRole,
-}
-export interface VirtualMeeting {
+export interface UnansweredQuestion {
   'id' : string,
-  'title' : string,
-  'scheduledTime' : bigint,
-  'description' : string,
-  'meetingLink' : string,
+  'question' : string,
+  'creationTime' : bigint,
+  'interactionCount' : bigint,
+  'categorySuggestion' : string,
 }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
@@ -191,122 +83,33 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
-  'addActivity' : ActorMethod<[Activity], undefined>,
-  'addAppIntegration' : ActorMethod<[AppIntegration], undefined>,
-  'addAppIntegrationRecord' : ActorMethod<[AppIntegrationRecord], undefined>,
-  'addB2BService' : ActorMethod<[B2BService], undefined>,
-  'addDropshippingPartner' : ActorMethod<[DropshippingPartner], undefined>,
-  'addLesson' : ActorMethod<[Lesson], undefined>,
-  'addOrUpdateProduct' : ActorMethod<[Product], undefined>,
-  'addToCart' : ActorMethod<[string], undefined>,
-  'addVirtualMeeting' : ActorMethod<[VirtualMeeting], undefined>,
-  'addWebhookIntegrationRecord' : ActorMethod<[string], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'assignUserAccessRole' : ActorMethod<[Principal, AccessRole], undefined>,
-  'checkoutCart' : ActorMethod<[string], [] | [string]>,
-  'clearCart' : ActorMethod<[], undefined>,
-  'completeActivity' : ActorMethod<[string], undefined>,
-  'completeLesson' : ActorMethod<[string], undefined>,
+  'addAssistantKnowledgeEntry' : ActorMethod<
+    [AssistantKnowledgeEntry],
+    undefined
+  >,
+  'askAssistant' : ActorMethod<[string, string], [] | [string]>,
+  'convertQuestionToKnowledgeEntry' : ActorMethod<
+    [string, string, string],
+    undefined
+  >,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
-  'deleteActivity' : ActorMethod<[string], undefined>,
-  'deleteAppIntegration' : ActorMethod<[string], undefined>,
-  'deleteB2BService' : ActorMethod<[string], undefined>,
-  'deleteDropshippingPartner' : ActorMethod<[string], undefined>,
-  'deleteLesson' : ActorMethod<[string], undefined>,
-  'deleteProduct' : ActorMethod<[string], undefined>,
-  'deleteVirtualMeeting' : ActorMethod<[string], undefined>,
-  'getAdminDashboardStats' : ActorMethod<
-    [],
-    {
-      'cartCount' : bigint,
-      'pendingOrderCount' : bigint,
-      'productCount' : bigint,
-      'appIntegrationCount' : bigint,
-      'orderCount' : bigint,
-      'b2bServiceCount' : bigint,
-      'dropshippingPartnerCount' : bigint,
-      'completedOrderCount' : bigint,
-      'userCount' : bigint,
-    }
-  >,
-  'getAllAppIntegrations' : ActorMethod<[], Array<AppIntegrationRecord>>,
-  'getAppIntegration' : ActorMethod<[string], [] | [AppIntegration]>,
-  'getAppIntegrationRecord' : ActorMethod<
-    [string],
-    [] | [AppIntegrationRecord]
-  >,
-  'getB2BService' : ActorMethod<[string], [] | [B2BService]>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
-  'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getCart' : ActorMethod<[], [] | [ShoppingCart]>,
-  'getDropshippingPartner' : ActorMethod<[string], [] | [DropshippingPartner]>,
-  'getMerchantFunnelPartner' : ActorMethod<[], FunnelPartner>,
-  'getOrder' : ActorMethod<[string], [] | [EcomOrder]>,
-  'getPendingOrders' : ActorMethod<[], Array<EcomOrder>>,
-  'getProduct' : ActorMethod<[string], [] | [Product]>,
-  'getRoleSummary' : ActorMethod<
-    [],
-    {
-      'guestCount' : bigint,
-      'startupMemberCount' : bigint,
-      'b2bMemberCount' : bigint,
-      'adminCount' : bigint,
-      'userCount' : bigint,
-    }
-  >,
-  'getServiceFee' : ActorMethod<[bigint], bigint>,
-  'getServiceFeePercentage' : ActorMethod<[], number>,
-  'getStartupProgramData' : ActorMethod<[Principal], [] | [StartupProgramData]>,
+  'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
-  'getUserOrders' : ActorMethod<[], Array<EcomOrder>>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUnansweredQuestions' : ActorMethod<[], Array<UnansweredQuestion>>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
-  'isAuthenticated' : ActorMethod<[], boolean>,
-  'isCallerAdmin' : ActorMethod<[], boolean>,
-  'isOwner' : ActorMethod<[], boolean>,
-  'isServiceFeeActive' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
-  'listAllOrders' : ActorMethod<[], Array<EcomOrder>>,
-  'listAllUsers' : ActorMethod<[], Array<UserProfile>>,
-  'listAllUsersWithRoles' : ActorMethod<[], Array<UserWithRole>>,
-  'listAppIntegrations' : ActorMethod<[], Array<AppIntegration>>,
-  'listB2BServices' : ActorMethod<[], Array<B2BService>>,
-  'listDropshippingPartners' : ActorMethod<[], Array<DropshippingPartner>>,
-  'listProductsByName' : ActorMethod<[], Array<Product>>,
-  'listProductsByPrice' : ActorMethod<[], Array<Product>>,
-  'registerUserWithPaidPlan' : ActorMethod<
-    [string, string, AccessRole, string],
-    undefined
-  >,
-  'removeAppIntegrationRecord' : ActorMethod<[string], undefined>,
-  'removeFromCart' : ActorMethod<[string], undefined>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'saveStartupProgramData' : ActorMethod<[StartupProgramData], undefined>,
-  'setMerchantFunnelPartner' : ActorMethod<[string, string], undefined>,
+  'markQuestionAsAnswered' : ActorMethod<[string], undefined>,
+  'removeAssistantKnowledgeEntry' : ActorMethod<[string], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
-  'setServiceFeePercentage' : ActorMethod<[number], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
-  'toggleAppIntegrationStatus' : ActorMethod<[string, boolean], undefined>,
-  'toggleB2BServiceStatus' : ActorMethod<[string, boolean], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateActivity' : ActorMethod<[Activity], undefined>,
-  'updateAppIntegration' : ActorMethod<[AppIntegration], undefined>,
-  'updateAppIntegrationRecord' : ActorMethod<[AppIntegrationRecord], undefined>,
-  'updateB2BService' : ActorMethod<[B2BService], undefined>,
-  'updateBusinessVerificationStatus' : ActorMethod<[string], undefined>,
-  'updateCreditBureauRegistrationStatus' : ActorMethod<[string], undefined>,
-  'updateDropshippingPartner' : ActorMethod<[DropshippingPartner], undefined>,
-  'updateDropshippingPartnerHealthMetrics' : ActorMethod<
-    [string, bigint, bigint, [] | [bigint], number],
+  'updateAssistantKnowledgeEntry' : ActorMethod<
+    [AssistantKnowledgeEntry],
     undefined
   >,
-  'updateLesson' : ActorMethod<[Lesson], undefined>,
-  'updateOrderStatus' : ActorMethod<[string, OrderStatus], undefined>,
-  'updateSubscriptionRole' : ActorMethod<[Principal, AccessRole], undefined>,
-  'updateVirtualMeeting' : ActorMethod<[VirtualMeeting], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

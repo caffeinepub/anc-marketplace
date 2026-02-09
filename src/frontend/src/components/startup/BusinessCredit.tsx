@@ -4,13 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CreditCard, CheckCircle2, AlertCircle, TrendingUp, Building2, FileCheck } from 'lucide-react';
 import { useGetUserBusinessCredit, useUpdateBusinessVerificationStatus, useUpdateCreditBureauRegistrationStatus } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { toast } from 'sonner';
 
 export default function BusinessCredit() {
-  const { identity } = useInternetIdentity();
-  const principal = identity?.getPrincipal();
-  const { data: creditData, isLoading } = useGetUserBusinessCredit(principal);
+  const { data: creditData, isLoading } = useGetUserBusinessCredit();
   const updateVerification = useUpdateBusinessVerificationStatus();
   const updateBureau = useUpdateCreditBureauRegistrationStatus();
 
@@ -59,7 +56,7 @@ export default function BusinessCredit() {
               <CardDescription>Build and establish your business credit profile</CardDescription>
             </div>
             <Badge variant="secondary" className="text-lg px-4 py-2">
-              {Math.round(completionPercentage)}%
+              {Math.round(completionPercentage)}% Complete
             </Badge>
           </div>
         </CardHeader>
@@ -79,21 +76,18 @@ export default function BusinessCredit() {
           <CardTitle className="text-lg">Why Business Credit Matters</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Building business credit is essential for accessing financing, establishing vendor relationships, and growing your startup. Follow these steps to establish a strong credit profile.
-          </p>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>
-              <span>Separate your personal and business finances</span>
+              <span>Access better financing options and lower interest rates</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>
-              <span>Access better financing terms and higher credit limits</span>
+              <span>Separate personal and business finances</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>
-              <span>Build credibility with vendors and partners</span>
+              <span>Build credibility with vendors and suppliers</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>
@@ -104,7 +98,7 @@ export default function BusinessCredit() {
       </Card>
 
       <div className="grid gap-4">
-        <Card className={verificationComplete ? 'bg-muted/30' : ''}>
+        <Card className={verificationComplete ? 'bg-primary/5 border-primary/20' : ''}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
@@ -117,45 +111,27 @@ export default function BusinessCredit() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <CardTitle className="text-xl">Business Information Verification</CardTitle>
+                    <CardTitle className="text-xl">Business Verification</CardTitle>
                     {verificationComplete && <Badge variant="default">Completed</Badge>}
-                    {!verificationComplete && <Badge variant="secondary">In Progress</Badge>}
                   </div>
-                  <CardDescription className="text-base mb-4">
-                    Verify your business information including EIN, business address, and legal structure
+                  <CardDescription className="text-base">
+                    Verify your business entity with official documentation
                   </CardDescription>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Obtain your EIN (Employer Identification Number)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Register your business address</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Verify business phone number</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Confirm legal business structure</span>
-                    </div>
-                  </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                {!verificationComplete && (
-                  <Button onClick={() => handleUpdateVerification('completed')} disabled={updateVerification.isPending}>
-                    {updateVerification.isPending ? 'Updating...' : 'Mark Complete'}
-                  </Button>
-                )}
-              </div>
+              {!verificationComplete && (
+                <Button
+                  onClick={() => handleUpdateVerification('completed')}
+                  disabled={updateVerification.isPending}
+                >
+                  Mark Complete
+                </Button>
+              )}
             </div>
           </CardHeader>
         </Card>
 
-        <Card className={bureauComplete ? 'bg-muted/30' : ''}>
+        <Card className={bureauComplete ? 'bg-primary/5 border-primary/20' : ''}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
@@ -170,88 +146,24 @@ export default function BusinessCredit() {
                   <div className="flex items-center gap-2 mb-1">
                     <CardTitle className="text-xl">Credit Bureau Registration</CardTitle>
                     {bureauComplete && <Badge variant="default">Completed</Badge>}
-                    {!bureauComplete && <Badge variant="secondary">Pending</Badge>}
                   </div>
-                  <CardDescription className="text-base mb-4">
-                    Register your business with major credit bureaus to start building your credit profile
+                  <CardDescription className="text-base">
+                    Register your business with major credit bureaus (Dun & Bradstreet, Experian, Equifax)
                   </CardDescription>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Register with Dun & Bradstreet (D-U-N-S Number)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Register with Experian Business</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Register with Equifax Business</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Monitor your business credit reports</span>
-                    </div>
-                  </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                {!bureauComplete && (
-                  <Button onClick={() => handleUpdateBureau('completed')} disabled={updateBureau.isPending}>
-                    {updateBureau.isPending ? 'Updating...' : 'Mark Complete'}
-                  </Button>
-                )}
-              </div>
+              {!bureauComplete && (
+                <Button
+                  onClick={() => handleUpdateBureau('completed')}
+                  disabled={updateBureau.isPending}
+                >
+                  Mark Complete
+                </Button>
+              )}
             </div>
           </CardHeader>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-primary" />
-            Credit Building Milestones
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-4 rounded-lg border">
-              <div className="p-2 rounded-full bg-primary/10">
-                <span className="text-sm font-bold text-primary">1</span>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Establish Business Identity</h4>
-                <p className="text-sm text-muted-foreground">
-                  Complete business verification and obtain all necessary identification numbers
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 rounded-lg border">
-              <div className="p-2 rounded-full bg-primary/10">
-                <span className="text-sm font-bold text-primary">2</span>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Register with Credit Bureaus</h4>
-                <p className="text-sm text-muted-foreground">
-                  Create profiles with major business credit reporting agencies
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 rounded-lg border">
-              <div className="p-2 rounded-full bg-primary/10">
-                <span className="text-sm font-bold text-primary">3</span>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Build Credit History</h4>
-                <p className="text-sm text-muted-foreground">
-                  Establish vendor accounts and make timely payments to build positive credit history
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

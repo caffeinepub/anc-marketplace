@@ -1,65 +1,39 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Site-wide top promotional banner with Appointment Dashboard53 route and embedded Calendly",
+  "title": "Role-based dropdown header navigation + site-wide Privacy Policy menu item",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Add a site-wide top promotional banner above the sticky header with exact ANC Apprentice Program Center message and a safe external Calendly link.",
+      "id": "REQ-35",
+      "summary": "Replace the current flat header navigation with grouped dropdown menus for Customer vs Sellers & Businesses (desktop + mobile Sheet), without breaking existing header features or route paths.",
       "acceptanceCriteria": [
-        "On every route, a top-of-page banner appears above the current sticky header in Layout.",
-        "The banner renders the provided text in English exactly as supplied, including the Calendly URL.",
-        "The Calendly URL in the banner is clickable and opens https://calendly.com/anc-electronics-n-services in a new tab/window with safe rel attributes (noopener/noreferrer).",
-        "The banner remains readable on mobile and does not break the existing header layout (nav, login, menus)."
+        "On desktop, the header navigation contains a “Customer” dropdown that includes links to at least: Store (/store), Customer FAQ (/customer-faq), Customer Blog (/customer-blog).",
+        "On desktop, the header navigation contains a “Sellers & Businesses” dropdown that includes links to at least: Store Builder (/store-builder), App Center (/app-center), Funnels (/funnels), Sellers & Businesses FAQ (/sellers-businesses-faq), Sellers & Businesses Blog (/sellers-businesses-blog), Affiliate (/affiliate).",
+        "The dropdown navigation is also available from the mobile menu (Sheet) so mobile users can reach the same pages.",
+        "Existing navigation elements (top promotional banner, the “Connect with the appointment dashboard53” button, user profile dropdown) continue to work as before.",
+        "Links navigate using TanStack Router navigation (no full page reload)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Insert a new top-of-page promotional banner section rendered above the existing sticky header. The banner must display the exact provided message text and include an anchor linking to https://calendly.com/anc-electronics-n-services that opens in a new tab with rel=\"noopener noreferrer\". Ensure responsive layout so the sticky header below remains intact on mobile/desktop."
+          "description": "Refactor header navigation to use grouped dropdown menus: implement a “Customer” dropdown and a “Sellers & Businesses” dropdown, using the existing shadcn-ui DropdownMenu components (do not edit files under frontend/src/components/ui). Verify the component's usage instructions before implementing. Ensure all items use TanStack Router's navigate({ to: ... }) and keep all existing route paths unchanged. Update the mobile Sheet menu to expose the same grouped navigation (e.g., using the same DropdownMenu patterns or clearly grouped sections within the Sheet) while keeping the promo banner, appointment-dashboard53 button, and user profile dropdown behavior intact."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Add a banner-area button labeled exactly \"Connect with the appointment dashboard53\" that client-side navigates to the new Appointment Dashboard53 page/route.",
+      "id": "REQ-36",
+      "summary": "Add a site-wide header dropdown menu item that always links to the existing Privacy Policy page, regardless of auth status or role, without changing the existing footer link.",
       "acceptanceCriteria": [
-        "A button labeled exactly \"Connect with the appointment dashboard53\" appears directly below the banner ad copy in the top banner area.",
-        "Clicking the button routes to an in-app page for the appointment dashboard (e.g., a new route added to the router), without a full page reload.",
-        "The button is usable on mobile and desktop and remains visible even when the sticky header is present."
+        "A Privacy Policy navigation item is available in the header as part of a dropdown menu and is visible to unauthenticated and authenticated users.",
+        "Clicking the Privacy Policy item routes to /privacy-policy and renders the existing PrivacyPolicyPage.",
+        "The existing footer link to Privacy Policy remains intact and continues to work."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Within the same top banner area, add a button directly below the ad copy labeled exactly \"Connect with the appointment dashboard53\" that uses TanStack Router navigation (no full reload) to the Appointment Dashboard53 route. Ensure the button remains visible/usable in responsive layouts with the sticky header."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register a new TanStack Router route for the Appointment Dashboard53 page so the banner button can navigate to it via client-side routing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Create the Appointment Dashboard53 page/route with an embedded Calendly view and an explicit external-link fallback to open Calendly in a new tab.",
-      "acceptanceCriteria": [
-        "A new route exists for the Appointment Dashboard53 page and can be reached via the banner button.",
-        "The page displays an embedded Calendly view for https://calendly.com/anc-electronics-n-services.",
-        "The page includes an explicit external-link fallback to open https://calendly.com/anc-electronics-n-services in a new tab with rel=noopener/noreferrer.",
-        "Navigating back to other routes works normally and the global Layout remains consistent."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AppointmentDashboard53.tsx",
-          "operation": "create",
-          "description": "Create the Appointment Dashboard53 page component. Render an embedded Calendly scheduling page for https://calendly.com/anc-electronics-n-services (e.g., iframe) sized to be usable on mobile/desktop, and include a clear external-link fallback that opens the same URL in a new tab with rel=\"noopener noreferrer\"."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Import and wire the new AppointmentDashboard53 page into the existing React + TanStack Router route tree with a dedicated path (e.g., /appointment-dashboard53), ensuring it renders within the root Layout and supports normal navigation."
+          "description": "Add a header dropdown (or add a site-wide item within an existing header dropdown) that includes a “Privacy Policy” item wired to navigate({ to: '/privacy-policy' }) and rendered for all users (authenticated or not, any role). Use existing shadcn-ui DropdownMenu components (read-only UI sources); Verify the component's usage instructions before implementing. Do not remove or alter the existing footer Privacy Policy link/button."
         }
       ]
     }

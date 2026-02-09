@@ -1,74 +1,56 @@
 {
   "kind": "build_request",
-  "title": "Add site-wide top banner promoting ANC Apprentice Program Center with Calendly link and Appointment Dashboard53 button",
+  "title": "Add role-based dropdown navigation for all built pages and site-wide Privacy Policy link",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-5",
-      "text": "Add a site-wide promotional banner across the very top of the app (above the existing sticky header navigation) that displays the exact message: \"We have a startup assistance program called ANC Apprentice Program Center if your interested set an appointment today at : https://calendly.com/anc-electronics-n-services\". The banner must include a clickable link to https://calendly.com/anc-electronics-n-services (open in a new tab).",
+      "id": "REQ-35",
+      "text": "Update the main header navigation (desktop and mobile) so users can access all previously built pages via dropdown menus, with customer pages grouped under a Customer dropdown and seller/business pages grouped under a Sellers & Businesses dropdown.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-1"
         ],
         "quotes": [
-          "Also advertise in a banner across the top , \"We have a startup assistance program called ANC Apprentice Program Center if your interested set an appointment today at : \" https://calendly.com/anc-electronics-n-services\""
+          "That is good now how do you access the rest of the pages we built? For the sellers and the customers can you put all the pages in the drop down menu? The sellers and business pagers in their menu and the customers pages in the customers menus?"
         ]
       },
       "acceptanceCriteria": [
-        "On every route, a top-of-page banner appears above the current sticky header in Layout.",
-        "The banner renders the provided text in English exactly as supplied, including the Calendly URL.",
-        "The Calendly URL in the banner is clickable and opens https://calendly.com/anc-electronics-n-services in a new tab/window with safe rel attributes (noopener/noreferrer).",
-        "The banner remains readable on mobile and does not break the existing header layout (nav, login, menus)."
+        "On desktop, the header navigation contains a “Customer” dropdown that includes links to at least: Store (/store), Customer FAQ (/customer-faq), Customer Blog (/customer-blog).",
+        "On desktop, the header navigation contains a “Sellers & Businesses” dropdown that includes links to at least: Store Builder (/store-builder), App Center (/app-center), Funnels (/funnels), Sellers & Businesses FAQ (/sellers-businesses-faq), Sellers & Businesses Blog (/sellers-businesses-blog), Affiliate (/affiliate).",
+        "The dropdown navigation is also available from the mobile menu (Sheet) so mobile users can reach the same pages.",
+        "Existing navigation elements (top promotional banner, the “Connect with the appointment dashboard53” button, user profile dropdown) continue to work as before.",
+        "Links navigate using TanStack Router navigation (no full page reload)."
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Add a button directly below the banner advertisement (as part of the same top-of-page banner area) labeled exactly: \"Connect with the appointment dashboard53\". When clicked, it must navigate the user to a new in-app page/route for the appointment dashboard (\"Appointment Dashboard53\").",
+      "id": "REQ-36",
+      "text": "Add a site-wide dropdown menu option in the header navigation that links to the Privacy Policy page (/privacy-policy) and is visible regardless of authentication status and active role.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-1"
         ],
         "quotes": [
-          "and put a button below that ad to connect with the appointment dashboard53"
+          "Also there needs to be a menu option in the drop down site wide for the privacy policy."
         ]
       },
       "acceptanceCriteria": [
-        "A button labeled exactly \"Connect with the appointment dashboard53\" appears directly below the banner ad copy in the top banner area.",
-        "Clicking the button routes to an in-app page for the appointment dashboard (e.g., a new route added to the router), without a full page reload.",
-        "The button is usable on mobile and desktop and remains visible even when the sticky header is present."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Create the \"Appointment Dashboard53\" page/route and render an embedded view of the Calendly scheduling page https://calendly.com/anc-electronics-n-services (e.g., via an iframe) along with a clear external-link fallback that opens the same URL in a new tab.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages-4"
-        ],
-        "quotes": [
-          "https://calendly.com/anc-electronics-n-services",
-          "appointment dashboard53"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new route exists for the Appointment Dashboard53 page and can be reached via the banner button.",
-        "The page displays an embedded Calendly view for https://calendly.com/anc-electronics-n-services.",
-        "The page includes an explicit external-link fallback to open https://calendly.com/anc-electronics-n-services in a new tab with rel=noopener/noreferrer.",
-        "Navigating back to other routes works normally and the global Layout remains consistent."
+        "A Privacy Policy navigation item is available in the header as part of a dropdown menu and is visible to unauthenticated and authenticated users.",
+        "Clicking the Privacy Policy item routes to /privacy-policy and renders the existing PrivacyPolicyPage.",
+        "The existing footer link to Privacy Policy remains intact and continues to work."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui (Shadcn components must be composed, not modified).",
-    "Do not modify the immutable hook files listed in SYSTEM_CONTEXT (frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
-    "Keep all changes within the existing React + TanStack Router structure (Layout is the root route component)."
+    "Do not edit files under frontend/src/components/ui (read-only UI component sources).",
+    "Do not modify immutable frontend hook entrypoints: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
+    "Keep the existing TanStack Router route paths unchanged (e.g., /privacy-policy, /customer-faq, /sellers-businesses-faq, /appointment-dashboard53)."
   ],
   "nonGoals": [
-    "Do not add or change backend/Motoko functionality for this request.",
-    "Do not add third-party authentication or external API integrations beyond linking/embedding the provided Calendly URL."
+    "Do not add new pages/routes beyond updating navigation access to existing pages.",
+    "Do not change authentication/authorization rules for accessing protected pages (e.g., Admin, Startup Dashboard, B2B Dashboard).",
+    "Do not implement new backend APIs or change backend state for navigation changes."
   ],
   "imageRequirements": {
     "required": [],

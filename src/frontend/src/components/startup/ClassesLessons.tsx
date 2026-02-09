@@ -4,15 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { BookOpen, PlayCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useGetUserLessons, useCompleteLesson } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useState } from 'react';
 import LessonDetail from './LessonDetail';
-import { Lesson } from '../../backend';
+import { Lesson } from '../../types';
 
 export default function ClassesLessons() {
-  const { identity } = useInternetIdentity();
-  const principal = identity?.getPrincipal();
-  const { data: lessons = [], isLoading } = useGetUserLessons(principal);
+  const { data: lessons = [], isLoading } = useGetUserLessons();
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const completedCount = lessons.length > 0 ? Math.floor(lessons.length * 0.6) : 0;
@@ -88,20 +85,22 @@ export default function ClassesLessons() {
                           <CardTitle className="text-xl">{lesson.title}</CardTitle>
                           {isCompleted && <Badge variant="default">Completed</Badge>}
                         </div>
-                        <CardDescription className="text-base">{lesson.description}</CardDescription>
+                        <CardDescription className="mt-2">{lesson.description}</CardDescription>
                         {lesson.videoLink && (
-                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                             <PlayCircle className="h-4 w-4" />
-                            <span>Includes video content</span>
+                            <span>Video lesson available</span>
                           </div>
                         )}
                       </div>
                     </div>
-                    <Button onClick={() => setSelectedLesson(lesson)} variant={isCompleted ? 'outline' : 'default'}>
-                      {isCompleted ? 'Review' : 'Start Lesson'}
-                    </Button>
                   </div>
                 </CardHeader>
+                <CardContent>
+                  <Button onClick={() => setSelectedLesson(lesson)} className="w-full">
+                    {isCompleted ? 'Review Lesson' : 'Start Lesson'}
+                  </Button>
+                </CardContent>
               </Card>
             );
           })

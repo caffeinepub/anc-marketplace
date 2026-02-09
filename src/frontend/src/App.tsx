@@ -11,6 +11,16 @@ import PaymentFailure from './pages/PaymentFailure';
 import AppCenterPage from './pages/AppCenterPage';
 import FunnelsPage from './pages/FunnelsPage';
 import AppointmentDashboard53 from './pages/AppointmentDashboard53';
+import StoreBuilderPage from './pages/StoreBuilderPage';
+import CustomerFAQ from './pages/CustomerFAQ';
+import SellersBusinessesFAQ from './pages/SellersBusinessesFAQ';
+import CustomerBlog from './pages/CustomerBlog';
+import SellersBusinessesBlog from './pages/SellersBusinessesBlog';
+import CustomerBlogPost from './pages/CustomerBlogPost';
+import SellersBusinessesBlogPost from './pages/SellersBusinessesBlogPost';
+import PciCompliancePage from './pages/PciCompliancePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import AffiliateDashboardPage from './pages/AffiliateDashboardPage';
 import ProfileSetup from './components/ProfileSetup';
 import Layout from './components/Layout';
 import { ThemeProvider } from 'next-themes';
@@ -62,10 +72,70 @@ const funnelsRoute = createRoute({
   component: FunnelsPage,
 });
 
+const storeBuilderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/store-builder',
+  component: StoreBuilderPage,
+});
+
 const appointmentDashboard53Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/appointment-dashboard53',
   component: AppointmentDashboard53,
+});
+
+const customerFAQRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-faq',
+  component: CustomerFAQ,
+});
+
+const sellersBusinessesFAQRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/sellers-businesses-faq',
+  component: SellersBusinessesFAQ,
+});
+
+const customerBlogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-blog',
+  component: CustomerBlog,
+});
+
+const sellersBusinessesBlogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/sellers-businesses-blog',
+  component: SellersBusinessesBlog,
+});
+
+const customerBlogPostRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/customer-blog/$postId',
+  component: CustomerBlogPost,
+});
+
+const sellersBusinessesBlogPostRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/sellers-businesses-blog/$postId',
+  component: SellersBusinessesBlogPost,
+});
+
+const pciComplianceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pci-compliance',
+  component: PciCompliancePage,
+});
+
+const privacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/privacy-policy',
+  component: PrivacyPolicyPage,
+});
+
+const affiliateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/affiliate',
+  component: AffiliateDashboardPage,
 });
 
 const paymentSuccessRoute = createRoute({
@@ -88,7 +158,17 @@ const routeTree = rootRoute.addChildren([
   adminRoute,
   appCenterRoute,
   funnelsRoute,
+  storeBuilderRoute,
   appointmentDashboard53Route,
+  customerFAQRoute,
+  sellersBusinessesFAQRoute,
+  customerBlogRoute,
+  sellersBusinessesBlogRoute,
+  customerBlogPostRoute,
+  sellersBusinessesBlogPostRoute,
+  pciComplianceRoute,
+  privacyPolicyRoute,
+  affiliateRoute,
   paymentSuccessRoute,
   paymentFailureRoute,
 ]);

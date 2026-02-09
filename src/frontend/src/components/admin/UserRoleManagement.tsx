@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Users, Shield, UserCheck, UserX, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
-import { AccessRole, UserRole, UserWithRole } from '../../backend';
+import { AccessRole, UserRole, UserWithRole } from '../../types';
 import { Principal } from '@icp-sdk/core/principal';
 
 export default function UserRoleManagement() {
@@ -21,7 +21,7 @@ export default function UserRoleManagement() {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
-  const [newAccessRole, setNewAccessRole] = useState<AccessRole>(AccessRole.guest);
+  const [newAccessRole, setNewAccessRole] = useState<string>('guest');
   const [newSystemRole, setNewSystemRole] = useState<UserRole>(UserRole.guest);
 
   const handleOpenRoleDialog = (user: UserWithRole) => {
@@ -35,15 +35,25 @@ export default function UserRoleManagement() {
     if (!selectedUser) return;
 
     try {
+      // Convert string to AccessRole variant
+      let accessRoleVariant: AccessRole;
+      if (newAccessRole === 'startUpMember') {
+        accessRoleVariant = { __kind__: 'startUpMember' };
+      } else if (newAccessRole === 'b2bMember') {
+        accessRoleVariant = { __kind__: 'b2bMember' };
+      } else {
+        accessRoleVariant = { __kind__: 'guest' };
+      }
+
       // Update access role
       await assignAccessRole.mutateAsync({
-        userPrincipal: selectedUser.principal,
-        newRole: newAccessRole,
+        userPrincipal: Principal.fromText(selectedUser.principal),
+        newRole: accessRoleVariant,
       });
 
       // Update system role
       await assignSystemRole.mutateAsync({
-        user: selectedUser.principal,
+        user: Principal.fromText(selectedUser.principal),
         role: newSystemRole,
       });
 
@@ -68,13 +78,13 @@ export default function UserRoleManagement() {
     }
   };
 
-  const getAccessRoleBadge = (role: AccessRole) => {
+  const getAccessRoleBadge = (role: string) => {
     switch (role) {
-      case AccessRole.startUpMember:
+      case 'startUpMember':
         return <Badge variant="default">Startup Member</Badge>;
-      case AccessRole.b2bMember:
+      case 'b2bMember':
         return <Badge variant="default">B2B Member</Badge>;
-      case AccessRole.guest:
+      case 'guest':
         return <Badge variant="secondary">Guest Access</Badge>;
       default:
         return <Badge variant="secondary">Guest</Badge>;
@@ -92,8 +102,8 @@ export default function UserRoleManagement() {
       (filterRole === 'admin' && user.systemRole === UserRole.admin) ||
       (filterRole === 'user' && user.systemRole === UserRole.user) ||
       (filterRole === 'guest' && user.systemRole === UserRole.guest) ||
-      (filterRole === 'startup' && user.profile.activeRole === AccessRole.startUpMember) ||
-      (filterRole === 'b2b' && user.profile.activeRole === AccessRole.b2bMember);
+      (filterRole === 'startup' && user.profile.activeRole === 'startUpMember') ||
+      (filterRole === 'b2b' && user.profile.activeRole === 'b2bMember');
 
     return matchesSearch && matchesFilter;
   });
@@ -234,14 +244,14 @@ export default function UserRoleManagement() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Access Level</label>
-              <Select value={newAccessRole} onValueChange={(value: AccessRole) => setNewAccessRole(value)}>
+              <Select value={newAccessRole} onValueChange={setNewAccessRole}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={AccessRole.startUpMember}>Startup Member - Startup program access</SelectItem>
-                  <SelectItem value={AccessRole.b2bMember}>B2B Member - B2B services access</SelectItem>
-                  <SelectItem value={AccessRole.guest}>Guest - Basic access only</SelectItem>
+                  <SelectItem value="startUpMember">Startup Member - Startup program access</SelectItem>
+                  <SelectItem value="b2bMember">B2B Member - B2B services access</SelectItem>
+                  <SelectItem value="guest">Guest - Basic access only</SelectItem>
                 </SelectContent>
               </Select>
             </div>

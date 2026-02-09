@@ -1,75 +1,108 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useRegisterUserWithPaidPlan } from '../hooks/useQueries';
+import { useNavigate } from '@tanstack/react-router';
+import { useRegisterUserWithPaidPlan, useSaveStoreBuilderConfig } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
-import { AccessRole } from '../backend';
-import { toast } from 'sonner';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
-  const search = useSearch({ strict: false }) as { plan?: string; email?: string; name?: string };
   const registerUser = useRegisterUserWithPaidPlan();
-  const [processing, setProcessing] = useState(false);
+  const saveStoreBuilderConfig = useSaveStoreBuilderConfig();
+  const [processing, setProcessing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const processPlanPurchase = async () => {
-      if (search.plan && search.email && search.name && !processing) {
-        setProcessing(true);
-        try {
-          const role = search.plan === 'startup' ? AccessRole.startUpMember : AccessRole.b2bMember;
-          await registerUser.mutateAsync({
-            email: search.email,
-            fullName: search.name,
-            role,
-            stripeSessionId: 'session_' + Date.now(),
-          });
-          toast.success('Plan activated successfully!');
-        } catch (error) {
-          toast.error('Failed to activate plan');
+    const processPayment = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const planType = urlParams.get('plan');
+
+        if (!sessionId) {
+          setError('No session ID found');
+          setProcessing(false);
+          return;
         }
+
+        if (planType === 'store-builder') {
+          await saveStoreBuilderConfig.mutateAsync({
+            subscriptionActive: true,
+            selectedTemplateId: null,
+            domainPurchaseLink: null,
+            customization: {
+              brandName: '',
+              tagline: '',
+              primaryColor: '#3B82F6',
+              assets: [],
+            },
+          });
+          setTimeout(() => navigate({ to: '/store-builder' }), 2000);
+        } else if (planType === 'startup' || planType === 'b2b') {
+          const roleVariant = planType === 'startup' ? { __kind__: 'startUpMember' as const } : { __kind__: 'b2bMember' as const };
+          
+          await registerUser.mutateAsync({
+            email: urlParams.get('email') || '',
+            fullName: urlParams.get('name') || '',
+            role: roleVariant,
+            stripeSessionId: sessionId,
+          });
+
+          const redirectPath = planType === 'startup' ? '/startup-dashboard' : '/b2b-dashboard';
+          setTimeout(() => navigate({ to: redirectPath }), 2000);
+        } else {
+          setTimeout(() => navigate({ to: '/' }), 2000);
+        }
+
+        setProcessing(false);
+      } catch (err: any) {
+        setError(err.message || 'Failed to process payment');
+        setProcessing(false);
       }
     };
 
-    processPlanPurchase();
-  }, [search, registerUser, processing]);
-
-  const handleContinue = () => {
-    if (search.plan === 'startup') {
-      navigate({ to: '/startup-dashboard' });
-    } else if (search.plan === 'b2b') {
-      navigate({ to: '/b2b-dashboard' });
-    } else {
-      navigate({ to: '/' });
-    }
-  };
+    processPayment();
+  }, [navigate, registerUser, saveStoreBuilderConfig]);
 
   return (
-    <div className="container py-12 flex items-center justify-center min-h-[600px]">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <CheckCircle2 className="h-10 w-10 text-primary" />
-          </div>
-          <CardTitle className="text-2xl">Payment Successful!</CardTitle>
-          <CardDescription>Your payment has been processed successfully</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {search.plan && (
-            <div className="p-4 rounded-lg bg-muted">
-              <p className="text-sm text-muted-foreground mb-1">Plan Activated</p>
-              <p className="font-semibold">{search.plan === 'startup' ? 'Startup Program' : 'B2B Services'}</p>
+    <div className="container mx-auto py-12 px-4">
+      <div className="max-w-md mx-auto">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3 mb-2">
+              {processing ? (
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              ) : error ? (
+                <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <span className="text-destructive text-xl">✕</span>
+                </div>
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+              )}
+              <CardTitle>
+                {processing ? 'Processing Payment...' : error ? 'Payment Error' : 'Payment Successful!'}
+              </CardTitle>
             </div>
-          )}
-          <p className="text-sm text-muted-foreground text-center">
-            Thank you for your purchase. You now have access to your dashboard and all features.
-          </p>
-          <Button className="w-full" onClick={handleContinue}>
-            Continue to Dashboard
-          </Button>
-        </CardContent>
-      </Card>
+            <CardDescription>
+              {processing
+                ? 'Please wait while we process your payment and set up your account.'
+                : error
+                ? error
+                : 'Your payment has been processed successfully. Redirecting you to your dashboard...'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!processing && !error && (
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>✓ Payment confirmed</p>
+                <p>✓ Account activated</p>
+                <p>✓ Preparing your dashboard...</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

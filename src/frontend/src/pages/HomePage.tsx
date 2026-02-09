@@ -1,7 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingBag, Users, Rocket, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Users, Rocket, ArrowRight, DollarSign } from 'lucide-react';
+import { PRICING_MODEL } from '@/lib/pricingCopy';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -100,19 +101,79 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="py-20 bg-primary/5">
+        <div className="container">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <DollarSign className="h-16 w-16 mx-auto mb-4 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
+              <p className="text-xl text-muted-foreground mb-6">
+                {PRICING_MODEL.shortDescription}
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">Marketplace Access</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="text-4xl font-bold text-primary mb-2">Free</div>
+                  <p className="text-sm text-muted-foreground">
+                    List and sell products or services with no upfront costs
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">Service Fee</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="text-4xl font-bold text-primary mb-2">$5</div>
+                  <p className="text-sm text-muted-foreground">
+                    Per sale - only pay when you make money
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">Standalone Website</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="text-4xl font-bold text-primary mb-2">$10</div>
+                  <p className="text-sm text-muted-foreground">
+                    Per month - optional upgrade for custom branding
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-muted/50">
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  {PRICING_MODEL.detailedDescription}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       <section className="py-20">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join ANC Electronics N Services today and unlock access to our comprehensive business platform.
+              Join ANC Electronics N Services today and start selling with no upfront costs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={() => navigate({ to: '/store' })}>
                 Browse Products
               </Button>
               <Button size="lg" variant="outline" onClick={() => navigate({ to: '/store' })}>
-                View Plans
+                Start Selling
               </Button>
             </div>
           </div>

@@ -3,12 +3,14 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetCallerUserProfile, useIsCallerAdmin, useGetCallerUserRole } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Menu, User, LogOut, Home, Store, Briefcase, Rocket, Shield, Puzzle, TrendingUp, Calendar, ExternalLink } from 'lucide-react';
+import { Menu, User, LogOut, Home, Store, Briefcase, Rocket, Shield, Puzzle, TrendingUp, Calendar, ExternalLink, Wrench, HelpCircle, BookOpen, Users, ChevronDown, ShoppingBag, FileText } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
-import { UserRole } from '../backend';
+import { UserRole } from '../types';
+import AssistantWidget from './assistant/AssistantWidget';
+import CookieConsentBanner from './privacy/CookieConsentBanner';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -81,57 +83,293 @@ export default function Layout() {
     }
   };
 
-  const navItems = [
-    { label: 'Home', path: '/', icon: Home },
-    { label: 'Store', path: '/store', icon: Store },
-  ];
+  const handleNavigation = (path: string, mobile = false) => {
+    navigate({ to: path });
+    if (mobile) setMobileMenuOpen(false);
+  };
 
-  if (isAuthenticated && userProfile) {
-    if (userProfile.activeRole === 'startUpMember') {
-      navItems.push({ label: 'Startup Dashboard', path: '/startup-dashboard', icon: Rocket });
-    }
-    if (userProfile.activeRole === 'b2bMember') {
-      navItems.push({ label: 'B2B Dashboard', path: '/b2b-dashboard', icon: Briefcase });
-    }
-  }
+  const DesktopNav = () => (
+    <nav className="hidden md:flex items-center gap-2">
+      <Button
+        variant={currentPath === '/' ? 'default' : 'ghost'}
+        onClick={() => handleNavigation('/')}
+      >
+        <Home className="h-4 w-4 mr-2" />
+        Home
+      </Button>
 
-  // Add App Center and Funnels for authenticated users
-  if (isAuthenticated) {
-    navItems.push({ label: 'App Center', path: '/app-center', icon: Puzzle });
-    navItems.push({ label: 'Funnels', path: '/funnels', icon: TrendingUp });
-  }
-
-  // Only show Admin link if user is confirmed admin
-  if (isAdmin === true && !isAdminLoading) {
-    navItems.push({ label: 'Admin', path: '/admin', icon: Shield });
-  }
-
-  const NavLinks = ({ mobile = false }: { mobile?: boolean }) => (
-    <>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = currentPath === item.path;
-        return (
-          <Button
-            key={item.path}
-            variant={isActive ? 'default' : 'ghost'}
-            onClick={() => {
-              navigate({ to: item.path });
-              if (mobile) setMobileMenuOpen(false);
-            }}
-            className={mobile ? 'w-full justify-start' : ''}
-          >
-            <Icon className="h-4 w-4 mr-2" />
-            {item.label}
+      {/* Customer Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="gap-1">
+            <ShoppingBag className="h-4 w-4" />
+            Customer
+            <ChevronDown className="h-3 w-3" />
           </Button>
-        );
-      })}
-    </>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Customer Pages</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => handleNavigation('/store')}>
+            <Store className="h-4 w-4 mr-2" />
+            Store
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/customer-faq')}>
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Customer FAQ
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/customer-blog')}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Customer Blog
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Sellers & Businesses Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="gap-1">
+            <Briefcase className="h-4 w-4" />
+            Sellers & Businesses
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Sellers & Businesses</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => handleNavigation('/store-builder')}>
+            <Wrench className="h-4 w-4 mr-2" />
+            Store Builder
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/app-center')}>
+            <Puzzle className="h-4 w-4 mr-2" />
+            App Center
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/funnels')}>
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Funnels
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/sellers-businesses-faq')}>
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Sellers & Businesses FAQ
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/sellers-businesses-blog')}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Sellers & Businesses Blog
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/affiliate')}>
+            <Users className="h-4 w-4 mr-2" />
+            Affiliate
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Privacy Policy - Site-wide */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="gap-1">
+            <FileText className="h-4 w-4" />
+            Legal
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => handleNavigation('/privacy-policy')}>
+            <FileText className="h-4 w-4 mr-2" />
+            Privacy Policy
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleNavigation('/pci-compliance')}>
+            <Shield className="h-4 w-4 mr-2" />
+            PCI Compliance
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Conditional Dashboard Links */}
+      {isAuthenticated && userProfile && userProfile.activeRole === 'startUpMember' && (
+        <Button
+          variant={currentPath === '/startup-dashboard' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/startup-dashboard')}
+        >
+          <Rocket className="h-4 w-4 mr-2" />
+          Startup Dashboard
+        </Button>
+      )}
+
+      {isAuthenticated && userProfile && userProfile.activeRole === 'b2bMember' && (
+        <Button
+          variant={currentPath === '/b2b-dashboard' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/b2b-dashboard')}
+        >
+          <Briefcase className="h-4 w-4 mr-2" />
+          B2B Dashboard
+        </Button>
+      )}
+
+      {isAdmin === true && !isAdminLoading && (
+        <Button
+          variant={currentPath === '/admin' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/admin')}
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Admin
+        </Button>
+      )}
+    </nav>
+  );
+
+  const MobileNav = () => (
+    <nav className="flex flex-col gap-2 mt-8">
+      <Button
+        variant={currentPath === '/' ? 'default' : 'ghost'}
+        onClick={() => handleNavigation('/', true)}
+        className="w-full justify-start"
+      >
+        <Home className="h-4 w-4 mr-2" />
+        Home
+      </Button>
+
+      {/* Customer Section */}
+      <div className="space-y-1">
+        <div className="px-3 py-2 text-sm font-semibold text-muted-foreground">Customer</div>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/store', true)}
+          className="w-full justify-start pl-6"
+        >
+          <Store className="h-4 w-4 mr-2" />
+          Store
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/customer-faq', true)}
+          className="w-full justify-start pl-6"
+        >
+          <HelpCircle className="h-4 w-4 mr-2" />
+          Customer FAQ
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/customer-blog', true)}
+          className="w-full justify-start pl-6"
+        >
+          <BookOpen className="h-4 w-4 mr-2" />
+          Customer Blog
+        </Button>
+      </div>
+
+      {/* Sellers & Businesses Section */}
+      <div className="space-y-1">
+        <div className="px-3 py-2 text-sm font-semibold text-muted-foreground">Sellers & Businesses</div>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/store-builder', true)}
+          className="w-full justify-start pl-6"
+        >
+          <Wrench className="h-4 w-4 mr-2" />
+          Store Builder
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/app-center', true)}
+          className="w-full justify-start pl-6"
+        >
+          <Puzzle className="h-4 w-4 mr-2" />
+          App Center
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/funnels', true)}
+          className="w-full justify-start pl-6"
+        >
+          <TrendingUp className="h-4 w-4 mr-2" />
+          Funnels
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/sellers-businesses-faq', true)}
+          className="w-full justify-start pl-6"
+        >
+          <HelpCircle className="h-4 w-4 mr-2" />
+          Sellers & Businesses FAQ
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/sellers-businesses-blog', true)}
+          className="w-full justify-start pl-6"
+        >
+          <BookOpen className="h-4 w-4 mr-2" />
+          Sellers & Businesses Blog
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/affiliate', true)}
+          className="w-full justify-start pl-6"
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Affiliate
+        </Button>
+      </div>
+
+      {/* Legal Section */}
+      <div className="space-y-1">
+        <div className="px-3 py-2 text-sm font-semibold text-muted-foreground">Legal</div>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/privacy-policy', true)}
+          className="w-full justify-start pl-6"
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Privacy Policy
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => handleNavigation('/pci-compliance', true)}
+          className="w-full justify-start pl-6"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          PCI Compliance
+        </Button>
+      </div>
+
+      {/* Conditional Dashboard Links */}
+      {isAuthenticated && userProfile && userProfile.activeRole === 'startUpMember' && (
+        <Button
+          variant={currentPath === '/startup-dashboard' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/startup-dashboard', true)}
+          className="w-full justify-start"
+        >
+          <Rocket className="h-4 w-4 mr-2" />
+          Startup Dashboard
+        </Button>
+      )}
+
+      {isAuthenticated && userProfile && userProfile.activeRole === 'b2bMember' && (
+        <Button
+          variant={currentPath === '/b2b-dashboard' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/b2b-dashboard', true)}
+          className="w-full justify-start"
+        >
+          <Briefcase className="h-4 w-4 mr-2" />
+          B2B Dashboard
+        </Button>
+      )}
+
+      {isAdmin === true && !isAdminLoading && (
+        <Button
+          variant={currentPath === '/admin' ? 'default' : 'ghost'}
+          onClick={() => handleNavigation('/admin', true)}
+          className="w-full justify-start"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Admin
+        </Button>
+      )}
+    </nav>
   );
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Promotional Banner */}
       <div className="w-full bg-gradient-to-r from-primary/90 to-primary text-primary-foreground py-4 px-4">
         <div className="container mx-auto">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -173,9 +411,7 @@ export default function Layout() {
                 ANC Electronics N Services
               </span>
             </button>
-            <nav className="hidden md:flex items-center gap-2">
-              <NavLinks />
-            </nav>
+            <DesktopNav />
           </div>
 
           <div className="flex items-center gap-2">
@@ -233,9 +469,7 @@ export default function Layout() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
-                <nav className="flex flex-col gap-2 mt-8">
-                  <NavLinks mobile />
-                </nav>
+                <MobileNav />
               </SheetContent>
             </Sheet>
           </div>
@@ -246,18 +480,106 @@ export default function Layout() {
         <Outlet />
       </main>
 
+      <AssistantWidget />
+      <CookieConsentBanner />
+
       <footer className="border-t bg-muted/50">
         <div className="container py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/assets/Screenshot_20251130-131933_Gmail.png" 
-                alt="ANC Electronics N Services Logo" 
-                className="h-10 w-auto object-contain"
-              />
-              <span className="font-semibold logo-text">ANC Electronics N Services</span>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/assets/Screenshot_20251130-131933_Gmail.png" 
+                  alt="ANC Electronics N Services Logo" 
+                  className="h-10 w-auto object-contain"
+                />
+                <span className="font-semibold logo-text">ANC Electronics N Services</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your Success is our mission
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground text-center">
+
+            <div>
+              <h3 className="font-semibold mb-3">Quick Links</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <button
+                    onClick={() => navigate({ to: '/customer-faq' })}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Customer FAQ
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate({ to: '/sellers-businesses-faq' })}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Sellers & Businesses FAQ
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate({ to: '/customer-blog' })}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Blog
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-3">Legal & Compliance</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <button
+                    onClick={() => navigate({ to: '/privacy-policy' })}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate({ to: '/pci-compliance' })}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    PCI Compliance Certificate
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-3">Contact</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a 
+                    href="mailto:support@anc-electronics-n-services.net"
+                    className="hover:text-foreground"
+                  >
+                    support@anc-electronics-n-services.net
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="https://calendly.com/anc-electronics-n-services"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground inline-flex items-center gap-1"
+                  >
+                    Schedule Appointment
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t text-center">
+            <p className="text-sm text-muted-foreground">
               © 2026. Built with love using{' '}
               <a href="https://caffeine.ai" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
                 caffeine.ai

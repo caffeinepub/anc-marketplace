@@ -4,13 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckSquare, ExternalLink, CheckCircle2, Circle } from 'lucide-react';
 import { useGetUserActivities, useCompleteActivity } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { toast } from 'sonner';
 
 export default function Activities() {
-  const { identity } = useInternetIdentity();
-  const principal = identity?.getPrincipal();
-  const { data: activities = [], isLoading } = useGetUserActivities(principal);
+  const { data: activities = [], isLoading } = useGetUserActivities();
   const completeActivity = useCompleteActivity();
 
   const completedCount = activities.filter((a) => a.isCompleted).length;

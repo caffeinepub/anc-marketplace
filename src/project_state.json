@@ -1,13 +1,18 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
+  "projectStateVersion": 17,
   "summary": "Build ANC Marketplace: a multi-vendor marketplace platform (Amazon/Shopify/Etsy/eBay-like) with customer/business/seller dashboards, admin control, product & services selling, dropshipping integrations, platform-wide AI assistant for store building/marketing, strict identity/business verification, monetization via per-sale fee (owner exempt), plus an app center and marketing funnel integrations.",
   "architectural_notes": [
     "Project name: \"ANC Marketplace\"; copyright: ANC Electronics N More",
     "PCI compliance requirement",
-    "Support/owner email updated to: anc.electronics.n.services@gmail.com",
     "Identity verification must be live camera capture (no photo uploads) with ID + selfie match before purchase completion",
-    "Business verification includes EIN, registration, and authorized signer identity verification"
+    "Business verification includes EIN, registration, and authorized signer identity verification",
+    "SMS/text messaging integration is not supported; implement management escalation as an in-app flow instead (no external SMS tools).",
+    "Management escalation contact number to display: 352-480-9856; show/escalate only when assistant cannot resolve the request.",
+    "AI assistant should support updating/expanding its business knowledge over time (learn/improve via admin-managed knowledge/config updates).",
+    "Support/owner email updated to: support@anc-electronics-n-services.net",
+    "PCI compliance certificate and privacy policy must be publicly accessible via a dedicated page",
+    "Sites are scanned quarterly for PCI/privacy compliance"
   ],
   "known_issues": [
     "Build/deploy automation failing with messages like \"AI couldn't implement your request\"; scope may need to be broken into smaller deliverables"
@@ -59,6 +64,198 @@
       "title": "Create the \"Appointment Dashboard53\" page/route and render an embedded view of the Calendly scheduling page https://calendly.com/anc-electronics-n-services (e.g., via an iframe) along with a clear external-link fallback that opens the same URL in a new tab.",
       "reqIds": [
         "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-authenticated-page-route-that-allows-sellers-and-businesses-to-start-a-10-month-subscription-to-convert-their-online-store-into-a-standalone-website-or-app-with-clear-ui-explaining-the-10-month-fee-and-a-purchase-flow-using-the-existing-stripe-checkout-session-mechanism",
+      "title": "Add a new authenticated page/route that allows sellers and businesses to start a $10/month subscription to convert their online store into a standalone website or app, with clear UI explaining the $10/month fee and a purchase flow using the existing Stripe checkout session mechanism.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-store-builder-page-provide-a-purchase-a-domain-button-workflow-implemented-as-a-placeholder-for-a-future-partner-integration-include-a-backend-stored-editable-field-for-an-external-domain-purchase-link-optional-and-when-present-the-button-must-open-that-link-in-a-new-tab-when-absent-show-an-english-message-indicating-the-link-is-not-yet-configured",
+      "title": "On the store-builder page, provide a \"Purchase a domain\" button/workflow implemented as a placeholder for a future partner integration: include a backend-stored, editable field for an external domain-purchase link (optional), and when present the button must open that link in a new tab; when absent, show an English message indicating the link is not yet configured.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-a-template-chooser-on-the-store-builder-page-with-multiple-selectable-templates-for-both-e-commerce-and-service-provider-websites-apps-persist-the-selected-template-in-backend-state-per-user-and-show-a-preview-card-for-each-template-thumbnail-short-description",
+      "title": "Provide a template chooser on the store-builder page with multiple selectable templates for both e-commerce and service-provider websites/apps; persist the selected template in backend state per user and show a preview card for each template (thumbnail + short description).",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-allow-users-to-upload-branding-assets-logo-and-at-least-one-additional-media-asset-type-and-customize-basic-presentation-settings-for-their-generated-site-app-e-g-brand-name-tagline-primary-color-persist-these-settings-and-uploaded-asset-references-in-backend-state-using-the-existing-backend-blob-storage-capabilities",
+      "title": "Allow users to upload branding assets (logo and at least one additional media asset type) and customize basic presentation settings for their generated site/app (e.g., brand name, tagline, primary color); persist these settings and uploaded asset references in backend state, using the existing backend blob storage capabilities.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-expose-backend-apis-and-react-query-hooks-to-create-read-and-update-the-per-user-store-builder-configuration-subscription-status-selected-template-customization-fields-domain-partner-url-and-integrate-them-into-the-new-page",
+      "title": "Expose backend APIs and React Query hooks to create, read, and update the per-user store-builder configuration (subscription status, selected template, customization fields, domain partner URL), and integrate them into the new page.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-navigation-entry-points-so-authenticated-users-can-discover-the-store-builder-page-from-the-main-app-navigation-without-breaking-the-existing-banner-appointment-dashboard-funnels-or-app-center-navigation",
+      "title": "Add navigation entry points so authenticated users can discover the store-builder page from the main app navigation, without breaking the existing banner, appointment dashboard, funnels, or app center navigation.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-two-separate-faq-pages-one-for-customers-and-one-for-sellers-businesses-each-containing-clear-english-site-information-relevant-to-that-audience",
+      "title": "Create two separate FAQ pages: one for Customers and one for Sellers/Businesses, each containing clear English site information relevant to that audience.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-two-separate-blog-sections-pages-one-for-customers-and-one-for-sellers-businesses-each-with-an-english-blog-landing-page-that-lists-posts-and-a-readable-post-view",
+      "title": "Create two separate blog sections/pages: one for Customers and one for Sellers/Businesses, each with an English blog landing page that lists posts and a readable post view.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-navigation-entry-points-so-users-can-discover-the-correct-faq-and-blog-pages-from-the-appropriate-side-of-the-app-customers-see-customer-faq-blog-in-the-customer-area-sellers-businesses-see-sellers-businesses-faq-blog-in-the-sellers-business-area",
+      "title": "Add navigation entry points so users can discover the correct FAQ and Blog pages from the appropriate side of the app: Customers see Customer FAQ/Blog in the customer area; Sellers/Businesses see Sellers & Businesses FAQ/Blog in the sellers/business area.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-register-the-new-faq-and-blog-routes-in-the-existing-tanstack-router-route-tree-so-they-can-be-visited-directly-by-url-and-navigated-to-from-the-ui",
+      "title": "Register the new FAQ and Blog routes in the existing TanStack Router route tree so they can be visited directly by URL and navigated to from the UI.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-site-wide-floating-assistant-widget-that-is-available-on-every-page-for-all-user-sides-customer-seller-business-startup-member-b2b-member-and-admin-the-widget-must-be-accessible-from-the-global-layout-and-open-a-chat-panel-when-clicked",
+      "title": "Add a site-wide floating assistant widget that is available on every page for all user sides (customer, seller/business, startup member, B2B member, and admin). The widget must be accessible from the global layout and open a chat panel when clicked.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-assistant-responses-using-an-on-canister-admin-managed-business-knowledge-base-no-external-ai-llm-integrations-the-assistant-must-answer-user-questions-by-matching-them-to-stored-knowledge-entries-and-returning-the-best-matching-answer-and-it-must-include-knowledge-about-anc-electronics-n-services-and-the-startup-assistance-program-anc-apprentice-program-center-as-part-of-the-initial-seeded-knowledge",
+      "title": "Implement assistant responses using an on-canister, admin-managed Business Knowledge Base (no external AI/LLM integrations). The assistant must answer user questions by matching them to stored knowledge entries and returning the best-matching answer, and it must include knowledge about ANC Electronics N Services and the startup assistance program (ANC Apprentice Program Center) as part of the initial seeded knowledge.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-in-app-escalate-to-management-flow-that-is-offered-only-when-the-assistant-cannot-confidently-assist-when-escalation-is-offered-and-the-user-chooses-it-show-the-management-contact-number-exactly-as-352-480-9856-do-not-implement-sms-texting-or-any-outbound-messaging",
+      "title": "Add an in-app “Escalate to Management” flow that is offered only when the assistant cannot confidently assist. When escalation is offered and the user chooses it, show the management contact number exactly as: 352-480-9856. Do not implement SMS/texting or any outbound messaging.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-support-learn-as-it-goes-by-capturing-unanswered-questions-for-later-review-and-allowing-admins-to-convert-them-into-new-knowledge-entries-provide-an-admin-facing-ui-section-in-the-existing-admin-dashboard-to-review-unanswered-questions-and-manage-the-assistant-knowledge-base",
+      "title": "Support “learn as it goes” by capturing unanswered questions for later review and allowing admins to convert them into new knowledge entries. Provide an admin-facing UI section in the existing Admin Dashboard to review unanswered questions and manage the assistant knowledge base.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-public-unauthenticated-page-route-that-displays-the-uploaded-pci-compliance-certificate-image-clearly-and-legibly-with-a-short-plain-english-explanation-and-a-download-open-in-new-tab-option-for-the-image",
+      "title": "Add a new public (unauthenticated) page/route that displays the uploaded PCI Compliance Certificate image clearly and legibly, with a short plain-English explanation and a download/open-in-new-tab option for the image.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-public-unauthenticated-privacy-policy-page-route-containing-clear-english-privacy-policy-text-and-a-visible-last-updated-date-field-in-the-page-content",
+      "title": "Add a new public (unauthenticated) Privacy Policy page/route containing clear English privacy policy text and a visible “Last updated” date field in the page content.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-site-wide-cookie-consent-permissions-popup-that-appears-for-new-visitors-until-they-accept-or-reject-non-essential-cookies-and-persists-the-choice-locally-so-it-does-not-repeatedly-prompt-on-subsequent-visits",
+      "title": "Implement a site-wide cookie consent/permissions popup that appears for new visitors until they accept or reject non-essential cookies, and persists the choice locally so it does not repeatedly prompt on subsequent visits.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-simple-in-app-human-check-challenge-popup-non-third-party-that-can-be-required-before-sensitive-actions-at-minimum-starting-checkout-and-can-be-configured-to-show-once-per-device-session-so-it-is-not-overly-disruptive",
+      "title": "Implement a simple in-app “human check” challenge popup (non-third-party) that can be required before sensitive actions (at minimum: starting checkout) and can be configured to show once per device/session so it is not overly disruptive.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-frontend-pages-sections-for-affiliates-and-admins-to-view-affiliate-program-status-affiliates-can-view-their-referral-count-current-commission-next-milestone-milestone-achievements-and-payout-method-on-file-admins-can-view-a-list-of-affiliates-and-export-view-payout-ready-summaries",
+      "title": "Create frontend pages/sections for affiliates and admins to view affiliate program status: affiliates can view their referral count, current commission %, next milestone, milestone achievements, and payout method on file; admins can view a list of affiliates and export/view payout-ready summaries.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-global-navigation-entry-points-for-the-new-public-compliance-and-privacy-routes-so-users-can-find-them-easily-footer-links-are-acceptable-without-breaking-existing-navigation-and-the-top-promotional-banner-appointment-dashboard-button",
+      "title": "Add global navigation entry points for the new public compliance and privacy routes so users can find them easily (footer links are acceptable), without breaking existing navigation and the top promotional banner/appointment dashboard button.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-user-facing-pricing-messaging-so-that-marketplace-store-access-and-service-access-are-free-and-users-are-only-charged-when-they-make-a-sale-via-a-5-service-fee-per-sale-the-only-other-charge-should-be-the-10-month-subscription-for-converting-an-online-store-or-service-provider-profile-into-a-standalone-website-or-app",
+      "title": "Update user-facing pricing/messaging so that marketplace store access and service access are free, and users are only charged when they make a sale via a $5 service fee per sale; the only other charge should be the $10/month subscription for converting an online store or service provider profile into a standalone website or app.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-adjust-the-store-page-ui-so-it-no-longer-promotes-paid-monthly-subscription-plans-for-basic-access-and-instead-explains-the-per-sale-fee-model-keep-product-purchasing-intact",
+      "title": "Adjust the Store page UI so it no longer promotes paid monthly subscription plans for basic access, and instead explains the per-sale fee model; keep product purchasing intact.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-main-header-navigation-desktop-and-mobile-so-users-can-access-all-previously-built-pages-via-dropdown-menus-with-customer-pages-grouped-under-a-customer-dropdown-and-seller-business-pages-grouped-under-a-sellers-businesses-dropdown",
+      "title": "Update the main header navigation (desktop and mobile) so users can access all previously built pages via dropdown menus, with customer pages grouped under a Customer dropdown and seller/business pages grouped under a Sellers & Businesses dropdown.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-site-wide-dropdown-menu-option-in-the-header-navigation-that-links-to-the-privacy-policy-page-privacy-policy-and-is-visible-regardless-of-authentication-status-and-active-role",
+      "title": "Add a site-wide dropdown menu option in the header navigation that links to the Privacy Policy page (/privacy-policy) and is visible regardless of authentication status and active role.",
+      "reqIds": [
+        "REQ-36"
       ],
       "version": 1
     }
@@ -142,6 +339,118 @@
       "reqIds": [
         "REQ-1"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Add a page for sellers/businesses to convert their marketplace store into a standalone website or mobile app with a $10/month subscription",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Add a \"Purchase a domain\" button/workflow with a placeholder/link field for future partner domain-purchase integration",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Provide selectable templates (e-commerce + service-provider) for generated websites/landing pages/apps, with customization options",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Allow users to upload branding assets (logo and other media/content) to customize their generated site/app",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Create two separate FAQ pages: one for Customers and one for Sellers/Businesses, each containing site information and placed in the appropriate customer vs seller/business areas of the app",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Create separate blog sections/pages for each side of the platform: one for Customers and one for Sellers/Businesses",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Site-wide AI assistant available on every page (all user sides) with business knowledge (incl. ANC Apprentice Program Center) and an in-app “Escalate to Management” option that is only offered when the AI cannot assist; escalation shows management contact number 352-480-9856 (no SMS integration).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Implement an affiliate marketing program with milestone-based commission increases (start 8%, cap 50% at 5000 successful referrals), milestone rewards/recognition, and lifetime recurring commissions for customers assigned under an affiliate; include one-month recurring commissions bonus at 1000 and 3000 referrals",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Add affiliate payout options and workflow supporting PayPal and Cash App payouts",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Create a public page to display the PCI Compliance Certificate and the Privacy Policy",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Implement cookie consent/permissions popup and a human-check (CAPTCHA) challenge popup",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Expand the on-canister Assistant Knowledge Base so the assistant can accurately answer questions about ANC’s business details provided by the owner (registered name, origin/state history, veteran support, women-owned/family-run, motto, apprentice center, marketplace pricing model, dropshipping, mentorship/consulting, contact email, and PCI compliance). This must be done by updating/adding seeded knowledge entries in the backend so a fresh deployment has the new information available without manual admin data entry.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Implement an Affiliate Marketing Program commission rules engine and persistence in the backend to support: (1) starting commission rate of 8%, (2) milestone-based increases at 100, 300, 500, 700, 1000, 1500, 2000, and continuing onward, (3) a hard cap of 50% at 5000 successful referrals/sales, (4) a bonus of “one month of recurring commissions” at 1000 and at 3000, and (5) “lifetime recurring commissions” where customers signed up under an affiliate are assigned to that affiliate so the affiliate earns commission on that customer’s purchases for life.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Add backend support for affiliate payout preferences limited to PayPal or Cash App, and provide admin-accessible reporting/export endpoints for affiliate earnings and payout readiness. Do not implement actual PayPal or Cash App transfers.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Implement backend support for a flat $5 service fee per sale (not a percentage), applied only when a sale occurs, and ensure the marketplace owner is exempt from the fee.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Update the seeded assistant knowledge entry about the marketplace pricing model to explicitly state: store access and service access are free; the charge is a $5 service fee per sale; there is no monthly bill unless the user converts their online store/service profile into a standalone website or app (which is $10/month).",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Update navigation menus so all built pages are accessible: add seller/business pages to the seller/business dropdown menu, customer pages to the customer dropdown menu, and add a site-wide dropdown menu option linking to the Privacy Policy page.",
+      "reqIds": [],
       "status": "pending"
     }
   ],
