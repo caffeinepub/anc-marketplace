@@ -1,22 +1,24 @@
-const COOKIE_CONSENT_KEY = 'anc-cookie-consent';
+const COOKIE_CONSENT_KEY = 'anc_cookie_consent';
 
-export type CookieConsentStatus = 'unknown' | 'accepted' | 'rejected';
-
-export function getCookieConsent(): CookieConsentStatus {
-  if (typeof window === 'undefined') return 'unknown';
+export function getCookieConsent(): boolean | null {
+  if (typeof window === 'undefined') return null;
   
   const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
-  if (stored === 'accepted' || stored === 'rejected') {
-    return stored as CookieConsentStatus;
+  if (stored === null) return null;
+  
+  try {
+    return stored === 'true';
+  } catch {
+    return null;
   }
-  return 'unknown';
 }
 
-export function setCookieConsent(status: 'accepted' | 'rejected'): void {
+export function setCookieConsent(accepted: boolean): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(COOKIE_CONSENT_KEY, status);
+  
+  localStorage.setItem(COOKIE_CONSENT_KEY, accepted.toString());
 }
 
-export function shouldShowCookieConsent(): boolean {
-  return getCookieConsent() === 'unknown';
+export function hasCookieConsent(): boolean {
+  return getCookieConsent() !== null;
 }

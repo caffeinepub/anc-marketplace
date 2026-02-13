@@ -105,9 +105,23 @@ export interface MarketplaceRoadmap {
     roadmapId: string;
     notes: string;
 }
+export interface PolicySignatureRecord {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: PolicyIdentifier;
+    timestamp: bigint;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
+}
+export interface UnansweredQuestion {
+    id: string;
+    question: string;
+    creationTime: bigint;
+    interactionCount: bigint;
+    categorySuggestion: string;
 }
 export interface AdminPageSectionStatus {
     status: Variant_completed_comingSoon_inProgress;
@@ -126,6 +140,7 @@ export interface http_request_result {
 export interface AssistantKnowledgeEntry {
     id: string;
     question: string;
+    isBusinessOps: boolean;
     usageCount: bigint;
     lastUpdated: bigint;
     answer: string;
@@ -152,6 +167,10 @@ export interface AdminDashboardData {
     adminSections: Array<AdminPageSectionStatus>;
     marketplaceRoadmap: Array<MarketplaceRoadmap>;
 }
+export interface StripeConfiguration {
+    allowedCountries: Array<string>;
+    secretKey: string;
+}
 export type StripeSessionStatus = {
     __kind__: "completed";
     completed: {
@@ -164,10 +183,6 @@ export type StripeSessionStatus = {
         error: string;
     };
 };
-export interface StripeConfiguration {
-    allowedCountries: Array<string>;
-    secretKey: string;
-}
 export interface AdminPageStatusDetails {
     version: string;
     notes: string;
@@ -202,6 +217,12 @@ export enum AdminPageSection {
     affiliate = "affiliate",
     funding = "funding"
 }
+export enum PolicyIdentifier {
+    terms = "terms",
+    shipping = "shipping",
+    privacy = "privacy",
+    returns = "returns"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -219,16 +240,20 @@ export interface backendInterface {
     _caffeineStorageCreateCertificate(blobHash: string): Promise<_CaffeineStorageCreateCertificateResult>;
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
+    addKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
     askAssistant(question: string, category: string): Promise<string | null>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignRole(user: Principal, role: UserRole): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    getActiveKnowledgeByCategory(category: string): Promise<Array<AssistantKnowledgeEntry>>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getFunnelPartner(): Promise<FunnelPartner>;
+    getSignatureByPolicy(policyIdentifier: PolicyIdentifier): Promise<PolicySignatureRecord | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getUnansweredQuestions(): Promise<Array<UnansweredQuestion>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
@@ -237,12 +262,16 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
+    signPolicy(policyRecord: PolicySignatureRecord): Promise<void>;
+    submitBusinessOpsQuestion(question: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
     updateFunnelPartner(partner: FunnelPartner): Promise<void>;
+    updateKnowledgeEntry(id: string, newAnswer: string): Promise<void>;
     updateMarketplaceRoadmap(): Promise<void>;
+    verifyPolicySignature(policyIdentifier: PolicyIdentifier, policyVersion: string): Promise<boolean>;
 }
-import type { AccessRole as _AccessRole, AdminDashboardData as _AdminDashboardData, AdminPageSection as _AdminPageSection, AdminPageSectionStatus as _AdminPageSectionStatus, AdminPageStatusDetails as _AdminPageStatusDetails, MarketplaceRoadmap as _MarketplaceRoadmap, StripeSessionStatus as _StripeSessionStatus, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AccessRole as _AccessRole, AdminDashboardData as _AdminDashboardData, AdminPageSection as _AdminPageSection, AdminPageSectionStatus as _AdminPageSectionStatus, AdminPageStatusDetails as _AdminPageStatusDetails, MarketplaceRoadmap as _MarketplaceRoadmap, PolicyIdentifier as _PolicyIdentifier, PolicySignatureRecord as _PolicySignatureRecord, StripeSessionStatus as _StripeSessionStatus, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -329,6 +358,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async addKnowledgeEntry(arg0: AssistantKnowledgeEntry): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addKnowledgeEntry(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addKnowledgeEntry(arg0);
+            return result;
+        }
+    }
     async askAssistant(arg0: string, arg1: string): Promise<string | null> {
         if (this.processError) {
             try {
@@ -382,6 +425,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.createCheckoutSession(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async getActiveKnowledgeByCategory(arg0: string): Promise<Array<AssistantKnowledgeEntry>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getActiveKnowledgeByCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getActiveKnowledgeByCategory(arg0);
             return result;
         }
     }
@@ -455,18 +512,46 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getSignatureByPolicy(arg0: PolicyIdentifier): Promise<PolicySignatureRecord | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSignatureByPolicy(to_candid_PolicyIdentifier_n27(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSignatureByPolicy(to_candid_PolicyIdentifier_n27(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getStripeSessionStatus(arg0: string): Promise<StripeSessionStatus> {
         if (this.processError) {
             try {
                 const result = await this.actor.getStripeSessionStatus(arg0);
-                return from_candid_StripeSessionStatus_n27(this._uploadFile, this._downloadFile, result);
+                return from_candid_StripeSessionStatus_n34(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStripeSessionStatus(arg0);
-            return from_candid_StripeSessionStatus_n27(this._uploadFile, this._downloadFile, result);
+            return from_candid_StripeSessionStatus_n34(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUnansweredQuestions(): Promise<Array<UnansweredQuestion>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUnansweredQuestions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUnansweredQuestions();
+            return result;
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -542,14 +627,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n30(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n37(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n30(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n37(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -578,6 +663,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.setStripeConfiguration(arg0);
+            return result;
+        }
+    }
+    async signPolicy(arg0: PolicySignatureRecord): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.signPolicy(to_candid_PolicySignatureRecord_n41(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.signPolicy(to_candid_PolicySignatureRecord_n41(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async submitBusinessOpsQuestion(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitBusinessOpsQuestion(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitBusinessOpsQuestion(arg0);
             return result;
         }
     }
@@ -623,6 +736,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateKnowledgeEntry(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateKnowledgeEntry(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateKnowledgeEntry(arg0, arg1);
+            return result;
+        }
+    }
     async updateMarketplaceRoadmap(): Promise<void> {
         if (this.processError) {
             try {
@@ -634,6 +761,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateMarketplaceRoadmap();
+            return result;
+        }
+    }
+    async verifyPolicySignature(arg0: PolicyIdentifier, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifyPolicySignature(to_candid_PolicyIdentifier_n27(this._uploadFile, this._downloadFile, arg0), arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifyPolicySignature(to_candid_PolicyIdentifier_n27(this._uploadFile, this._downloadFile, arg0), arg1);
             return result;
         }
     }
@@ -650,8 +791,14 @@ function from_candid_AdminPageSectionStatus_n14(_uploadFile: (file: ExternalBlob
 function from_candid_AdminPageSection_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdminPageSection): AdminPageSection {
     return from_candid_variant_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_StripeSessionStatus_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
-    return from_candid_variant_n28(_uploadFile, _downloadFile, value);
+function from_candid_PolicyIdentifier_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PolicyIdentifier): PolicyIdentifier {
+    return from_candid_variant_n33(_uploadFile, _downloadFile, value);
+}
+function from_candid_PolicySignatureRecord_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PolicySignatureRecord): PolicySignatureRecord {
+    return from_candid_record_n31(_uploadFile, _downloadFile, value);
+}
+function from_candid_StripeSessionStatus_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n35(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserProfile_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
     return from_candid_record_n22(_uploadFile, _downloadFile, value);
@@ -667,6 +814,9 @@ function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 }
 function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : from_candid_UserProfile_n21(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_PolicySignatureRecord]): PolicySignatureRecord | null {
+    return value.length === 0 ? null : from_candid_PolicySignatureRecord_n30(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];
@@ -731,7 +881,28 @@ function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uin
         activeRole: from_candid_AccessRole_n23(_uploadFile, _downloadFile, value.activeRole)
     };
 }
-function from_candid_record_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: _PolicyIdentifier;
+    timestamp: bigint;
+}): {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: PolicyIdentifier;
+    timestamp: bigint;
+} {
+    return {
+        signerName: value.signerName,
+        signature: value.signature,
+        policyVersion: value.policyVersion,
+        policyIdentifier: from_candid_PolicyIdentifier_n32(_uploadFile, _downloadFile, value.policyIdentifier),
+        timestamp: value.timestamp
+    };
+}
+function from_candid_record_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     userPrincipal: [] | [string];
     response: string;
 }): {
@@ -799,7 +970,18 @@ function from_candid_variant_n26(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    terms: null;
+} | {
+    shipping: null;
+} | {
+    privacy: null;
+} | {
+    returns: null;
+}): PolicyIdentifier {
+    return "terms" in value ? PolicyIdentifier.terms : "shipping" in value ? PolicyIdentifier.shipping : "privacy" in value ? PolicyIdentifier.privacy : "returns" in value ? PolicyIdentifier.returns : value;
+}
+function from_candid_variant_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     completed: {
         userPrincipal: [] | [string];
         response: string;
@@ -822,7 +1004,7 @@ function from_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "completed" in value ? {
         __kind__: "completed",
-        completed: from_candid_record_n29(_uploadFile, _downloadFile, value.completed)
+        completed: from_candid_record_n36(_uploadFile, _downloadFile, value.completed)
     } : "failed" in value ? {
         __kind__: "failed",
         failed: value.failed
@@ -831,11 +1013,17 @@ function from_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Ui
 function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdminPageSectionStatus>): Array<AdminPageSectionStatus> {
     return value.map((x)=>from_candid_AdminPageSectionStatus_n14(_uploadFile, _downloadFile, x));
 }
-function to_candid_AccessRole_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AccessRole): _AccessRole {
-    return to_candid_variant_n33(_uploadFile, _downloadFile, value);
+function to_candid_AccessRole_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AccessRole): _AccessRole {
+    return to_candid_variant_n40(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n31(_uploadFile, _downloadFile, value);
+function to_candid_PolicyIdentifier_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PolicyIdentifier): _PolicyIdentifier {
+    return to_candid_variant_n28(_uploadFile, _downloadFile, value);
+}
+function to_candid_PolicySignatureRecord_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PolicySignatureRecord): _PolicySignatureRecord {
+    return to_candid_record_n42(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserProfile_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n38(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n10(_uploadFile, _downloadFile, value);
@@ -855,7 +1043,7 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
 }
-function to_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     accountCreated: bigint;
     fullName: string;
     email: string;
@@ -873,7 +1061,28 @@ function to_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         fullName: value.fullName,
         email: value.email,
         subscriptionId: value.subscriptionId ? candid_some(value.subscriptionId) : candid_none(),
-        activeRole: to_candid_AccessRole_n32(_uploadFile, _downloadFile, value.activeRole)
+        activeRole: to_candid_AccessRole_n39(_uploadFile, _downloadFile, value.activeRole)
+    };
+}
+function to_candid_record_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: PolicyIdentifier;
+    timestamp: bigint;
+}): {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: _PolicyIdentifier;
+    timestamp: bigint;
+} {
+    return {
+        signerName: value.signerName,
+        signature: value.signature,
+        policyVersion: value.policyVersion,
+        policyIdentifier: to_candid_PolicyIdentifier_n27(_uploadFile, _downloadFile, value.policyIdentifier),
+        timestamp: value.timestamp
     };
 }
 function to_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
@@ -891,7 +1100,26 @@ function to_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint
         guest: null
     } : value;
 }
-function to_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AccessRole): {
+function to_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PolicyIdentifier): {
+    terms: null;
+} | {
+    shipping: null;
+} | {
+    privacy: null;
+} | {
+    returns: null;
+} {
+    return value == PolicyIdentifier.terms ? {
+        terms: null
+    } : value == PolicyIdentifier.shipping ? {
+        shipping: null
+    } : value == PolicyIdentifier.privacy ? {
+        privacy: null
+    } : value == PolicyIdentifier.returns ? {
+        returns: null
+    } : value;
+}
+function to_candid_variant_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AccessRole): {
     b2bMember: null;
 } | {
     startUpMember: null;

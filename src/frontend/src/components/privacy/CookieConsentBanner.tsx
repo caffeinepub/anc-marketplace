@@ -1,67 +1,60 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Cookie } from 'lucide-react';
-import { shouldShowCookieConsent, setCookieConsent } from '@/lib/cookieConsent';
-import { useNavigate } from '@tanstack/react-router';
+import { getCookieConsent, setCookieConsent } from '../../lib/cookieConsent';
 
 export default function CookieConsentBanner() {
-  const [show, setShow] = useState(false);
-  const navigate = useNavigate();
+  const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    setShow(shouldShowCookieConsent());
+    const consent = getCookieConsent();
+    if (consent === null) {
+      setShowBanner(true);
+    }
   }, []);
 
   const handleAccept = () => {
-    setCookieConsent('accepted');
-    setShow(false);
+    setCookieConsent(true);
+    setShowBanner(false);
   };
 
   const handleReject = () => {
-    setCookieConsent('rejected');
-    setShow(false);
+    setCookieConsent(false);
+    setShowBanner(false);
   };
 
-  const handleViewPolicy = () => {
-    navigate({ to: '/privacy-policy' });
-  };
-
-  if (!show) return null;
+  if (!showBanner) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md">
       <Card className="shadow-lg border-2">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Cookie className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Cookie Consent</CardTitle>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <Cookie className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+            <div className="flex-1 space-y-3">
+              <h3 className="font-semibold text-lg">Cookie Consent</h3>
+              <p className="text-sm text-muted-foreground">
+                We use cookies to enhance your browsing experience and analyze site traffic. By clicking "Accept", you
+                consent to our use of cookies.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={handleAccept} size="sm" className="flex-1">
+                  Accept
+                </Button>
+                <Button onClick={handleReject} variant="outline" size="sm" className="flex-1">
+                  Reject
+                </Button>
+              </div>
+              <Link to="/privacy-policy" className="text-xs text-primary hover:underline block">
+                Learn more in our Privacy Policy
+              </Link>
+            </div>
           </div>
-          <CardDescription>
-            We use cookies to enhance your browsing experience and analyze site traffic.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pb-3">
-          <p className="text-sm text-muted-foreground">
-            By clicking "Accept", you consent to our use of cookies. You can learn more about 
-            how we use cookies in our{' '}
-            <button
-              onClick={handleViewPolicy}
-              className="underline hover:text-foreground font-medium"
-            >
-              Privacy Policy
-            </button>
-            .
-          </p>
         </CardContent>
-        <CardFooter className="flex gap-2">
-          <Button onClick={handleAccept} className="flex-1">
-            Accept
-          </Button>
-          <Button onClick={handleReject} variant="outline" className="flex-1">
-            Reject
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

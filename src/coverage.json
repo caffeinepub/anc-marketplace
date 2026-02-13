@@ -1,49 +1,202 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T14:10:16.555Z",
+  "generatedAt": "2026-02-13T01:41:26.959Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 7,
+    "implemented": 7,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the global UI theme so the primary brand color is navy blue (not green) across light and dark modes, including primary/ring/sidebar variables and any custom gradient/outline styles that currently use the green hue.",
+        "summary": "Add site-wide footer content on every page (via the shared layout) that includes: (a) copyright notice \"© ANC Electronics N More\"; (b) \"PCI Compliant # 201100278838\"; (c) the provided business/contact information exactly as written; (d) a \"Partners\" line mentioning \"Authorize.net\" and \"Zen dash\"; and (e) major credit/debit card brand logos (Visa, Mastercard, and other major brands) displayed in the footer.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/index.css"
+          "frontend/src/components/Footer.tsx",
+          "frontend/public/policies/business-contact-info.txt",
+          "frontend/public/assets/generated/payment-logos-strip.dim_800x120.png",
+          "frontend/public/assets/generated/authorize-net-logo.dim_240x80.png",
+          "frontend/public/assets/generated/zen-dash-logo.dim_240x80.png",
+          "frontend/src/components/Layout.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/index.css"
+          "frontend/src/components/Footer.tsx",
+          "frontend/public/assets/generated/payment-logos-strip.dim_800x120.png",
+          "frontend/public/assets/generated/authorize-net-logo.dim_240x80.png",
+          "frontend/public/assets/generated/zen-dash-logo.dim_240x80.png",
+          "frontend/src/components/Layout.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Update PWA/browser theme metadata colors to match the new navy blue theme color.",
+        "summary": "Create new legal policy pages for Shipping Policy, Returns Policy, and Terms & Conditions, and make them accessible from the footer on every page.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/index.html",
-          "frontend/public/manifest.json"
+          "frontend/src/pages/ShippingPolicyPage.tsx",
+          "frontend/src/pages/ReturnsPolicyPage.tsx",
+          "frontend/src/pages/TermsConditionsPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx",
+          "frontend/public/policies/shipping-policy.md",
+          "frontend/public/policies/returns-policy.md",
+          "frontend/public/policies/terms-and-conditions.md",
+          "frontend/src/components/Footer.tsx"
         ],
         "matchedFiles": [
-          "frontend/index.html",
-          "frontend/public/manifest.json"
+          "frontend/src/pages/ShippingPolicyPage.tsx",
+          "frontend/src/pages/ReturnsPolicyPage.tsx",
+          "frontend/src/pages/TermsConditionsPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx",
+          "frontend/public/policies/shipping-policy.md",
+          "frontend/public/policies/returns-policy.md",
+          "frontend/public/policies/terms-and-conditions.md",
+          "frontend/src/components/Footer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Update the existing Privacy Policy page content to use the privacy policy text the user uploads (replace the current placeholder policy content), while keeping the route/path to the privacy policy page stable.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/policies/privacy-policy.md",
+          "frontend/src/pages/PrivacyPolicyPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/public/policies/privacy-policy.md",
+          "frontend/src/pages/PrivacyPolicyPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Ensure a cookie permission pop-up is present and functional: allow users to Accept or Reject cookies, persist their choice locally, and provide a clear link to view the Privacy Policy from the banner.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/privacy/CookieConsentBanner.tsx",
+          "frontend/src/lib/cookieConsent.ts",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/privacy/CookieConsentBanner.tsx",
+          "frontend/src/lib/cookieConsent.ts",
+          "frontend/src/components/Layout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Implement a digital policy acceptance + signature flow that applies to both customers and sellers: users must (1) explicitly accept and (2) digitally sign each of the following policies: Privacy Policy, Shipping Policy, Returns Policy, Terms & Conditions. Store per-user acceptance records including policy identifier, policy version/last-updated value, signature name/text, and timestamp.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/policies.ts",
+          "frontend/src/hooks/usePolicySignatures.ts",
+          "frontend/src/components/policies/PolicySignaturesPanel.tsx",
+          "frontend/src/pages/CustomerSettingsPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/policies.ts",
+          "frontend/src/components/policies/PolicySignaturesPanel.tsx",
+          "frontend/src/pages/CustomerSettingsPage.tsx",
+          "frontend/src/components/policies/PolicyDocument.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Enforce policy signing: when an authenticated user has not signed all required policies, block access to actions that imply usage of the marketplace (at minimum: purchasing/checkout flows and seller/business tools) until all required policies are signed, and provide a clear navigation path to complete signing.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/policies/RequirePolicySignatures.tsx",
+          "frontend/src/pages/StorePage.tsx",
+          "frontend/src/pages/StoreBuilderPage.tsx",
+          "frontend/src/pages/StartupDashboard.tsx",
+          "frontend/src/pages/B2BDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/policies/RequirePolicySignatures.tsx",
+          "frontend/src/pages/StorePage.tsx",
+          "frontend/src/pages/StoreBuilderPage.tsx",
+          "frontend/src/pages/StartupDashboard.tsx",
+          "frontend/src/pages/B2BDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Add the new policy routes (Shipping, Returns, Terms) to the app router and include them in both desktop and mobile navigation only where appropriate (footer links are required; header nav can remain unchanged unless necessary).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Footer.tsx",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Footer.tsx",
+          "frontend/src/components/Layout.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.html",
-    "frontend/public/manifest.json",
-    "frontend/src/index.css",
+    "frontend/public/assets/generated/authorize-net-logo.dim_240x80.png",
+    "frontend/public/assets/generated/payment-logos-strip.dim_800x120.png",
+    "frontend/public/assets/generated/zen-dash-logo.dim_240x80.png",
+    "frontend/public/policies/privacy-policy.md",
+    "frontend/public/policies/returns-policy.md",
+    "frontend/public/policies/shipping-policy.md",
+    "frontend/public/policies/terms-and-conditions.md",
+    "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/ProfileSetup.tsx",
+    "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
+    "frontend/src/components/admin/UserRoleManagement.tsx",
+    "frontend/src/components/admin/assistant/AssistantKnowledgeBaseAdmin.tsx",
+    "frontend/src/components/admin/assistant/UnansweredQuestionsAdmin.tsx",
+    "frontend/src/components/policies/PolicyDocument.tsx",
+    "frontend/src/components/policies/PolicySignaturesPanel.tsx",
+    "frontend/src/components/policies/RequirePolicySignatures.tsx",
+    "frontend/src/components/privacy/CookieConsentBanner.tsx",
+    "frontend/src/components/startup/Activities.tsx",
+    "frontend/src/components/startup/BusinessCredit.tsx",
+    "frontend/src/components/startup/ClassesLessons.tsx",
+    "frontend/src/components/startup/VirtualMeetings.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/lib/cookieConsent.ts",
+    "frontend/src/lib/policies.ts",
+    "frontend/src/pages/AdminDashboard.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/AppCenterPage.tsx",
+    "frontend/src/pages/AppLaunchPage.tsx",
+    "frontend/src/pages/AppointmentDashboard53.tsx",
+    "frontend/src/pages/B2BDashboard.tsx",
+    "frontend/src/pages/CustomerFavoritesPage.tsx",
+    "frontend/src/pages/CustomerProfileHome.tsx",
+    "frontend/src/pages/CustomerSettingsPage.tsx",
+    "frontend/src/pages/CustomerWishlistPage.tsx",
+    "frontend/src/pages/FunnelsPage.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/PaymentFailure.tsx",
+    "frontend/src/pages/PaymentSuccess.tsx",
+    "frontend/src/pages/PrivacyPolicyPage.tsx",
+    "frontend/src/pages/ReturnsPolicyPage.tsx",
+    "frontend/src/pages/ShippingPolicyPage.tsx",
+    "frontend/src/pages/StartupDashboard.tsx",
+    "frontend/src/pages/StoreBuilderPage.tsx",
+    "frontend/src/pages/StorePage.tsx",
+    "frontend/src/pages/TermsConditionsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

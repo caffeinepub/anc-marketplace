@@ -1,18 +1,9 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
+import { StrictMode } from 'react';
+import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
-import StorePage from './pages/StorePage';
-import StartupDashboard from './pages/StartupDashboard';
-import B2BDashboard from './pages/B2BDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import AppCenterPage from './pages/AppCenterPage';
-import FunnelsPage from './pages/FunnelsPage';
-import StoreBuilderPage from './pages/StoreBuilderPage';
-import AppointmentDashboard53 from './pages/AppointmentDashboard53';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailure from './pages/PaymentFailure';
 import CustomerFAQ from './pages/CustomerFAQ';
 import SellersBusinessesFAQ from './pages/SellersBusinessesFAQ';
 import CustomerBlog from './pages/CustomerBlog';
@@ -21,16 +12,22 @@ import CustomerBlogPost from './pages/CustomerBlogPost';
 import SellersBusinessesBlogPost from './pages/SellersBusinessesBlogPost';
 import PciCompliancePage from './pages/PciCompliancePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import AffiliateDashboardPage from './pages/AffiliateDashboardPage';
-import CustomerProfileHome from './pages/CustomerProfileHome';
-import CustomerWishlistPage from './pages/CustomerWishlistPage';
-import CustomerFavoritesPage from './pages/CustomerFavoritesPage';
+import ShippingPolicyPage from './pages/ShippingPolicyPage';
+import ReturnsPolicyPage from './pages/ReturnsPolicyPage';
+import TermsConditionsPage from './pages/TermsConditionsPage';
 import CustomerSettingsPage from './pages/CustomerSettingsPage';
-import CustomerPurchaseHistoryPage from './pages/CustomerPurchaseHistoryPage';
-import CustomerMessagesPage from './pages/CustomerMessagesPage';
-import AppLaunchPage from './pages/AppLaunchPage';
 import RuntimeErrorBoundary from './components/RuntimeErrorBoundary';
 import RouterErrorScreen from './components/RouterErrorScreen';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const rootRoute = createRootRoute({
   component: Layout,
@@ -41,71 +38,6 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: HomePage,
-});
-
-const storeRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/store',
-  component: StorePage,
-});
-
-const startupDashboardRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/startup-dashboard',
-  component: StartupDashboard,
-});
-
-const b2bDashboardRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/b2b-dashboard',
-  component: B2BDashboard,
-});
-
-const adminDashboardRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin',
-  component: AdminDashboard,
-  validateSearch: (search: Record<string, unknown>): { tab?: string } => {
-    return {
-      tab: typeof search.tab === 'string' ? search.tab : undefined,
-    };
-  },
-});
-
-const appCenterRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/app-center',
-  component: AppCenterPage,
-});
-
-const funnelsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/funnels',
-  component: FunnelsPage,
-});
-
-const storeBuilderRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/store-builder',
-  component: StoreBuilderPage,
-});
-
-const appointmentDashboard53Route = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/appointment-dashboard53',
-  component: AppointmentDashboard53,
-});
-
-const paymentSuccessRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/payment-success',
-  component: PaymentSuccess,
-});
-
-const paymentFailureRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/payment-failure',
-  component: PaymentFailure,
 });
 
 const customerFAQRoute = createRoute({
@@ -156,28 +88,22 @@ const privacyPolicyRoute = createRoute({
   component: PrivacyPolicyPage,
 });
 
-const affiliateDashboardRoute = createRoute({
+const shippingPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/affiliate-dashboard',
-  component: AffiliateDashboardPage,
+  path: '/shipping-policy',
+  component: ShippingPolicyPage,
 });
 
-const customerProfileRoute = createRoute({
+const returnsPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/customer-profile',
-  component: CustomerProfileHome,
+  path: '/returns-policy',
+  component: ReturnsPolicyPage,
 });
 
-const customerWishlistRoute = createRoute({
+const termsConditionsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/customer-wishlist',
-  component: CustomerWishlistPage,
-});
-
-const customerFavoritesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/customer-favorites',
-  component: CustomerFavoritesPage,
+  path: '/terms-and-conditions',
+  component: TermsConditionsPage,
 });
 
 const customerSettingsRoute = createRoute({
@@ -186,42 +112,8 @@ const customerSettingsRoute = createRoute({
   component: CustomerSettingsPage,
 });
 
-const customerPurchasesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/customer-purchases',
-  component: CustomerPurchaseHistoryPage,
-});
-
-const customerMessagesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/customer-messages',
-  component: CustomerMessagesPage,
-});
-
-const appLaunchRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/app-launch',
-  component: AppLaunchPage,
-  validateSearch: (search: Record<string, unknown>): { url?: string; title?: string } => {
-    return {
-      url: typeof search.url === 'string' ? search.url : undefined,
-      title: typeof search.title === 'string' ? search.title : undefined,
-    };
-  },
-});
-
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  storeRoute,
-  startupDashboardRoute,
-  b2bDashboardRoute,
-  adminDashboardRoute,
-  appCenterRoute,
-  funnelsRoute,
-  storeBuilderRoute,
-  appointmentDashboard53Route,
-  paymentSuccessRoute,
-  paymentFailureRoute,
   customerFAQRoute,
   sellersBusinessesFAQRoute,
   customerBlogRoute,
@@ -230,14 +122,10 @@ const routeTree = rootRoute.addChildren([
   sellersBusinessesBlogPostRoute,
   pciComplianceRoute,
   privacyPolicyRoute,
-  affiliateDashboardRoute,
-  customerProfileRoute,
-  customerWishlistRoute,
-  customerFavoritesRoute,
+  shippingPolicyRoute,
+  returnsPolicyRoute,
+  termsConditionsRoute,
   customerSettingsRoute,
-  customerPurchasesRoute,
-  customerMessagesRoute,
-  appLaunchRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -250,11 +138,14 @@ declare module '@tanstack/react-router' {
 
 export default function App() {
   return (
-    <RuntimeErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <RouterProvider router={router} />
-        <Toaster />
-      </ThemeProvider>
-    </RuntimeErrorBoundary>
+    <StrictMode>
+      <RuntimeErrorBoundary>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </ThemeProvider>
+      </RuntimeErrorBoundary>
+    </StrictMode>
   );
 }

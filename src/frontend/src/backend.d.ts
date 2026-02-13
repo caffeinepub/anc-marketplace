@@ -20,6 +20,20 @@ export interface MarketplaceRoadmap {
     roadmapId: string;
     notes: string;
 }
+export interface PolicySignatureRecord {
+    signerName: string;
+    signature: string;
+    policyVersion: string;
+    policyIdentifier: PolicyIdentifier;
+    timestamp: bigint;
+}
+export interface UnansweredQuestion {
+    id: string;
+    question: string;
+    creationTime: bigint;
+    interactionCount: bigint;
+    categorySuggestion: string;
+}
 export interface AdminPageSectionStatus {
     status: Variant_completed_comingSoon_inProgress;
     section: AdminPageSection;
@@ -37,6 +51,7 @@ export interface http_request_result {
 export interface AssistantKnowledgeEntry {
     id: string;
     question: string;
+    isBusinessOps: boolean;
     usageCount: bigint;
     lastUpdated: bigint;
     answer: string;
@@ -63,6 +78,10 @@ export interface AdminDashboardData {
     adminSections: Array<AdminPageSectionStatus>;
     marketplaceRoadmap: Array<MarketplaceRoadmap>;
 }
+export interface StripeConfiguration {
+    allowedCountries: Array<string>;
+    secretKey: string;
+}
 export type StripeSessionStatus = {
     __kind__: "completed";
     completed: {
@@ -75,10 +94,6 @@ export type StripeSessionStatus = {
         error: string;
     };
 };
-export interface StripeConfiguration {
-    allowedCountries: Array<string>;
-    secretKey: string;
-}
 export interface AdminPageStatusDetails {
     version: string;
     notes: string;
@@ -109,6 +124,12 @@ export enum AdminPageSection {
     affiliate = "affiliate",
     funding = "funding"
 }
+export enum PolicyIdentifier {
+    terms = "terms",
+    shipping = "shipping",
+    privacy = "privacy",
+    returns = "returns"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -120,16 +141,20 @@ export enum Variant_completed_comingSoon_inProgress {
     inProgress = "inProgress"
 }
 export interface backendInterface {
+    addKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
     askAssistant(question: string, category: string): Promise<string | null>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignRole(user: Principal, role: UserRole): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    getActiveKnowledgeByCategory(category: string): Promise<Array<AssistantKnowledgeEntry>>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getFunnelPartner(): Promise<FunnelPartner>;
+    getSignatureByPolicy(policyIdentifier: PolicyIdentifier): Promise<PolicySignatureRecord | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getUnansweredQuestions(): Promise<Array<UnansweredQuestion>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
@@ -138,8 +163,12 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
+    signPolicy(policyRecord: PolicySignatureRecord): Promise<void>;
+    submitBusinessOpsQuestion(question: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
     updateFunnelPartner(partner: FunnelPartner): Promise<void>;
+    updateKnowledgeEntry(id: string, newAnswer: string): Promise<void>;
     updateMarketplaceRoadmap(): Promise<void>;
+    verifyPolicySignature(policyIdentifier: PolicyIdentifier, policyVersion: string): Promise<boolean>;
 }

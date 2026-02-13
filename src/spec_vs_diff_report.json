@@ -1,31 +1,138 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T14:10:16.552Z",
-  "summary": "REQ-1 and REQ-2 appear implemented via updates to global CSS theme tokens (including primary/ring/sidebar and custom logo/outline styles) and PWA/browser theme metadata colors. Two additional modified files (frontend-file-summaries.txt and project_state.json) are not part of the requested changes.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-13T01:41:26.955Z",
+  "summary": "Diff implements new policy routes/pages via markdown files, adds a new Footer component with legal/contact/payment info, adds a cookie consent banner with local persistence and a Privacy Policy link, and introduces components/hooks for a policy signature UI plus backend types/migration scaffolding. However, several BuildRequest specifics are either not evidenced or appear incomplete (notably uploaded privacy policy content, enforcement of signing in checkout/seller tools, and required monochrome logo images).",
+  "missing_requirements": [
     {
-      "description": "Updated/added extensive project-wide change summaries unrelated to the requested theme color change.",
-      "reason": "BuildRequest only asked for theme color updates in CSS and PWA metadata; modifying a repository summary file is not requested.",
+      "id": "REQ-1",
+      "requirement": "Footer must include copyright notice \"© ANC Electronics N More\" and \"PCI Compliant # 201100278838\" and show required logos (including provided monochrome strip images).",
+      "reason": "Footer.tsx shows contact block, partners text, and card icons, but the diff is truncated before the bottom bar where copyright/PCI text would likely appear; also the required image assets (payment-logos-strip, Authorize.net logo, Zen dash logo) are not referenced—icons are used instead.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/components/Footer.tsx (truncated)"
       ]
     },
     {
-      "description": "Updated project tracking/state metadata (e.g., new_feature_requests entries) unrelated to implementing the theme change itself.",
-      "reason": "BuildRequest does not request changes to project_state.json or any project management metadata.",
+      "id": "REQ-1",
+      "requirement": "Use the required provided contact/business info block exactly as written.",
+      "reason": "Footer.tsx includes a contact info block, but the BuildRequest demands it match 'exactly as written'. The diff summary does not include the original provided block for exact comparison, so exactness cannot be verified from the diff alone.",
       "evidence": [
-        "project_state.json"
+        "frontend/src/components/Footer.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Privacy Policy page content must be replaceable with user-uploaded policy text (no placeholder remains once uploaded) while keeping the same route.",
+      "reason": "Privacy policy content is implemented as a static public markdown file fetched by PolicyDocument; there is no evidence of an upload-driven mechanism or dynamic replacement without code changes.",
+      "evidence": [
+        "frontend/public/policies/privacy-policy.md",
+        "frontend/src/components/policies/PolicyDocument.tsx (truncated)",
+        "frontend/src/App.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Backend must store per-user acceptance records (policy identifier, policy version/last-updated value, signature, timestamp) and frontend must fetch current user acceptance status reliably after refresh.",
+      "reason": "Backend types and a migration adding policySignaturesByUser are shown, and frontend has hooks/components that call verify/sign, but the diff summary does not show the backend methods (e.g., signPolicy, verify/get status) or stable query endpoints; backend/main.mo is truncated and does not evidence the required storage logic and query methods.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "backend/migration.mo",
+        "frontend/src/components/policies/PolicySignaturesPanel.tsx (truncated)",
+        "frontend/src/components/policies/RequirePolicySignatures.tsx",
+        "frontend/src/hooks/useQueries.ts (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Enforce policy signing by blocking marketplace-critical actions (at minimum: purchasing/checkout flows and seller/business tools) until all required policies are signed, with a navigation path to complete signing.",
+      "reason": "RequirePolicySignatures wrapper component exists, but there is no evidence it is applied to checkout/purchasing routes or seller/business tools in the shown router/layout changes. The router shows policy/settings routes only; no evidence of gating on critical flows.",
+      "evidence": [
+        "frontend/src/components/policies/RequirePolicySignatures.tsx",
+        "frontend/src/App.tsx (truncated)"
       ]
     }
   ],
-  "confidence": 0.78,
+  "hallucinated_features": [
+    {
+      "description": "Added/linked a PCI Compliance page in the footer and router.",
+      "reason": "BuildRequest did not ask to add a new PCI compliance page/route; REQ-1 only requested displaying the PCI compliance text in the footer.",
+      "evidence": [
+        "frontend/src/components/Footer.tsx (truncated)",
+        "frontend/src/App.tsx (truncated)"
+      ]
+    },
+    {
+      "description": "Large set of admin UI changes unrelated to legal pages/cookie consent/policy signatures (assistant knowledge base admin, unanswered questions admin, marketplace roadmap admin, user role management UI updates, multiple admin pages).",
+      "reason": "Not requested by any REQ; appears to be scope expansion beyond legal/compliance/signature work.",
+      "evidence": [
+        "frontend/src/components/admin/assistant/AssistantKnowledgeBaseAdmin.tsx (truncated)",
+        "frontend/src/components/admin/assistant/UnansweredQuestionsAdmin.tsx (truncated)",
+        "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx (truncated)",
+        "frontend/src/components/admin/UserRoleManagement.tsx (truncated)",
+        "frontend/src/pages/AdminDashboard.tsx",
+        "frontend/src/pages/AffiliateDashboardPage.tsx",
+        "frontend/src/pages/AppCenterPage.tsx",
+        "frontend/src/pages/AppLaunchPage.tsx",
+        "frontend/src/pages/AppointmentDashboard53.tsx"
+      ]
+    },
+    {
+      "description": "Promotional banner added to Layout with emoji content.",
+      "reason": "Not part of requested legal/footer/cookie/signature requirements; also conflicts with the constraint to use English user-facing text (emoji is not English text, though not strictly disallowed).",
+      "evidence": [
+        "frontend/src/components/Layout.tsx (truncated)"
+      ]
+    }
+  ],
+  "confidence": 0.66,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/public/manifest.json",
-    "frontend/src/index.css",
+    "frontend/public/policies/privacy-policy.md",
+    "frontend/public/policies/returns-policy.md",
+    "frontend/public/policies/shipping-policy.md",
+    "frontend/public/policies/terms-and-conditions.md",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/ProfileSetup.tsx",
+    "frontend/src/components/admin/MarketplaceRoadmapAdmin.tsx",
+    "frontend/src/components/admin/UserRoleManagement.tsx",
+    "frontend/src/components/admin/assistant/AssistantKnowledgeBaseAdmin.tsx",
+    "frontend/src/components/admin/assistant/UnansweredQuestionsAdmin.tsx",
+    "frontend/src/components/policies/PolicyDocument.tsx",
+    "frontend/src/components/policies/PolicySignaturesPanel.tsx",
+    "frontend/src/components/policies/RequirePolicySignatures.tsx",
+    "frontend/src/components/privacy/CookieConsentBanner.tsx",
+    "frontend/src/components/startup/Activities.tsx",
+    "frontend/src/components/startup/BusinessCredit.tsx",
+    "frontend/src/components/startup/ClassesLessons.tsx",
+    "frontend/src/components/startup/VirtualMeetings.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/lib/cookieConsent.ts",
+    "frontend/src/lib/policies.ts",
+    "frontend/src/pages/AdminDashboard.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/AppCenterPage.tsx",
+    "frontend/src/pages/AppLaunchPage.tsx",
+    "frontend/src/pages/AppointmentDashboard53.tsx",
+    "frontend/src/pages/B2BDashboard.tsx",
+    "frontend/src/pages/CustomerFavoritesPage.tsx",
+    "frontend/src/pages/CustomerProfileHome.tsx",
+    "frontend/src/pages/CustomerSettingsPage.tsx",
+    "frontend/src/pages/CustomerWishlistPage.tsx",
+    "frontend/src/pages/FunnelsPage.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/PaymentFailure.tsx",
+    "frontend/src/pages/PaymentSuccess.tsx",
+    "frontend/src/pages/PrivacyPolicyPage.tsx",
+    "frontend/src/pages/ReturnsPolicyPage.tsx",
+    "frontend/src/pages/ShippingPolicyPage.tsx",
+    "frontend/src/pages/StartupDashboard.tsx",
+    "frontend/src/pages/StoreBuilderPage.tsx",
+    "frontend/src/pages/StorePage.tsx",
+    "frontend/src/pages/TermsConditionsPage.tsx",
     "project_state.json"
   ]
 }

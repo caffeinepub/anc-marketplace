@@ -19,6 +19,16 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const AssistantKnowledgeEntry = IDL.Record({
+  'id' : IDL.Text,
+  'question' : IDL.Text,
+  'isBusinessOps' : IDL.Bool,
+  'usageCount' : IDL.Nat,
+  'lastUpdated' : IDL.Int,
+  'answer' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'category' : IDL.Text,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -65,15 +75,6 @@ export const AdminDashboardData = IDL.Record({
   'adminSections' : IDL.Vec(AdminPageSectionStatus),
   'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
 });
-export const AssistantKnowledgeEntry = IDL.Record({
-  'id' : IDL.Text,
-  'question' : IDL.Text,
-  'usageCount' : IDL.Nat,
-  'lastUpdated' : IDL.Int,
-  'answer' : IDL.Text,
-  'isActive' : IDL.Bool,
-  'category' : IDL.Text,
-});
 export const AccessRole = IDL.Variant({
   'b2bMember' : IDL.Null,
   'startUpMember' : IDL.Null,
@@ -91,12 +92,32 @@ export const FunnelPartner = IDL.Record({
   'signupLink' : IDL.Text,
   'profileLink' : IDL.Text,
 });
+export const PolicyIdentifier = IDL.Variant({
+  'terms' : IDL.Null,
+  'shipping' : IDL.Null,
+  'privacy' : IDL.Null,
+  'returns' : IDL.Null,
+});
+export const PolicySignatureRecord = IDL.Record({
+  'signerName' : IDL.Text,
+  'signature' : IDL.Text,
+  'policyVersion' : IDL.Text,
+  'policyIdentifier' : PolicyIdentifier,
+  'timestamp' : IDL.Int,
+});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
     'response' : IDL.Text,
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
+});
+export const UnansweredQuestion = IDL.Record({
+  'id' : IDL.Text,
+  'question' : IDL.Text,
+  'creationTime' : IDL.Int,
+  'interactionCount' : IDL.Nat,
+  'categorySuggestion' : IDL.Text,
 });
 export const UserRoleSummary = IDL.Record({
   'guestCount' : IDL.Nat,
@@ -153,6 +174,7 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+  'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
   'askAssistant' : IDL.Func(
       [IDL.Text, IDL.Text],
       [IDL.Opt(IDL.Text)],
@@ -165,6 +187,11 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
+  'getActiveKnowledgeByCategory' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(AssistantKnowledgeEntry)],
+      ['query'],
+    ),
   'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
   'getAssistantKnowledgeBase' : IDL.Func(
       [],
@@ -174,7 +201,17 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
+  'getSignatureByPolicy' : IDL.Func(
+      [PolicyIdentifier],
+      [IDL.Opt(PolicySignatureRecord)],
+      ['query'],
+    ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+  'getUnansweredQuestions' : IDL.Func(
+      [],
+      [IDL.Vec(UnansweredQuestion)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -187,6 +224,8 @@ export const idlService = IDL.Service({
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+  'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
+  'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
@@ -194,7 +233,13 @@ export const idlService = IDL.Service({
     ),
   'updateAdminDashboardData' : IDL.Func([], [], []),
   'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
+  'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateMarketplaceRoadmap' : IDL.Func([], [], []),
+  'verifyPolicySignature' : IDL.Func(
+      [PolicyIdentifier, IDL.Text],
+      [IDL.Bool],
+      ['query'],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -210,6 +255,16 @@ export const idlFactory = ({ IDL }) => {
   const _CaffeineStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const AssistantKnowledgeEntry = IDL.Record({
+    'id' : IDL.Text,
+    'question' : IDL.Text,
+    'isBusinessOps' : IDL.Bool,
+    'usageCount' : IDL.Nat,
+    'lastUpdated' : IDL.Int,
+    'answer' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'category' : IDL.Text,
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
@@ -257,15 +312,6 @@ export const idlFactory = ({ IDL }) => {
     'adminSections' : IDL.Vec(AdminPageSectionStatus),
     'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
   });
-  const AssistantKnowledgeEntry = IDL.Record({
-    'id' : IDL.Text,
-    'question' : IDL.Text,
-    'usageCount' : IDL.Nat,
-    'lastUpdated' : IDL.Int,
-    'answer' : IDL.Text,
-    'isActive' : IDL.Bool,
-    'category' : IDL.Text,
-  });
   const AccessRole = IDL.Variant({
     'b2bMember' : IDL.Null,
     'startUpMember' : IDL.Null,
@@ -283,12 +329,32 @@ export const idlFactory = ({ IDL }) => {
     'signupLink' : IDL.Text,
     'profileLink' : IDL.Text,
   });
+  const PolicyIdentifier = IDL.Variant({
+    'terms' : IDL.Null,
+    'shipping' : IDL.Null,
+    'privacy' : IDL.Null,
+    'returns' : IDL.Null,
+  });
+  const PolicySignatureRecord = IDL.Record({
+    'signerName' : IDL.Text,
+    'signature' : IDL.Text,
+    'policyVersion' : IDL.Text,
+    'policyIdentifier' : PolicyIdentifier,
+    'timestamp' : IDL.Int,
+  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
       'response' : IDL.Text,
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
+  });
+  const UnansweredQuestion = IDL.Record({
+    'id' : IDL.Text,
+    'question' : IDL.Text,
+    'creationTime' : IDL.Int,
+    'interactionCount' : IDL.Nat,
+    'categorySuggestion' : IDL.Text,
   });
   const UserRoleSummary = IDL.Record({
     'guestCount' : IDL.Nat,
@@ -342,6 +408,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+    'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
     'askAssistant' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Opt(IDL.Text)],
@@ -354,6 +421,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
+    'getActiveKnowledgeByCategory' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(AssistantKnowledgeEntry)],
+        ['query'],
+      ),
     'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
     'getAssistantKnowledgeBase' : IDL.Func(
         [],
@@ -363,7 +435,17 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
+    'getSignatureByPolicy' : IDL.Func(
+        [PolicyIdentifier],
+        [IDL.Opt(PolicySignatureRecord)],
+        ['query'],
+      ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+    'getUnansweredQuestions' : IDL.Func(
+        [],
+        [IDL.Vec(UnansweredQuestion)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -376,6 +458,8 @@ export const idlFactory = ({ IDL }) => {
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+    'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
+    'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
@@ -383,7 +467,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateAdminDashboardData' : IDL.Func([], [], []),
     'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
+    'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateMarketplaceRoadmap' : IDL.Func([], [], []),
+    'verifyPolicySignature' : IDL.Func(
+        [PolicyIdentifier, IDL.Text],
+        [IDL.Bool],
+        ['query'],
+      ),
   });
 };
 

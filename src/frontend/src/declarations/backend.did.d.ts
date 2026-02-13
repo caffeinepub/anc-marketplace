@@ -35,6 +35,7 @@ export interface AdminPageStatusDetails { 'version' : string, 'notes' : string }
 export interface AssistantKnowledgeEntry {
   'id' : string,
   'question' : string,
+  'isBusinessOps' : boolean,
   'usageCount' : bigint,
   'lastUpdated' : bigint,
   'answer' : string,
@@ -53,6 +54,17 @@ export interface MarketplaceRoadmap {
   'lastUpdated' : bigint,
   'roadmapId' : string,
   'notes' : string,
+}
+export type PolicyIdentifier = { 'terms' : null } |
+  { 'shipping' : null } |
+  { 'privacy' : null } |
+  { 'returns' : null };
+export interface PolicySignatureRecord {
+  'signerName' : string,
+  'signature' : string,
+  'policyVersion' : string,
+  'policyIdentifier' : PolicyIdentifier,
+  'timestamp' : bigint,
 }
 export interface ShoppingItem {
   'productName' : string,
@@ -77,6 +89,13 @@ export interface TransformationOutput {
   'status' : bigint,
   'body' : Uint8Array,
   'headers' : Array<http_header>,
+}
+export interface UnansweredQuestion {
+  'id' : string,
+  'question' : string,
+  'creationTime' : bigint,
+  'interactionCount' : bigint,
+  'categorySuggestion' : string,
 }
 export interface UserProfile {
   'accountCreated' : bigint,
@@ -126,6 +145,7 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
+  'addKnowledgeEntry' : ActorMethod<[AssistantKnowledgeEntry], undefined>,
   'askAssistant' : ActorMethod<[string, string], [] | [string]>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -133,12 +153,21 @@ export interface _SERVICE {
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'getActiveKnowledgeByCategory' : ActorMethod<
+    [string],
+    Array<AssistantKnowledgeEntry>
+  >,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFunnelPartner' : ActorMethod<[], FunnelPartner>,
+  'getSignatureByPolicy' : ActorMethod<
+    [PolicyIdentifier],
+    [] | [PolicySignatureRecord]
+  >,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getUnansweredQuestions' : ActorMethod<[], Array<UnansweredQuestion>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
@@ -147,10 +176,14 @@ export interface _SERVICE {
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
+  'signPolicy' : ActorMethod<[PolicySignatureRecord], undefined>,
+  'submitBusinessOpsQuestion' : ActorMethod<[string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
   'updateFunnelPartner' : ActorMethod<[FunnelPartner], undefined>,
+  'updateKnowledgeEntry' : ActorMethod<[string, string], undefined>,
   'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,
+  'verifyPolicySignature' : ActorMethod<[PolicyIdentifier, string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

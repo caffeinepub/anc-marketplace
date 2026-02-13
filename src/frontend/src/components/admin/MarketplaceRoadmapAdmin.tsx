@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetAdminDashboardData, useUpdateMarketplaceRoadmap } from '../../hooks/useQueries';
+import { useGetAdminDashboardData, useUpdateAdminDashboardData } from '../../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Loader2, Map, RefreshCw, CheckCircle2, Clock, AlertCircle } from 'lucid
 
 export default function MarketplaceRoadmapAdmin() {
   const { data: dashboardData, isLoading, error } = useGetAdminDashboardData();
-  const updateRoadmap = useUpdateMarketplaceRoadmap();
+  const updateRoadmap = useUpdateAdminDashboardData();
 
   const handleRefresh = async () => {
     try {

@@ -13,21 +13,21 @@ export default function HomePage() {
       title: 'E-Commerce Store',
       description: 'Browse and purchase business and industry products with integrated Stripe checkout.',
       image: '/assets/generated/ecommerce-icon.dim_100x100.png',
-      action: () => navigate({ to: '/store' }),
+      action: () => navigate({ to: '/customer-faq' }),
     },
     {
       icon: Rocket,
       title: 'Startup Program',
       description: 'Access business registration tools, mentoring, certification tracking, and partner resources.',
       image: '/assets/generated/startup-icon.dim_100x100.png',
-      action: () => navigate({ to: '/store' }),
+      action: () => navigate({ to: '/sellers-businesses-faq' }),
     },
     {
       icon: Users,
       title: 'B2B Services',
       description: 'Manage outsourced services, marketplace listings, client relations, and analytics.',
       image: '/assets/generated/b2b-icon.dim_100x100.png',
-      action: () => navigate({ to: '/store' }),
+      action: () => navigate({ to: '/sellers-businesses-faq' }),
     },
   ];
 
@@ -58,7 +58,7 @@ export default function HomePage() {
             <p className="text-2xl md:text-3xl text-muted-foreground mb-8 font-light">
               Our mission is your success.
             </p>
-            <Button size="lg" onClick={() => navigate({ to: '/store' })} className="text-lg px-8">
+            <Button size="lg" onClick={() => navigate({ to: '/customer-faq' })} className="text-lg px-8">
               Explore Our Services
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -169,11 +169,11 @@ export default function HomePage() {
               Join ANC Electronics N Services today and start selling with no upfront costs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate({ to: '/store' })}>
-                Browse Products
+              <Button size="lg" onClick={() => navigate({ to: '/customer-faq' })}>
+                Learn More
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate({ to: '/store' })}>
-                Start Selling
+              <Button size="lg" variant="outline" onClick={() => navigate({ to: '/sellers-businesses-faq' })}>
+                For Sellers
               </Button>
             </div>
           </div>

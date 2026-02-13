@@ -1,193 +1,220 @@
-import { useState } from 'react';
-import { MessageSquare, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  useGetUnansweredQuestions,
+  useAddKnowledgeEntry,
+  type UnansweredQuestion,
+} from '../../../hooks/useQueries';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  useGetUnansweredQuestions,
-  useConvertQuestionToKnowledge,
-  type UnansweredQuestion,
-} from '../../../hooks/useQueries';
-import type { AssistantKnowledgeEntry } from '../../../backend';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2, MessageSquare, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AssistantKnowledgeEntry } from '../../../backend';
+import { toast } from 'sonner';
 
 export default function UnansweredQuestionsAdmin() {
-  const { data: unansweredQuestions = [], isLoading } = useGetUnansweredQuestions();
-  const convertQuestion = useConvertQuestionToKnowledge();
+  const { data: questions, isLoading, error } = useGetUnansweredQuestions();
+  const addKnowledgeEntry = useAddKnowledgeEntry();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<UnansweredQuestion | null>(null);
-  const [form, setForm] = useState({
-    answer: '',
-    category: '',
-  });
+  const [answer, setAnswer] = useState('');
+  const [category, setCategory] = useState('');
 
-  const resetForm = () => {
-    setForm({ answer: '', category: '' });
-    setSelectedQuestion(null);
-  };
-
-  const handleConvert = (question: UnansweredQuestion) => {
-    setSelectedQuestion(question);
-    setForm({
-      answer: '',
-      category: question.categorySuggestion || 'General',
-    });
-    setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!selectedQuestion || !form.answer.trim() || !form.category.trim()) {
-      toast.error('Please fill in all required fields');
+  const handleConvert = async () => {
+    if (!selectedQuestion || !answer.trim() || !category.trim()) {
+      toast.error('Please provide an answer and category');
       return;
     }
 
+    const isBusinessOps = category.toLowerCase().includes('business') || 
+                          category.toLowerCase().includes('funnel') ||
+                          category.toLowerCase().includes('report') ||
+                          category.toLowerCase().includes('onboard') ||
+                          category.toLowerCase().includes('advertis');
+
     try {
       const entry: AssistantKnowledgeEntry = {
-        id: `KB-${Date.now()}`,
+        id: `converted_${selectedQuestion.id}`,
         question: selectedQuestion.question,
-        answer: form.answer.trim(),
-        category: form.category.trim(),
-        isActive: true,
+        answer: answer.trim(),
+        category: category.trim(),
         lastUpdated: BigInt(Date.now() * 1000000),
-        usageCount: BigInt(0),
+        isActive: true,
+        usageCount: selectedQuestion.interactionCount,
+        isBusinessOps,
       };
 
-      await convertQuestion.mutateAsync({
-        questionId: selectedQuestion.id,
-        entry,
-      });
-      toast.success('Question converted to knowledge entry successfully');
-      setDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      toast.error('Failed to convert question');
+      await addKnowledgeEntry.mutateAsync(entry);
+      toast.success('Question converted to knowledge entry');
+      setIsConvertDialogOpen(false);
+      setSelectedQuestion(null);
+      setAnswer('');
+      setCategory('');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to convert question');
     }
+  };
+
+  const openConvertDialog = (question: UnansweredQuestion) => {
+    setSelectedQuestion(question);
+    setCategory(question.categorySuggestion);
+    setIsConvertDialogOpen(true);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading unanswered questions...</p>
-        </div>
-      </div>
+      <Card className="border-primary/20 shadow-md">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading unanswered questions...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    const errorMessage = String(error);
+    const isPermissionError = errorMessage.includes('Permission denied') || errorMessage.includes('Unauthorized');
+
+    return (
+      <Card className="border-destructive/20 shadow-md">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-6 w-6" />
+            {isPermissionError ? 'Access Denied' : 'Error Loading Questions'}
+          </CardTitle>
+          <CardDescription>
+            {isPermissionError
+              ? 'You do not have permission to view unanswered questions'
+              : 'Failed to load unanswered questions'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold">Unanswered Questions</h3>
-        <p className="text-sm text-muted-foreground">
-          Review questions the assistant couldn't answer and create knowledge entries
-        </p>
-      </div>
-
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-4">
-          {unansweredQuestions.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  No unanswered questions yet. The assistant is doing great!
-                </p>
-              </CardContent>
-            </Card>
+      <Card className="border-primary/20 shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-primary/10">
+              <MessageSquare className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl">Unanswered Questions</CardTitle>
+              <CardDescription className="text-base mt-1">
+                Review and convert unanswered questions into knowledge entries
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {questions?.length === 0 ? (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>
+                Great! There are no unanswered questions at the moment.
+              </AlertDescription>
+            </Alert>
           ) : (
-            unansweredQuestions.map((question) => (
-              <Card key={question.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{question.categorySuggestion}</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          Asked {question.interactionCount.toString()} times
-                        </span>
+            <div className="space-y-3">
+              {questions?.map((question) => (
+                <Card key={question.id} className="border-primary/20">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base mb-2">{question.question}</CardTitle>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline">{question.categorySuggestion}</Badge>
+                          <Badge variant="secondary">
+                            Asked {Number(question.interactionCount)} times
+                          </Badge>
+                        </div>
                       </div>
-                      <CardTitle className="text-base">{question.question}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {new Date(Number(question.creationTime) / 1000000).toLocaleString()}
-                      </CardDescription>
+                      <Button onClick={() => openConvertDialog(question)} size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Convert
+                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleConvert(question)}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Knowledge Entry
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
           )}
-        </div>
-      </ScrollArea>
+        </CardContent>
+      </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) resetForm();
-      }}>
+      {/* Convert Dialog */}
+      <Dialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create Knowledge Entry</DialogTitle>
-            <DialogDescription>
-              Convert this unanswered question into a knowledge entry
-            </DialogDescription>
+            <DialogTitle>Convert to Knowledge Entry</DialogTitle>
+            <DialogDescription>Provide an answer to add this question to the knowledge base</DialogDescription>
           </DialogHeader>
           {selectedQuestion && (
             <div className="space-y-4">
-              <div>
+              <div className="space-y-2">
                 <Label>Question</Label>
-                <div className="mt-1 p-3 bg-muted rounded-md">
-                  <p className="text-sm">{selectedQuestion.question}</p>
-                </div>
+                <p className="text-sm text-muted-foreground">{selectedQuestion.question}</p>
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Input
                   id="category"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  placeholder="e.g., General, Startup Program, Ecommerce"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g., General, Ecommerce, Business Operations"
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="answer">Answer</Label>
                 <Textarea
                   id="answer"
-                  value={form.answer}
-                  onChange={(e) => setForm({ ...form, answer: e.target.value })}
-                  placeholder="Provide a detailed answer to this question..."
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Provide a detailed answer..."
                   rows={6}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setDialogOpen(false);
-              resetForm();
-            }}>
+            <Button variant="outline" onClick={() => setIsConvertDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              Create Entry
+            <Button onClick={handleConvert} disabled={addKnowledgeEntry.isPending}>
+              {addKnowledgeEntry.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Converting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Convert to Knowledge
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

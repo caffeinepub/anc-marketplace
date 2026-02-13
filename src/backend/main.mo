@@ -2,6 +2,7 @@ import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import OutCall "http-outcalls/outcall";
 import Stripe "stripe/stripe";
+import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
@@ -11,12 +12,32 @@ import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
+import Migration "migration";
 
-import List "mo:core/List";
-
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
+
+  public type PolicyIdentifier = {
+    #privacy;
+    #shipping;
+    #returns;
+    #terms;
+  };
+
+  public type PolicyVersion = {
+    policyIdentifier : PolicyIdentifier;
+    version : Text;
+    lastUpdated : Int;
+  };
+
+  public type PolicySignatureRecord = {
+    policyIdentifier : PolicyIdentifier;
+    policyVersion : Text;
+    signerName : Text;
+    signature : Text;
+    timestamp : Int;
+  };
 
   public type ShoppingItem = Stripe.ShoppingItem;
 
@@ -253,6 +274,7 @@ actor {
     lastUpdated : Int;
     isActive : Bool;
     usageCount : Nat;
+    isBusinessOps : Bool;
   };
 
   public type UnansweredQuestion = {
@@ -351,6 +373,7 @@ actor {
   let appIntegrationStore = Map.empty<Text, AppIntegrationRecord>();
   let affiliateStore = Map.empty<Text, Affiliate>();
   let affiliatePayoutStore = Map.empty<Text, AffiliatePayoutRecord>();
+  let policySignaturesByUser = Map.empty<Principal, List.List<PolicySignatureRecord>>();
 
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
   var ownerPrincipal : ?Principal = null;
@@ -601,6 +624,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
         {
           id = "anc_veteran_support";
@@ -610,6 +634,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
         {
           id = "anc_women_family_owned";
@@ -619,6 +644,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
         {
           id = "anc_contacts";
@@ -628,6 +654,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
         {
           id = "anc_pci_compliance";
@@ -637,18 +664,20 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
       ];
 
       let ecommerceEntries = [
         {
           id = "anc_ecommerce";
-          question = "What e-commerce services does ANC offer?";
-          answer = "ANC offers a suite of e-commerce solutions including store builder templates, product catalog management, payment processing, and dropshipping partnerships with third-party suppliers.";
+          question = "What ecommerce services does ANC offer?";
+          answer = "ANC offers a suite of ecommerce solutions including store builder templates, product catalog management, payment processing, and dropshipping partnerships with third-party suppliers.";
           category = "Ecommerce";
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
         {
           id = "anc_marketplace_pricing";
@@ -658,6 +687,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
       ];
 
@@ -670,6 +700,7 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
         },
       ];
 
@@ -682,6 +713,72 @@ actor {
           lastUpdated = Time.now();
           isActive = true;
           usageCount = 0;
+          isBusinessOps = false;
+        },
+      ];
+
+      // Add business-operations-focused knowledge entries
+      let businessOpsEntries = [
+        // Funnel generation/setup
+        {
+          id = "funnel_guidance";
+          question = "How do I set up a marketing funnel using the platform?";
+          answer = "Follow these steps: (1) Sign up with ClickFunnels using our partner link; (2) Choose a funnel template aligned with your goals; (3) Customize the funnel within the ClickFunnels dashboard; (4) Integrate the funnel with your ANC storefront or offer links in the dashboard. Our business consultants are available for personalized guidance - contact us to schedule a session.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
+        },
+        {
+          id = "business_reports_guidance";
+          question = "What's the app's current capability for generating business reports?";
+          answer = "The app doesn't currently generate reports. Reports should be handled as an export through Stripe and/or ClickFunnels, with integration on the product and admin dashboard roadmap moving forward.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
+        },
+        {
+          id = "employee_onboarding_guidance";
+          question = "Can the app support employee and seller onboarding?";
+          answer = "Onboarding is available only as a business consultancy service through our company. Contact us to schedule a session for personalized onboarding assistance.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
+        },
+        {
+          id = "external_advertising_guidance";
+          question = "Does the app support external advertising?";
+          answer = "The app does not support advertising directly. However, your business can be promoted in-app. Contact us to discuss advertising opportunities within our app.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
+        },
+        {
+          id = "business_ops_consulting";
+          question = "What support does ANC offer for business operations?";
+          answer = "ANC provides business consulting services covering strategy, marketing, financial planning, and operations optimization. Our expert consultants offer both individual and group consulting packages tailored to your specific needs. Contact us to schedule an introductory meeting and discuss how we can help you achieve your business goals.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
+        },
+        {
+          id = "feature_request_process";
+          question = "What is the process for requesting new features or submitting feedback?";
+          answer = "We encourage users to submit feature requests and feedback through the app's contact form or by emailing ancelectronicsnservices@gmail.com. Our development team reviews all submissions and prioritizes them based on demand and strategic goals.";
+          category = "Business Operations";
+          lastUpdated = Time.now();
+          isActive = true;
+          usageCount = 0;
+          isBusinessOps = true;
         },
       ];
 
@@ -698,14 +795,78 @@ actor {
       for (entry in startupEntries.values()) {
         knowledgeBase.add(entry.id, entry);
       };
+      // Add business-operations-focused entries
+      for (entry in businessOpsEntries.values()) {
+        knowledgeBase.add(entry.id, entry);
+      };
     };
   };
 
-  public query ({ caller }) func getAssistantKnowledgeBase() : async [AssistantKnowledgeEntry] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access knowledge base");
+  public shared ({ caller }) func signPolicy(policyRecord : PolicySignatureRecord) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can sign policies");
     };
-    knowledgeBase.values().toArray();
+
+    // Get current policy signatures for user or create new empty list
+    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
+      case (?existing) { existing };
+      case (null) { List.empty<PolicySignatureRecord>() };
+    };
+
+    // Check if user already signed this policy version
+    switch (currentSignatures.find(func(record) { record.policyIdentifier == policyRecord.policyIdentifier and record.policyVersion == policyRecord.policyVersion })) {
+      case (?_) { Runtime.trap("Policy already signed") };
+      case (null) {
+        currentSignatures.add(policyRecord);
+        policySignaturesByUser.add(caller, currentSignatures);
+      };
+    };
+  };
+
+  public query ({ caller }) func getSignatureByPolicy(policyIdentifier : PolicyIdentifier) : async ?PolicySignatureRecord {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access policy signatures");
+    };
+    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
+      case (?existing) { existing };
+      case (null) { List.empty<PolicySignatureRecord>() };
+    };
+    currentSignatures.find(func(record) { record.policyIdentifier == policyIdentifier });
+  };
+
+  public query ({ caller }) func verifyPolicySignature(policyIdentifier : PolicyIdentifier, policyVersion : Text) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can verify policy signatures");
+    };
+    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
+      case (?existing) { existing };
+      case (null) { List.empty<PolicySignatureRecord>() };
+    };
+
+    let matchingSignature = currentSignatures.find(func(record) { record.policyIdentifier == policyIdentifier and record.policyVersion == policyVersion });
+    switch (matchingSignature) {
+      case (null) { false };
+      case (?_) { true };
+    };
+  };
+
+  // Public read access - no authorization needed (guests can view)
+  public query ({ caller }) func getAssistantKnowledgeBase() : async [AssistantKnowledgeEntry] {
+    let values = knowledgeBase.values().toArray();
+    values;
+  };
+
+  // Public read access - no authorization needed (guests can view)
+  public query ({ caller }) func getActiveKnowledgeByCategory(category : Text) : async [AssistantKnowledgeEntry] {
+    let filteredEntries = List.empty<AssistantKnowledgeEntry>();
+
+    for ((_, entry) in knowledgeBase.entries()) {
+      if (entry.category.toLower() == category.toLower() and entry.isActive) {
+        filteredEntries.add(entry);
+      };
+    };
+
+    filteredEntries.toArray();
   };
 
   func calculateSimilarity(question1 : Text, question2 : Text) : Float {
@@ -755,15 +916,76 @@ actor {
     bestMatch;
   };
 
+  // Public access - no authorization needed (guests can ask questions)
   public query ({ caller }) func askAssistant(question : Text, category : Text) : async ?Text {
     let normalizedQuestion = question.toLower();
 
     let bestMatch = getBestMatchingAnswer(normalizedQuestion, category);
 
     switch (bestMatch) {
-      case (null) { null };
-      case (?matchingEntry) { ?matchingEntry.answer };
+      case (null) {
+        addUnansweredQuestion(normalizedQuestion, category);
+        null;
+      };
+      case (?matchingEntry) {
+        ?matchingEntry.answer;
+      };
     };
+  };
+
+  func addUnansweredQuestion(question : Text, category : Text) {
+    let id = Time.now().toText() # "_" # category;
+    let unansweredQuestion : UnansweredQuestion = {
+      id;
+      question;
+      categorySuggestion = category;
+      creationTime = Time.now();
+      interactionCount = 1;
+    };
+
+    unansweredQuestions.add(id, unansweredQuestion);
+  };
+
+  // Admin-only access - contains sensitive data
+  public query ({ caller }) func getUnansweredQuestions() : async [UnansweredQuestion] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view unanswered questions");
+    };
+    unansweredQuestions.values().toArray();
+  };
+
+  public shared ({ caller }) func updateKnowledgeEntry(id : Text, newAnswer : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update knowledge entries");
+    };
+    switch (knowledgeBase.get(id)) {
+      case (null) {
+        Runtime.trap("Knowledge entry not found");
+      };
+      case (?entry) {
+        let updatedEntry = {
+          entry with
+          lastUpdated = Time.now();
+          answer = newAnswer;
+        };
+        knowledgeBase.add(id, updatedEntry);
+      };
+    };
+  };
+
+  public shared ({ caller }) func addKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add knowledge entries");
+    };
+    knowledgeBase.add(entry.id, entry);
+  };
+
+  // User-only access - requires authentication to submit questions
+  public shared ({ caller }) func submitBusinessOpsQuestion(question : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can submit business operations questions");
+    };
+    addUnansweredQuestion(question, "Business Operations");
   };
 
   // Stripe Integration
@@ -799,10 +1021,8 @@ actor {
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
   };
 
+  // Public access - funnel partners are marketing information accessible to all
   public query ({ caller }) func getFunnelPartner() : async FunnelPartner {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access funnel partners");
-    };
     merchantFunnelPartner;
   };
 

@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-global-ui-theme-so-the-primary-brand-color-is-navy-blue-not-green-across-light-and-dark-modes-including-primary-ring-sidebar-variables-and-any-custom-gradient-outline-styles-that-currently-use-the-green-hue",
-      "featureTitle": "Update the global UI theme so the primary brand color is navy blue (not green) across light and dark modes, including primary/ring/sidebar variables and any custom gradient/outline styles that currently use the green hue.",
+      "featureId": "feature-add-site-wide-footer-content-on-every-page-via-the-shared-layout-that-includes-a-copyright-notice-anc-electronics-n-more-b-pci-compliant-201100278838-c-the-provided-business-contact-information-exactly-as-written-d-a-partners-line-mentioning-authorize-net-and-zen-dash-and-e-major-credit-debit-card-brand-logos-visa-mastercard-and-other-major-brands-displayed-in-the-footer",
+      "featureTitle": "Add site-wide footer content on every page (via the shared layout) that includes: (a) copyright notice \"© ANC Electronics N More\"; (b) \"PCI Compliant # 201100278838\"; (c) the provided business/contact information exactly as written; (d) a \"Partners\" line mentioning \"Authorize.net\" and \"Zen dash\"; and (e) major credit/debit card brand logos (Visa, Mastercard, and other major brands) displayed in the footer.",
       "files": [
-        "frontend/src/index.css"
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Layout.tsx"
       ],
       "components": [
         "authorization@3.0.0",
@@ -24,11 +25,17 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-pwa-browser-theme-metadata-colors-to-match-the-new-navy-blue-theme-color",
-      "featureTitle": "Update PWA/browser theme metadata colors to match the new navy blue theme color.",
+      "featureId": "feature-create-new-legal-policy-pages-for-shipping-policy-returns-policy-and-terms-conditions-and-make-them-accessible-from-the-footer-on-every-page",
+      "featureTitle": "Create new legal policy pages for Shipping Policy, Returns Policy, and Terms & Conditions, and make them accessible from the footer on every page.",
       "files": [
-        "frontend/index.html",
-        "frontend/public/manifest.json"
+        "frontend/public/policies/returns-policy.md",
+        "frontend/public/policies/shipping-policy.md",
+        "frontend/public/policies/terms-and-conditions.md",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/policies/PolicyDocument.tsx",
+        "frontend/src/pages/ReturnsPolicyPage.tsx",
+        "frontend/src/pages/ShippingPolicyPage.tsx",
+        "frontend/src/pages/TermsConditionsPage.tsx"
       ],
       "components": [
         "authorization@3.0.0",
@@ -43,6 +50,129 @@
       ],
       "testIds": [
         "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-existing-privacy-policy-page-content-to-use-the-privacy-policy-text-the-user-uploads-replace-the-current-placeholder-policy-content-while-keeping-the-route-path-to-the-privacy-policy-page-stable",
+      "featureTitle": "Update the existing Privacy Policy page content to use the privacy policy text the user uploads (replace the current placeholder policy content), while keeping the route/path to the privacy policy page stable.",
+      "files": [
+        "frontend/public/policies/privacy-policy.md",
+        "frontend/src/components/policies/PolicyDocument.tsx",
+        "frontend/src/pages/PrivacyPolicyPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-a-cookie-permission-pop-up-is-present-and-functional-allow-users-to-accept-or-reject-cookies-persist-their-choice-locally-and-provide-a-clear-link-to-view-the-privacy-policy-from-the-banner",
+      "featureTitle": "Ensure a cookie permission pop-up is present and functional: allow users to Accept or Reject cookies, persist their choice locally, and provide a clear link to view the Privacy Policy from the banner.",
+      "files": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/components/privacy/CookieConsentBanner.tsx",
+        "frontend/src/lib/cookieConsent.ts"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-a-digital-policy-acceptance-signature-flow-that-applies-to-both-customers-and-sellers-users-must-1-explicitly-accept-and-2-digitally-sign-each-of-the-following-policies-privacy-policy-shipping-policy-returns-policy-terms-conditions-store-per-user-acceptance-records-including-policy-identifier-policy-version-last-updated-value-signature-name-text-and-timestamp",
+      "featureTitle": "Implement a digital policy acceptance + signature flow that applies to both customers and sellers: users must (1) explicitly accept and (2) digitally sign each of the following policies: Privacy Policy, Shipping Policy, Returns Policy, Terms & Conditions. Store per-user acceptance records including policy identifier, policy version/last-updated value, signature name/text, and timestamp.",
+      "files": [
+        "frontend/src/components/policies/PolicyDocument.tsx",
+        "frontend/src/components/policies/PolicySignaturesPanel.tsx",
+        "frontend/src/lib/policies.ts",
+        "frontend/src/pages/CustomerSettingsPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-enforce-policy-signing-when-an-authenticated-user-has-not-signed-all-required-policies-block-access-to-actions-that-imply-usage-of-the-marketplace-at-minimum-purchasing-checkout-flows-and-seller-business-tools-until-all-required-policies-are-signed-and-provide-a-clear-navigation-path-to-complete-signing",
+      "featureTitle": "Enforce policy signing: when an authenticated user has not signed all required policies, block access to actions that imply usage of the marketplace (at minimum: purchasing/checkout flows and seller/business tools) until all required policies are signed, and provide a clear navigation path to complete signing.",
+      "files": [
+        "frontend/src/components/policies/RequirePolicySignatures.tsx",
+        "frontend/src/pages/B2BDashboard.tsx",
+        "frontend/src/pages/StartupDashboard.tsx",
+        "frontend/src/pages/StoreBuilderPage.tsx",
+        "frontend/src/pages/StorePage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-the-new-policy-routes-shipping-returns-terms-to-the-app-router-and-include-them-in-both-desktop-and-mobile-navigation-only-where-appropriate-footer-links-are-required-header-nav-can-remain-unchanged-unless-necessary",
+      "featureTitle": "Add the new policy routes (Shipping, Returns, Terms) to the app router and include them in both desktop and mobile navigation only where appropriate (footer links are required; header nav can remain unchanged unless necessary).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
       ],
       "confidence": "high"
     }

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { AccessRole } from '../backend';
 
 export default function ProfileSetup() {
   const [fullName, setFullName] = useState('');
@@ -22,8 +23,7 @@ export default function ProfileSetup() {
       await saveProfile.mutateAsync({
         fullName: fullName.trim(),
         email: email.trim(),
-        activeRole: 'guest',
-        subscriptionId: null,
+        activeRole: AccessRole.guest,
         accountCreated: BigInt(Date.now() * 1000000),
       });
       toast.success('Profile created successfully!');

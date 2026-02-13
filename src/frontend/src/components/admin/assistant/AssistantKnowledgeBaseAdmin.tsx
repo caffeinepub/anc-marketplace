@@ -1,266 +1,331 @@
-import { useState } from 'react';
-import { Plus, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
 import {
   useGetKnowledgeBase,
   useAddKnowledgeEntry,
   useUpdateKnowledgeEntry,
-  useDeleteKnowledgeEntry,
+  type UnansweredQuestion,
 } from '../../../hooks/useQueries';
-import type { AssistantKnowledgeEntry } from '../../../backend';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2, BookOpen, Plus, Edit, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { AssistantKnowledgeEntry } from '../../../backend';
+import { toast } from 'sonner';
 
 export default function AssistantKnowledgeBaseAdmin() {
-  const { data: knowledgeBase = [], isLoading } = useGetKnowledgeBase();
+  const { data: knowledgeBase, isLoading, error } = useGetKnowledgeBase();
   const addEntry = useAddKnowledgeEntry();
   const updateEntry = useUpdateKnowledgeEntry();
-  const removeEntry = useDeleteKnowledgeEntry();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<AssistantKnowledgeEntry | null>(null);
-  const [form, setForm] = useState({
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [newEntry, setNewEntry] = useState({
     question: '',
     answer: '',
     category: '',
-    isActive: true,
   });
 
-  const resetForm = () => {
-    setForm({ question: '', answer: '', category: '', isActive: true });
-    setEditingEntry(null);
-  };
-
-  const handleEdit = (entry: AssistantKnowledgeEntry) => {
-    setEditingEntry(entry);
-    setForm({
-      question: entry.question,
-      answer: entry.answer,
-      category: entry.category,
-      isActive: entry.isActive,
-    });
-    setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.question.trim() || !form.answer.trim() || !form.category.trim()) {
-      toast.error('Please fill in all required fields');
+  const handleAddEntry = async () => {
+    if (!newEntry.question.trim() || !newEntry.answer.trim() || !newEntry.category.trim()) {
+      toast.error('Please fill in all fields');
       return;
     }
 
+    const isBusinessOps = newEntry.category.toLowerCase().includes('business') || 
+                          newEntry.category.toLowerCase().includes('funnel') ||
+                          newEntry.category.toLowerCase().includes('report') ||
+                          newEntry.category.toLowerCase().includes('onboard') ||
+                          newEntry.category.toLowerCase().includes('advertis');
+
     try {
       const entry: AssistantKnowledgeEntry = {
-        id: editingEntry?.id || `KB-${Date.now()}`,
-        question: form.question.trim(),
-        answer: form.answer.trim(),
-        category: form.category.trim(),
-        isActive: form.isActive,
+        id: `entry_${Date.now()}`,
+        question: newEntry.question.trim(),
+        answer: newEntry.answer.trim(),
+        category: newEntry.category.trim(),
         lastUpdated: BigInt(Date.now() * 1000000),
-        usageCount: editingEntry?.usageCount || BigInt(0),
+        isActive: true,
+        usageCount: BigInt(0),
+        isBusinessOps,
       };
 
-      if (editingEntry) {
-        await updateEntry.mutateAsync(entry);
-        toast.success('Knowledge entry updated successfully');
-      } else {
-        await addEntry.mutateAsync(entry);
-        toast.success('Knowledge entry added successfully');
-      }
-
-      setDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      toast.error('Failed to save knowledge entry');
+      await addEntry.mutateAsync(entry);
+      toast.success('Knowledge entry added successfully');
+      setIsAddDialogOpen(false);
+      setNewEntry({ question: '', answer: '', category: '' });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add entry');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await removeEntry.mutateAsync(id);
-      toast.success('Knowledge entry removed successfully');
-    } catch (error) {
-      toast.error('Failed to remove knowledge entry');
-    }
-  };
+  const handleUpdateEntry = async () => {
+    if (!editingEntry) return;
 
-  const handleToggleActive = async (entry: AssistantKnowledgeEntry) => {
     try {
       await updateEntry.mutateAsync({
-        ...entry,
-        isActive: !entry.isActive,
-        lastUpdated: BigInt(Date.now() * 1000000),
+        id: editingEntry.id,
+        newAnswer: editingEntry.answer,
       });
-      toast.success(`Entry ${!entry.isActive ? 'activated' : 'deactivated'}`);
-    } catch (error) {
-      toast.error('Failed to update entry status');
+      toast.success('Knowledge entry updated successfully');
+      setIsEditDialogOpen(false);
+      setEditingEntry(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update entry');
     }
   };
+
+  const openEditDialog = (entry: AssistantKnowledgeEntry) => {
+    setEditingEntry(entry);
+    setIsEditDialogOpen(true);
+  };
+
+  const filteredEntries = knowledgeBase?.filter((entry) =>
+    entry.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entry.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entry.category.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading knowledge base...</p>
-        </div>
-      </div>
+      <Card className="border-primary/20 shadow-md">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading knowledge base...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    const errorMessage = String(error);
+    const isPermissionError = errorMessage.includes('Permission denied') || errorMessage.includes('Unauthorized');
+
+    return (
+      <Card className="border-destructive/20 shadow-md">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-6 w-6" />
+            {isPermissionError ? 'Access Denied' : 'Error Loading Knowledge Base'}
+          </CardTitle>
+          <CardDescription>
+            {isPermissionError
+              ? 'You do not have permission to manage the knowledge base'
+              : 'Failed to load knowledge base data'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Knowledge Base</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage the assistant's knowledge entries
-          </p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Entry
-        </Button>
-      </div>
+      <Card className="border-primary/20 shadow-md">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-primary/10">
+                <BookOpen className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Knowledge Base</CardTitle>
+                <CardDescription className="text-base mt-1">
+                  Manage AI assistant knowledge entries
+                </CardDescription>
+              </div>
+            </div>
+            <Button onClick={() => setIsAddDialogOpen(true)} className="flex-shrink-0">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Entry
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            placeholder="Search knowledge base..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-11"
+          />
 
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-4">
-          {knowledgeBase.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No knowledge entries yet. Add your first entry to get started.</p>
-              </CardContent>
-            </Card>
+          {filteredEntries.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {knowledgeBase?.length === 0
+                  ? 'No knowledge entries found. Add your first entry to get started.'
+                  : 'No entries match your search criteria'}
+              </AlertDescription>
+            </Alert>
           ) : (
-            knowledgeBase.map((entry) => (
-              <Card key={entry.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{entry.category}</Badge>
-                        {entry.isActive ? (
-                          <Badge variant="default" className="gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="gap-1">
-                            <XCircle className="h-3 w-3" />
-                            Inactive
-                          </Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          Used {entry.usageCount.toString()} times
-                        </span>
+            <div className="space-y-3">
+              {filteredEntries.map((entry) => (
+                <Card key={entry.id} className="border-primary/20">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base mb-2">{entry.question}</CardTitle>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline">{entry.category}</Badge>
+                          {entry.isActive ? (
+                            <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                              <Eye className="h-3 w-3 mr-1" />
+                              Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <EyeOff className="h-3 w-3 mr-1" />
+                              Inactive
+                            </Badge>
+                          )}
+                          {entry.isBusinessOps && (
+                            <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                              Business Ops
+                            </Badge>
+                          )}
+                          <Badge variant="outline">Used {Number(entry.usageCount)} times</Badge>
+                        </div>
                       </div>
-                      <CardTitle className="text-base">{entry.question}</CardTitle>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(entry)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(entry.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <Button onClick={() => openEditDialog(entry)} variant="outline" size="sm">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="whitespace-pre-wrap">
-                    {entry.answer}
-                  </CardDescription>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Switch
-                      checked={entry.isActive}
-                      onCheckedChange={() => handleToggleActive(entry)}
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {entry.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">{entry.answer}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
-        </div>
-      </ScrollArea>
+        </CardContent>
+      </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) resetForm();
-      }}>
+      {/* Add Entry Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {editingEntry ? 'Edit Knowledge Entry' : 'Add Knowledge Entry'}
-            </DialogTitle>
-            <DialogDescription>
-              {editingEntry
-                ? 'Update the knowledge entry details below.'
-                : 'Add a new knowledge entry to help the assistant answer questions.'}
-            </DialogDescription>
+            <DialogTitle>Add Knowledge Entry</DialogTitle>
+            <DialogDescription>Create a new entry for the AI assistant knowledge base</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                placeholder="e.g., General, Startup Program, Ecommerce"
-              />
-            </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="question">Question</Label>
               <Input
                 id="question"
-                value={form.question}
-                onChange={(e) => setForm({ ...form, question: e.target.value })}
+                value={newEntry.question}
+                onChange={(e) => setNewEntry({ ...newEntry, question: e.target.value })}
                 placeholder="What question should this answer?"
               />
             </div>
-            <div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={newEntry.category}
+                onChange={(e) => setNewEntry({ ...newEntry, category: e.target.value })}
+                placeholder="e.g., General, Ecommerce, Business Operations"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="answer">Answer</Label>
               <Textarea
                 id="answer"
-                value={form.answer}
-                onChange={(e) => setForm({ ...form, answer: e.target.value })}
+                value={newEntry.answer}
+                onChange={(e) => setNewEntry({ ...newEntry, answer: e.target.value })}
                 placeholder="Provide a detailed answer..."
                 rows={6}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={form.isActive}
-                onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
-              />
-              <Label>Active</Label>
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setDialogOpen(false);
-              resetForm();
-            }}>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingEntry ? 'Update' : 'Add'} Entry
+            <Button onClick={handleAddEntry} disabled={addEntry.isPending}>
+              {addEntry.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Entry
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Entry Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Knowledge Entry</DialogTitle>
+            <DialogDescription>Update the answer for this knowledge entry</DialogDescription>
+          </DialogHeader>
+          {editingEntry && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Question</Label>
+                <p className="text-sm text-muted-foreground">{editingEntry.question}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <p className="text-sm text-muted-foreground">{editingEntry.category}</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-answer">Answer</Label>
+                <Textarea
+                  id="edit-answer"
+                  value={editingEntry.answer}
+                  onChange={(e) => setEditingEntry({ ...editingEntry, answer: e.target.value })}
+                  rows={6}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateEntry} disabled={updateEntry.isPending}>
+              {updateEntry.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Update Entry
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

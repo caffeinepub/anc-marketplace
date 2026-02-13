@@ -1,24 +1,69 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
+  "summary": "Web app for ANC Electronics N More / ANC Marketplace with required legal policies, consent/signature flows, and updated footer compliance/contact/payment branding. Domain: https://anc-electronics-n-services-rw8.caffeine.com",
+  "architectural_notes": [
+    "Domain for the app: https://anc-electronics-n-services-rw8.caffeine.com",
+    "Legal/policy links must be present in the global footer on every page",
+    "Policies require acceptance + digital signature by both customers and sellers"
+  ],
   "known_issues": [],
-  "isFixRequest": true,
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Payment card brand logos strip in a clean monochrome style (payment-logos-strip.dim_800x120.png)\n- Authorize.net logo in monochrome (authorize-net-logo.dim_240x80.png)\n- Zen dash logo in monochrome (zen-dash-logo.dim_240x80.png)",
   "existing_features": [
     {
-      "id": "feature-update-the-global-ui-theme-so-the-primary-brand-color-is-navy-blue-not-green-across-light-and-dark-modes-including-primary-ring-sidebar-variables-and-any-custom-gradient-outline-styles-that-currently-use-the-green-hue",
-      "title": "Update the global UI theme so the primary brand color is navy blue (not green) across light and dark modes, including primary/ring/sidebar variables and any custom gradient/outline styles that currently use the green hue.",
+      "id": "feature-add-site-wide-footer-content-on-every-page-via-the-shared-layout-that-includes-a-copyright-notice-anc-electronics-n-more-b-pci-compliant-201100278838-c-the-provided-business-contact-information-exactly-as-written-d-a-partners-line-mentioning-authorize-net-and-zen-dash-and-e-major-credit-debit-card-brand-logos-visa-mastercard-and-other-major-brands-displayed-in-the-footer",
+      "title": "Add site-wide footer content on every page (via the shared layout) that includes: (a) copyright notice \"© ANC Electronics N More\"; (b) \"PCI Compliant # 201100278838\"; (c) the provided business/contact information exactly as written; (d) a \"Partners\" line mentioning \"Authorize.net\" and \"Zen dash\"; and (e) major credit/debit card brand logos (Visa, Mastercard, and other major brands) displayed in the footer.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-pwa-browser-theme-metadata-colors-to-match-the-new-navy-blue-theme-color",
-      "title": "Update PWA/browser theme metadata colors to match the new navy blue theme color.",
+      "id": "feature-create-new-legal-policy-pages-for-shipping-policy-returns-policy-and-terms-conditions-and-make-them-accessible-from-the-footer-on-every-page",
+      "title": "Create new legal policy pages for Shipping Policy, Returns Policy, and Terms & Conditions, and make them accessible from the footer on every page.",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-existing-privacy-policy-page-content-to-use-the-privacy-policy-text-the-user-uploads-replace-the-current-placeholder-policy-content-while-keeping-the-route-path-to-the-privacy-policy-page-stable",
+      "title": "Update the existing Privacy Policy page content to use the privacy policy text the user uploads (replace the current placeholder policy content), while keeping the route/path to the privacy policy page stable.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-a-cookie-permission-pop-up-is-present-and-functional-allow-users-to-accept-or-reject-cookies-persist-their-choice-locally-and-provide-a-clear-link-to-view-the-privacy-policy-from-the-banner",
+      "title": "Ensure a cookie permission pop-up is present and functional: allow users to Accept or Reject cookies, persist their choice locally, and provide a clear link to view the Privacy Policy from the banner.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-digital-policy-acceptance-signature-flow-that-applies-to-both-customers-and-sellers-users-must-1-explicitly-accept-and-2-digitally-sign-each-of-the-following-policies-privacy-policy-shipping-policy-returns-policy-terms-conditions-store-per-user-acceptance-records-including-policy-identifier-policy-version-last-updated-value-signature-name-text-and-timestamp",
+      "title": "Implement a digital policy acceptance + signature flow that applies to both customers and sellers: users must (1) explicitly accept and (2) digitally sign each of the following policies: Privacy Policy, Shipping Policy, Returns Policy, Terms & Conditions. Store per-user acceptance records including policy identifier, policy version/last-updated value, signature name/text, and timestamp.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-policy-signing-when-an-authenticated-user-has-not-signed-all-required-policies-block-access-to-actions-that-imply-usage-of-the-marketplace-at-minimum-purchasing-checkout-flows-and-seller-business-tools-until-all-required-policies-are-signed-and-provide-a-clear-navigation-path-to-complete-signing",
+      "title": "Enforce policy signing: when an authenticated user has not signed all required policies, block access to actions that imply usage of the marketplace (at minimum: purchasing/checkout flows and seller/business tools) until all required policies are signed, and provide a clear navigation path to complete signing.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-the-new-policy-routes-shipping-returns-terms-to-the-app-router-and-include-them-in-both-desktop-and-mobile-navigation-only-where-appropriate-footer-links-are-required-header-nav-can-remain-unchanged-unless-necessary",
+      "title": "Add the new policy routes (Shipping, Returns, Terms) to the app router and include them in both desktop and mobile navigation only where appropriate (footer links are required; header nav can remain unchanged unless necessary).",
+      "reqIds": [
+        "REQ-7"
       ],
       "version": 1
     }
@@ -26,12 +71,49 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Change the app theme color from green to navy blue",
+      "summary": "Add Privacy Policy page/content (user will upload policy text) and make it accessible from the footer site-wide",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Add Shipping Policy, Returns Policy, and Terms & Conditions pages; link all policies in the footer on every page",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Add cookie permission/consent pop-up",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Require customers and sellers to accept and digitally sign each policy (Privacy, Shipping, Returns, Terms & Conditions)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Update footer with copyright notice \"© ANC Electronics N More\" and display \"PCI Compliant # 201100278838\"",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add contact and business information to footer (ANC Electronics N More / ANC Marketplace, EIN, DBA, owner, support email, admin phone, physical address)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add payment/partner branding to footer: Visa/Mastercard/major card logos and partners \"Authorize.net\" and \"Zen dash\" for payment processors",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Change app theme color from green to navy blue",
+  "gameProjectType": "none",
+  "projectName": "ANC Electronics N More / ANC Marketplace",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

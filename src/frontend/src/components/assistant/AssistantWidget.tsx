@@ -38,7 +38,7 @@ export default function AssistantWidget() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <AssistantChatPanel />
+          <AssistantChatPanel isOpen={isOpen} />
         </Card>
       )}
     </>
