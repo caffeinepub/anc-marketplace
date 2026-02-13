@@ -37,12 +37,15 @@ export default function HomePage() {
         <div className="container relative z-10 text-center mb-8">
           <img 
             src="/assets/Screenshot_20251130-131933_Gmail.png" 
-            alt="ANC Electronics N Services Logo" 
+            alt="ANC Marketplace Logo" 
             className="h-32 w-auto mx-auto mb-6 object-contain"
           />
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 logo-text">
-            ANC Electronics N Services
+            ANC Marketplace
           </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Featuring stores like <span className="font-semibold">ANC Electronics N Services</span> - specializing in business and industrial products
+          </p>
         </div>
         
         <div className="relative w-full h-[500px] flex items-center justify-center">
@@ -166,7 +169,7 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join ANC Electronics N Services today and start selling with no upfront costs.
+              Join ANC Marketplace today and start selling with no upfront costs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={() => navigate({ to: '/customer-faq' })}>

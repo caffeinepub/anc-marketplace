@@ -1,37 +1,129 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T02:42:20.325Z",
+  "generatedAt": "2026-02-13T07:46:13.551Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 8,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Ensure all site pages render with a white (light) background instead of a black (dark) background, regardless of the user’s OS/system theme settings.",
+        "summary": "Update all user-facing branding so the platform is named \"ANC Marketplace\" (and \"ANC Electronics N Services\" is described as a store within the marketplace that sells business and industrial products and services). Apply this consistently across the header, homepage hero, promotional banner, footer, PWA manifest, and HTML meta/title tags.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/index.css"
+          "frontend/index.html",
+          "frontend/public/manifest.json",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/components/Footer.tsx"
         ],
         "matchedFiles": [
+          "frontend/index.html",
+          "frontend/public/manifest.json",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/components/Footer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Update the backend seeded assistant knowledge base content that currently describes \"ANC Electronics N Services\" as the overall platform so it instead describes \"ANC Marketplace\" as the platform and \"ANC Electronics N Services\" as a store within the marketplace focused on business and industrial products and services.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement backend support for temporarily holding seller funds (escrow-style internal ledger) until they are transferred to a designated external payout account. This must include data structures and APIs to: (1) create/get a seller payout profile, (2) maintain an internal held balance, (3) record credits (e.g., from completed sales) into held funds, and (4) create and track payout transfers to the seller’s designated external account with statuses (e.g., pending/processed/failed).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Provide sellers with an internal \"account number\" (platform payout account identifier) that can be displayed in the UI and used to reference their payout profile. The identifier must be generated and persisted per seller, and retrievable via backend API.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add a seller-facing UI page/section where authenticated sellers can: view their payout account number, view held balance, enter/update the designated external payout account details (as plain fields), and view a list of payout transfers with status.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/SellerPayoutsPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
           "frontend/src/App.tsx",
-          "frontend/src/index.css"
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/SellerPayoutsPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/App.tsx",
+          "frontend/src/components/Layout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Implement seller debit card and credit card request workflows as application records (not real issuance): add backend APIs and storage to allow a seller to (1) request a business debit card, and (2) apply for a credit card, each with a status lifecycle (e.g., draft/submitted/under_review/approved/rejected) and timestamp history.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Extend the seller payout UI page/section to include: (1) a \"Request Business Debit Card\" form and (2) a \"Apply for Credit Card\" form. Each form must submit to the backend and show the current application status after submission.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/SellerPayoutsPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/SellerPayoutsPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Update any conflicting platform copy that states the platform does not process or hold seller/merchant funds so it does not contradict the new \"temporary hold until transfer\" capability. At minimum, update the seeded assistant knowledge entry that says ANC does not process seller/merchant money directly, and update any relevant public policy/terms copy where it explicitly conflicts.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/policies/marketplace-policy.md",
+          "frontend/public/policies/terms-and-conditions.md",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/public/policies/marketplace-policy.md",
+          "frontend/public/policies/terms-and-conditions.md",
+          "frontend/src/components/Layout.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
+    "frontend/public/manifest.json",
+    "frontend/public/policies/marketplace-policy.md",
+    "frontend/public/policies/terms-and-conditions.md",
     "frontend/src/App.tsx",
-    "frontend/src/index.css",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/SellerPayoutsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

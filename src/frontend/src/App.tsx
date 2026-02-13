@@ -15,7 +15,9 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import ShippingPolicyPage from './pages/ShippingPolicyPage';
 import ReturnsPolicyPage from './pages/ReturnsPolicyPage';
 import TermsConditionsPage from './pages/TermsConditionsPage';
+import MarketplacePolicyPage from './pages/MarketplacePolicyPage';
 import CustomerSettingsPage from './pages/CustomerSettingsPage';
+import SellerPayoutsPage from './pages/SellerPayoutsPage';
 import RuntimeErrorBoundary from './components/RuntimeErrorBoundary';
 import RouterErrorScreen from './components/RouterErrorScreen';
 
@@ -106,10 +108,22 @@ const termsConditionsRoute = createRoute({
   component: TermsConditionsPage,
 });
 
+const marketplacePolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/marketplace-policy',
+  component: MarketplacePolicyPage,
+});
+
 const customerSettingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/customer-settings',
   component: CustomerSettingsPage,
+});
+
+const payoutsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/payouts',
+  component: SellerPayoutsPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -125,7 +139,9 @@ const routeTree = rootRoute.addChildren([
   shippingPolicyRoute,
   returnsPolicyRoute,
   termsConditionsRoute,
+  marketplacePolicyRoute,
   customerSettingsRoute,
+  payoutsRoute,
 ]);
 
 const router = createRouter({ routeTree });

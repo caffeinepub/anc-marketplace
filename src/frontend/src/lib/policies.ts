@@ -1,4 +1,4 @@
-export type PolicyIdentifier = 'privacy' | 'shipping' | 'returns' | 'terms';
+export type PolicyIdentifier = 'privacy' | 'shipping' | 'returns' | 'terms' | 'marketplaceWide';
 
 export interface PolicyMetadata {
   identifier: PolicyIdentifier;
@@ -34,6 +34,13 @@ export const POLICY_METADATA: Record<PolicyIdentifier, PolicyMetadata> = {
     identifier: 'terms',
     displayName: 'Terms & Conditions',
     route: '/terms-and-conditions',
+    version: '1.0',
+    lastUpdated: '2026-02-13',
+  },
+  marketplaceWide: {
+    identifier: 'marketplaceWide',
+    displayName: 'Marketplace Policy',
+    route: '/marketplace-policy',
     version: '1.0',
     lastUpdated: '2026-02-13',
   },

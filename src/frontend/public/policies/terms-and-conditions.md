@@ -4,7 +4,7 @@
 
 ## Agreement to Terms
 
-By accessing and using ANC Electronics N More and ANC Marketplace ("the Platform"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our services.
+By accessing and using ANC Marketplace ("the Platform"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our services.
 
 ## Use of Services
 
@@ -51,7 +51,7 @@ Buyers agree to:
 
 ## Intellectual Property
 
-All content on the Platform, including text, graphics, logos, and software, is the property of ANC Electronics N More or its content suppliers and is protected by intellectual property laws.
+All content on the Platform, including text, graphics, logos, and software, is the property of ANC Marketplace or its content suppliers and is protected by intellectual property laws.
 
 ### Copyright
 Product copyrights remain with the respective sellers and service providers. ANC does not claim ownership of seller content.
@@ -60,6 +60,7 @@ Product copyrights remain with the respective sellers and service providers. ANC
 
 ### Payment Processing
 - Payments are processed through third-party payment processors (Authorize.net, Zen dash)
+- ANC Marketplace temporarily holds seller funds in an internal ledger until transferred to designated payout accounts
 - We do not store your complete payment information
 - All transactions are subject to fraud detection and prevention measures
 
@@ -77,7 +78,7 @@ To the fullest extent permitted by law:
 
 ## Indemnification
 
-You agree to indemnify and hold harmless ANC Electronics N More, its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.
+You agree to indemnify and hold harmless ANC Marketplace, its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.
 
 ## Dispute Resolution
 
@@ -107,7 +108,7 @@ Your use of the Platform is also governed by our Privacy Policy. Please review o
 
 For questions about these Terms and Conditions, please contact:
 
-**ANC Electronics N More and ANC Marketplace**
+**ANC Marketplace**
 - EIN: 33-3107359
 - Florida DBA: G25000056278
 - Owner: Angela MW Miller
@@ -121,4 +122,4 @@ If any provision of these Terms is found to be unenforceable, the remaining prov
 
 ## Entire Agreement
 
-These Terms, together with our Privacy Policy and other policies, constitute the entire agreement between you and ANC Electronics N More regarding the use of the Platform.
+These Terms, together with our Privacy Policy and other policies, constitute the entire agreement between you and ANC Marketplace regarding the use of the Platform.

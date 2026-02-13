@@ -1,26 +1,124 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Force site-wide light (white) background regardless of system theme",
+  "title": "ANC Marketplace rebrand + seller payouts and card request UI",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Force the application to use a light theme so global background tokens never switch to dark based on OS/system settings.",
+      "summary": "Rebrand all user-facing platform naming to “ANC Marketplace” and clarify “ANC Electronics N Services” is a store within the marketplace.",
       "acceptanceCriteria": [
-        "When visiting any route (e.g., /, /customer-faq, /privacy-policy), the page background is light/white and not dark/black.",
-        "On devices with system dark mode enabled, the app still renders with a light/white background by default.",
-        "No UI areas that use the global background token (e.g., Layout container and header using bg-background) appear black due to dark theme being applied automatically."
+        "Header logo text and promotional banner use \"ANC Marketplace\" (not \"ANC Electronics N Services\").",
+        "Home page hero title and logo alt text use \"ANC Marketplace\" and describe \"ANC Electronics N Services\" as a store within the marketplace (business/industrial focus).",
+        "Footer brand text is updated to reflect \"ANC Marketplace\" as the site name, with \"ANC Electronics N Services\" referenced as a store (where applicable).",
+        "frontend/public/manifest.json name/short_name/description and frontend/index.html title/meta/OG/Twitter tags reflect \"ANC Marketplace\" as the site name.",
+        "No remaining prominent UI copy labels the site as \"ANC Electronics N Services\" as the platform name."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Update the next-themes ThemeProvider configuration to force the light theme (disable following the system theme), ensuring the 'dark' class is not applied based on OS settings."
+          "description": "Update HTML title and meta tags (description/author/OG/Twitter/apple-mobile-web-app-title) to consistently use “ANC Marketplace” as the platform name and avoid labeling “ANC Electronics N Services” as the platform."
         },
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/public/manifest.json",
           "operation": "modify",
-          "description": "Add/adjust global base styles to enforce a light color scheme and a white/light background fallback at the document/body level to prevent any dark rendering even if a dark class is accidentally present."
+          "description": "Update PWA manifest name/short_name/description to “ANC Marketplace” (and adjust any lingering platform-level references to “ANC Electronics N Services”)."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Update header logo text, logo alt text (if applicable), and promotional banner copy to “ANC Marketplace”, and add brief clarifying copy where appropriate that “ANC Electronics N Services” is a store within the marketplace focused on business and industrial products/services."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Update homepage hero title and prominent branding copy to “ANC Marketplace”; adjust the hero/logo alt text and supporting copy to describe “ANC Electronics N Services” as a store within the marketplace focused on business/industrial products and services."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Update footer brand/contact copy so the platform is presented as “ANC Marketplace”, referencing “ANC Electronics N Services” only as a store name where applicable (not as the platform name)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add a login-gated seller “Payouts” page to view account number, held balance, update external payout details, and view payout transfers.",
+      "acceptanceCriteria": [
+        "There is a navigable UI entry point (route + link from an appropriate existing menu area) for \"Payouts\" (or equivalent) that requires login.",
+        "The page shows the seller’s platform account number and current held balance from the backend.",
+        "The page includes a form to save/update the seller’s external payout account details (stored in the backend).",
+        "The page lists payout transfer records with at least: amount, created date, and status.",
+        "UI uses React Query for loading/mutations and displays reasonable loading and error states (consistent with existing patterns)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/SellerPayoutsPage.tsx",
+          "operation": "create",
+          "description": "Create a new login-gated seller payouts page that uses React Query-backed hooks to: (1) ensure/fetch the seller account number, (2) fetch payout profile for held balance + designated payout account, (3) submit updates for external payout account details as plain text fields, and (4) display a transfer list with amount/date/status (including showing newly created transfer records returned by the backend)."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks/mutations for seller payouts data: create/get account number, get payout profile, update payout profile, record payout transfer, and a query-backed client-side transfer list cache that is updated when a transfer is created."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register a new route (e.g., \"/payouts\") that renders SellerPayoutsPage and is reachable via router navigation."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Add a navigable entry point to the new “Payouts” area (e.g., a menu item under the authenticated user dropdown and mobile menu). Ensure it is only shown when the user is logged in."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Extend the seller payouts page with debit card request and credit card application forms that submit to the backend and show current status.",
+      "acceptanceCriteria": [
+        "The seller can submit a debit card request and see a confirmation plus the application status.",
+        "The seller can submit a credit card application and see a confirmation plus the application status.",
+        "The UI clearly states these are requests/applications and shows status (e.g., Submitted, Under Review, Approved/Rejected).",
+        "All user-facing text is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/SellerPayoutsPage.tsx",
+          "operation": "modify",
+          "description": "Add two additional sections to the payouts page: (1) “Request Business Debit Card” form and status display, and (2) “Apply for Credit Card” form and status display. Submit via React Query mutations and render returned status fields. Ensure all copy is explicit that these are requests/applications (not real issuance)."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query mutations for requesting a business debit card and submitting a business credit card application; wire page-level state so the latest returned application/request and status can be displayed after submission, with loading/error handling consistent with existing hooks."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Update public policy/terms copy that conflicts with the new temporary hold-until-transfer funds capability.",
+      "acceptanceCriteria": [
+        "The assistant knowledge base no longer claims the platform does not process/handle seller funds in a way that contradicts escrow holding.",
+        "If any policy/terms documents explicitly state the platform does not hold/process seller funds, those lines are revised to align with the escrow-style holding description.",
+        "No other prominent site copy contradicts the new payments flow."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/policies/marketplace-policy.md",
+          "operation": "modify",
+          "description": "Revise conflicting payment language that states ANC does not handle seller/merchant funds so it no longer contradicts temporary holding until transfer; also update the platform naming in this policy to “ANC Marketplace” where it refers to the marketplace platform."
+        },
+        {
+          "path": "frontend/public/policies/terms-and-conditions.md",
+          "operation": "modify",
+          "description": "Audit and revise any explicit terms statements that contradict temporary holding until transfer (if present) while keeping the constraint that no real banking rails or integrations are implied."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Audit and update any prominent banner/header copy that could contradict the new temporary hold-until-transfer payouts flow (e.g., statements implying the platform never handles seller funds), ensuring consistency with the updated policies."
         }
       ]
     }

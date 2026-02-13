@@ -1,34 +1,172 @@
 {
   "kind": "build_request",
-  "title": "Set site-wide page background to white (disable dark background)",
+  "title": "Rebrand to ANC Marketplace and add seller escrow/payout account + debit/credit card request workflow",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Ensure all site pages render with a white (light) background instead of a black (dark) background, regardless of the user’s OS/system theme settings.",
+      "text": "Update all user-facing branding so the platform is named \"ANC Marketplace\" (and \"ANC Electronics N Services\" is described as a store within the marketplace that sells business and industrial products and services). Apply this consistently across the header, homepage hero, promotional banner, footer, PWA manifest, and HTML meta/title tags.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-10"
         ],
         "quotes": [
-          "The background of the site pages should be white not black"
+          "Yes give it another try and also the site is called ANC Marketplace not ANC Electronics N Services that is suppose to be a store within the marketplace that sells business and industrial products and services"
         ]
       },
       "acceptanceCriteria": [
-        "When visiting any route (e.g., /, /customer-faq, /privacy-policy), the page background is light/white and not dark/black.",
-        "On devices with system dark mode enabled, the app still renders with a light/white background by default.",
-        "No UI areas that use the global background token (e.g., Layout container and header using bg-background) appear black due to dark theme being applied automatically."
+        "Header logo text and promotional banner use \"ANC Marketplace\" (not \"ANC Electronics N Services\").",
+        "Home page hero title and logo alt text use \"ANC Marketplace\" and describe \"ANC Electronics N Services\" as a store within the marketplace (business/industrial focus).",
+        "Footer brand text is updated to reflect \"ANC Marketplace\" as the site name, with \"ANC Electronics N Services\" referenced as a store (where applicable).",
+        "frontend/public/manifest.json name/short_name/description and frontend/index.html title/meta/OG/Twitter tags reflect \"ANC Marketplace\" as the site name.",
+        "No remaining prominent UI copy labels the site as \"ANC Electronics N Services\" as the platform name."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Update the backend seeded assistant knowledge base content that currently describes \"ANC Electronics N Services\" as the overall platform so it instead describes \"ANC Marketplace\" as the platform and \"ANC Electronics N Services\" as a store within the marketplace focused on business and industrial products and services.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-10"
+        ],
+        "quotes": [
+          "the site is called ANC Marketplace not ANC Electronics N Services that is suppose to be a store within the marketplace that sells business and industrial products and services"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The seeded knowledge base Q&A entry for \"What is ANC Electronics N Services?\" (and any similar platform-description entries) no longer describes it as the overall platform.",
+        "At least one seeded entry clearly explains: \"ANC Marketplace\" is the platform; \"ANC Electronics N Services\" is a store within it (business/industrial focus).",
+        "After backend deploy, the assistant UI can retrieve and display the updated answers when asked those questions."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement backend support for temporarily holding seller funds (escrow-style internal ledger) until they are transferred to a designated external payout account. This must include data structures and APIs to: (1) create/get a seller payout profile, (2) maintain an internal held balance, (3) record credits (e.g., from completed sales) into held funds, and (4) create and track payout transfers to the seller’s designated external account with statuses (e.g., pending/processed/failed).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "And to temporarily hold money until it is transfered to the designated external account."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes authenticated methods for a seller to create and fetch their payout profile and held balance.",
+        "Backend can record held-fund credits tied to an order or reference ID and increases held balance accordingly.",
+        "Backend can create a payout transfer record that reduces held balance only when marked processed (or uses an equivalent safe accounting approach), and stores a transfer status.",
+        "Backend enforces authorization so a caller can only read/update their own payout profile and payout records (admins can view all if applicable to existing access rules)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Provide sellers with an internal \"account number\" (platform payout account identifier) that can be displayed in the UI and used to reference their payout profile. The identifier must be generated and persisted per seller, and retrievable via backend API.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Provide sellers with a account number"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Each seller payout profile includes a stable, human-readable account number/identifier.",
+        "The same seller always receives the same identifier across sessions.",
+        "A backend method returns the account number for the authenticated seller."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add a seller-facing UI page/section where authenticated sellers can: view their payout account number, view held balance, enter/update the designated external payout account details (as plain fields), and view a list of payout transfers with status.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "And to temporarily hold money until it is transfered to the designated external account. Provide sellers with a account number"
+        ]
+      },
+      "acceptanceCriteria": [
+        "There is a navigable UI entry point (route + link from an appropriate existing menu area) for \"Payouts\" (or equivalent) that requires login.",
+        "The page shows the seller’s platform account number and current held balance from the backend.",
+        "The page includes a form to save/update the seller’s external payout account details (stored in the backend).",
+        "The page lists payout transfer records with at least: amount, created date, and status.",
+        "UI uses React Query for loading/mutations and displays reasonable loading and error states (consistent with existing patterns)."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Implement seller debit card and credit card request workflows as application records (not real issuance): add backend APIs and storage to allow a seller to (1) request a business debit card, and (2) apply for a credit card, each with a status lifecycle (e.g., draft/submitted/under_review/approved/rejected) and timestamp history.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Provide sellers with ... the option to receive a business debit card and to apply to a credit card."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend defines and persists application records for debit card requests and credit card applications linked to the caller principal.",
+        "Backend exposes methods to create/submit an application and to fetch the caller’s current/past applications and statuses.",
+        "Authorization prevents users from accessing other users’ applications (admin access optional if aligned with existing access control)."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Extend the seller payout UI page/section to include: (1) a \"Request Business Debit Card\" form and (2) a \"Apply for Credit Card\" form. Each form must submit to the backend and show the current application status after submission.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "the option to receive a business debit card and to apply to a credit card."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The seller can submit a debit card request and see a confirmation plus the application status.",
+        "The seller can submit a credit card application and see a confirmation plus the application status.",
+        "The UI clearly states these are requests/applications and shows status (e.g., Submitted, Under Review, Approved/Rejected).",
+        "All user-facing text is in English."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Update any conflicting platform copy that states the platform does not process or hold seller/merchant funds so it does not contradict the new \"temporary hold until transfer\" capability. At minimum, update the seeded assistant knowledge entry that says ANC does not process seller/merchant money directly, and update any relevant public policy/terms copy where it explicitly conflicts.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-10"
+        ],
+        "quotes": [
+          "And to temporarily hold money until it is transfered to the designated external account.",
+          "the site is called ANC Marketplace not ANC Electronics N Services..."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The assistant knowledge base no longer claims the platform does not process/handle seller funds in a way that contradicts escrow holding.",
+        "If any policy/terms documents explicitly state the platform does not hold/process seller funds, those lines are revised to align with the escrow-style holding description.",
+        "No other prominent site copy contradicts the new payments flow."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any code in frontend/src/components/ui (immutable paths).",
-    "Keep the existing single-actor Motoko backend architecture unchanged."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Do not edit files under frontend/src/components/ui or any paths listed in frontend.immutablePaths.",
+    "Use English for any user-facing text.",
+    "Do not implement real banking rails, real card issuance, KYC/AML verification, or external financial integrations beyond storing seller-provided payout details as plain text fields."
   ],
   "nonGoals": [
-    "Performing a full codebase review for bugs, glitches, misspellings, or general QA beyond the background color issue.",
-    "Adding a user-facing theme toggle or dark-mode support features (unless required to keep the background white)."
+    "Implementing actual escrow with real custody of funds via a regulated financial partner.",
+    "Generating real, bank-routable account and routing numbers.",
+    "Shipping physical or virtual debit/credit cards or integrating with card processors/issuers.",
+    "Building a full seller storefront/multi-store management system (beyond the naming clarification that ANC Electronics N Services is a store within ANC Marketplace)."
   ],
   "imageRequirements": {
     "required": [],

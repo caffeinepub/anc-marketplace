@@ -41,6 +41,19 @@ export const ShoppingItem = IDL.Record({
   'priceInCents' : IDL.Nat,
   'productDescription' : IDL.Text,
 });
+export const AccountAssignment = IDL.Record({
+  'sellerPrincipal' : IDL.Principal,
+  'active' : IDL.Bool,
+  'createdAt' : IDL.Int,
+  'accountNumber' : IDL.Text,
+});
+export const SellerPayoutProfile = IDL.Record({
+  'sellerPrincipal' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'lastUpdated' : IDL.Int,
+  'designatedPayoutAccount' : IDL.Text,
+  'internalBalanceCents' : IDL.Nat,
+});
 export const AdminPageSection = IDL.Variant({
   'b2b' : IDL.Null,
   'marketplace' : IDL.Null,
@@ -96,6 +109,7 @@ export const PolicyIdentifier = IDL.Variant({
   'terms' : IDL.Null,
   'shipping' : IDL.Null,
   'privacy' : IDL.Null,
+  'marketplaceWide' : IDL.Null,
   'returns' : IDL.Null,
 });
 export const PolicySignatureRecord = IDL.Record({
@@ -124,9 +138,58 @@ export const UserRoleSummary = IDL.Record({
   'adminCount' : IDL.Nat,
   'userCount' : IDL.Nat,
 });
+export const PayoutTransferStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'processed' : IDL.Null,
+  'failed' : IDL.Null,
+});
+export const SellerPayoutTransferRecord = IDL.Record({
+  'id' : IDL.Text,
+  'status' : PayoutTransferStatus,
+  'sellerPrincipal' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'errorMessage' : IDL.Opt(IDL.Text),
+  'amountCents' : IDL.Nat,
+  'processedAt' : IDL.Opt(IDL.Int),
+  'payoutAccount' : IDL.Text,
+});
+export const DebitCardRequestStatus = IDL.Variant({
+  'submitted' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+  'under_review' : IDL.Null,
+  'draft' : IDL.Null,
+});
+export const BusinessDebitCardRequest = IDL.Record({
+  'id' : IDL.Text,
+  'sellerPrincipal' : IDL.Principal,
+  'submissionTimestamp' : IDL.Int,
+  'businessName' : IDL.Text,
+  'approvalTimestamp' : IDL.Opt(IDL.Int),
+  'rejectionTimestamp' : IDL.Opt(IDL.Int),
+  'requestStatus' : DebitCardRequestStatus,
+  'reviewTimestamp' : IDL.Opt(IDL.Int),
+});
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
   'secretKey' : IDL.Text,
+});
+export const CreditCardApplicationStatus = IDL.Variant({
+  'submitted' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+  'under_review' : IDL.Null,
+  'draft' : IDL.Null,
+});
+export const BusinessCreditCardApplication = IDL.Record({
+  'id' : IDL.Text,
+  'sellerPrincipal' : IDL.Principal,
+  'submissionTimestamp' : IDL.Int,
+  'businessName' : IDL.Text,
+  'approvalTimestamp' : IDL.Opt(IDL.Int),
+  'applicationStatus' : CreditCardApplicationStatus,
+  'rejectionTimestamp' : IDL.Opt(IDL.Int),
+  'reviewTimestamp' : IDL.Opt(IDL.Int),
 });
 export const http_header = IDL.Record({
   'value' : IDL.Text,
@@ -187,6 +250,13 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
+  'createOrGetAccountNumber' : IDL.Func([], [AccountAssignment], []),
+  'createOrUpdatePayoutProfile' : IDL.Func(
+      [IDL.Text],
+      [SellerPayoutProfile],
+      [],
+    ),
+  'getAccountNumber' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
   'getActiveKnowledgeByCategory' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(AssistantKnowledgeEntry)],
@@ -201,6 +271,7 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
+  'getPayoutProfile' : IDL.Func([], [IDL.Opt(SellerPayoutProfile)], ['query']),
   'getSignatureByPolicy' : IDL.Func(
       [PolicyIdentifier],
       [IDL.Opt(PolicySignatureRecord)],
@@ -221,10 +292,26 @@ export const idlService = IDL.Service({
   'initializeAccessControl' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+  'recordCredit' : IDL.Func([IDL.Nat], [], []),
+  'recordPayoutTransfer' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [SellerPayoutTransferRecord],
+      [],
+    ),
+  'requestBusinessDebitCard' : IDL.Func(
+      [IDL.Text],
+      [BusinessDebitCardRequest],
+      [],
+    ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
+  'submitBusinessCreditCardApplication' : IDL.Func(
+      [IDL.Text],
+      [BusinessCreditCardApplication],
+      [],
+    ),
   'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
@@ -277,6 +364,19 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'priceInCents' : IDL.Nat,
     'productDescription' : IDL.Text,
+  });
+  const AccountAssignment = IDL.Record({
+    'sellerPrincipal' : IDL.Principal,
+    'active' : IDL.Bool,
+    'createdAt' : IDL.Int,
+    'accountNumber' : IDL.Text,
+  });
+  const SellerPayoutProfile = IDL.Record({
+    'sellerPrincipal' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'lastUpdated' : IDL.Int,
+    'designatedPayoutAccount' : IDL.Text,
+    'internalBalanceCents' : IDL.Nat,
   });
   const AdminPageSection = IDL.Variant({
     'b2b' : IDL.Null,
@@ -333,6 +433,7 @@ export const idlFactory = ({ IDL }) => {
     'terms' : IDL.Null,
     'shipping' : IDL.Null,
     'privacy' : IDL.Null,
+    'marketplaceWide' : IDL.Null,
     'returns' : IDL.Null,
   });
   const PolicySignatureRecord = IDL.Record({
@@ -361,9 +462,58 @@ export const idlFactory = ({ IDL }) => {
     'adminCount' : IDL.Nat,
     'userCount' : IDL.Nat,
   });
+  const PayoutTransferStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'processed' : IDL.Null,
+    'failed' : IDL.Null,
+  });
+  const SellerPayoutTransferRecord = IDL.Record({
+    'id' : IDL.Text,
+    'status' : PayoutTransferStatus,
+    'sellerPrincipal' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'errorMessage' : IDL.Opt(IDL.Text),
+    'amountCents' : IDL.Nat,
+    'processedAt' : IDL.Opt(IDL.Int),
+    'payoutAccount' : IDL.Text,
+  });
+  const DebitCardRequestStatus = IDL.Variant({
+    'submitted' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+    'under_review' : IDL.Null,
+    'draft' : IDL.Null,
+  });
+  const BusinessDebitCardRequest = IDL.Record({
+    'id' : IDL.Text,
+    'sellerPrincipal' : IDL.Principal,
+    'submissionTimestamp' : IDL.Int,
+    'businessName' : IDL.Text,
+    'approvalTimestamp' : IDL.Opt(IDL.Int),
+    'rejectionTimestamp' : IDL.Opt(IDL.Int),
+    'requestStatus' : DebitCardRequestStatus,
+    'reviewTimestamp' : IDL.Opt(IDL.Int),
+  });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
     'secretKey' : IDL.Text,
+  });
+  const CreditCardApplicationStatus = IDL.Variant({
+    'submitted' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+    'under_review' : IDL.Null,
+    'draft' : IDL.Null,
+  });
+  const BusinessCreditCardApplication = IDL.Record({
+    'id' : IDL.Text,
+    'sellerPrincipal' : IDL.Principal,
+    'submissionTimestamp' : IDL.Int,
+    'businessName' : IDL.Text,
+    'approvalTimestamp' : IDL.Opt(IDL.Int),
+    'applicationStatus' : CreditCardApplicationStatus,
+    'rejectionTimestamp' : IDL.Opt(IDL.Int),
+    'reviewTimestamp' : IDL.Opt(IDL.Int),
   });
   const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
   const http_request_result = IDL.Record({
@@ -421,6 +571,13 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
+    'createOrGetAccountNumber' : IDL.Func([], [AccountAssignment], []),
+    'createOrUpdatePayoutProfile' : IDL.Func(
+        [IDL.Text],
+        [SellerPayoutProfile],
+        [],
+      ),
+    'getAccountNumber' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getActiveKnowledgeByCategory' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(AssistantKnowledgeEntry)],
@@ -435,6 +592,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
+    'getPayoutProfile' : IDL.Func(
+        [],
+        [IDL.Opt(SellerPayoutProfile)],
+        ['query'],
+      ),
     'getSignatureByPolicy' : IDL.Func(
         [PolicyIdentifier],
         [IDL.Opt(PolicySignatureRecord)],
@@ -455,10 +617,26 @@ export const idlFactory = ({ IDL }) => {
     'initializeAccessControl' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+    'recordCredit' : IDL.Func([IDL.Nat], [], []),
+    'recordPayoutTransfer' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [SellerPayoutTransferRecord],
+        [],
+      ),
+    'requestBusinessDebitCard' : IDL.Func(
+        [IDL.Text],
+        [BusinessDebitCardRequest],
+        [],
+      ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
+    'submitBusinessCreditCardApplication' : IDL.Func(
+        [IDL.Text],
+        [BusinessCreditCardApplication],
+        [],
+      ),
     'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
     'transform' : IDL.Func(
         [TransformationInput],

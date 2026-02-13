@@ -1,19 +1,17 @@
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
-import OutCall "http-outcalls/outcall";
-import Stripe "stripe/stripe";
-import List "mo:core/List";
-import Iter "mo:core/Iter";
 import Map "mo:core/Map";
-import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
+import List "mo:core/List";
+import Time "mo:core/Time";
+import Iter "mo:core/Iter";
+import Runtime "mo:core/Runtime";
+import Stripe "stripe/stripe";
+import OutCall "http-outcalls/outcall";
+import Principal "mo:core/Principal";
 import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
-import Time "mo:core/Time";
-
-
 
 actor {
   include MixinStorage();
@@ -23,6 +21,7 @@ actor {
     #shipping;
     #returns;
     #terms;
+    #marketplaceWide; // New variant for marketplace-wide policy
   };
 
   public type PolicyVersion = {
@@ -47,18 +46,18 @@ actor {
     #b2bMember;
   };
 
+  public type UserRoleSummary = {
+    adminCount : Nat;
+    userCount : Nat;
+    guestCount : Nat;
+  };
+
   public type UserProfile = {
     email : Text;
     fullName : Text;
     activeRole : AccessRole;
     subscriptionId : ?Text;
     accountCreated : Int;
-  };
-
-  public type UserRoleSummary = {
-    adminCount : Nat;
-    userCount : Nat;
-    guestCount : Nat;
   };
 
   public type PaymentStatus = {
@@ -358,6 +357,76 @@ actor {
     #affiliateProgram;
   };
 
+  public type SellerPayoutProfile = {
+    sellerPrincipal : Principal;
+    designatedPayoutAccount : Text;
+    internalBalanceCents : Nat; // Held funds
+    createdAt : Int;
+    lastUpdated : Int;
+  };
+
+  public type PayoutTransferStatus = {
+    #pending;
+    #processed;
+    #failed;
+  };
+
+  public type SellerPayoutTransferRecord = {
+    id : Text;
+    sellerPrincipal : Principal;
+    amountCents : Nat;
+    payoutAccount : Text;
+    status : PayoutTransferStatus;
+    createdAt : Int;
+    processedAt : ?Int;
+    errorMessage : ?Text;
+  };
+
+  public type AccountAssignment = {
+    sellerPrincipal : Principal;
+    accountNumber : Text;
+    createdAt : Int;
+    active : Bool;
+  };
+
+  public type DebitCardRequestStatus = {
+    #draft;
+    #submitted;
+    #under_review;
+    #approved;
+    #rejected;
+  };
+
+  public type BusinessDebitCardRequest = {
+    id : Text;
+    sellerPrincipal : Principal;
+    businessName : Text;
+    requestStatus : DebitCardRequestStatus;
+    submissionTimestamp : Int;
+    reviewTimestamp : ?Int;
+    approvalTimestamp : ?Int;
+    rejectionTimestamp : ?Int;
+  };
+
+  public type CreditCardApplicationStatus = {
+    #draft;
+    #submitted;
+    #under_review;
+    #approved;
+    #rejected;
+  };
+
+  public type BusinessCreditCardApplication = {
+    id : Text;
+    sellerPrincipal : Principal;
+    businessName : Text;
+    applicationStatus : CreditCardApplicationStatus;
+    submissionTimestamp : Int;
+    reviewTimestamp : ?Int;
+    approvalTimestamp : ?Int;
+    rejectionTimestamp : ?Int;
+  };
+
   let accessControlState = AccessControl.initState();
 
   let userStore = Map.empty<Principal, UserProfile>();
@@ -374,6 +443,13 @@ actor {
   let affiliateStore = Map.empty<Text, Affiliate>();
   let affiliatePayoutStore = Map.empty<Text, AffiliatePayoutRecord>();
   let policySignaturesByUser = Map.empty<Principal, List.List<PolicySignatureRecord>>();
+
+  let sellerPayoutProfiles = Map.empty<Principal, SellerPayoutProfile>();
+  let payoutAccountAssignments = Map.empty<Principal, AccountAssignment>();
+  let sellerPayoutTransfers = Map.empty<Text, SellerPayoutTransferRecord>();
+
+  let debitCardRequests = Map.empty<Text, BusinessDebitCardRequest>();
+  let creditCardApplications = Map.empty<Text, BusinessCreditCardApplication>();
 
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
   var ownerPrincipal : ?Principal = null;
@@ -618,8 +694,8 @@ actor {
       let generalEntries = [
         {
           id = "anc_general_info";
-          question = "What is ANC Electronics N Services?";
-          answer = "ANC Electronics N Services is a digital transformation platform offering a suite of business solutions including e-commerce, startup assistance, B2B services, and educational content for entrepreneurs and businesses. ANC was established in Texas and now operates in both Texas and Georgia.";
+          question = "What is ANC Marketplace?";
+          answer = "ANC Marketplace is a digital transformation platform offering a suite of business solutions including e-commerce, startup assistance, B2B services, and educational content for entrepreneurs and businesses. ANC was established in Texas and now operates in both Texas and Georgia. ANC Electronics N Services is a store within ANC Marketplace, specializing in business and industrial products leveraging dropshipping for nationwide distribution.";
           category = "General";
           lastUpdated = Time.now();
           isActive = true;
@@ -648,8 +724,8 @@ actor {
         },
         {
           id = "anc_contacts";
-          question = "How does ANC handle payments and copyright matters?";
-          answer = "ANC does not process seller/merchant money directly. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any of these issues, and service fees will be refunded accordingly.";
+          question = "How does ANC handle seller funds and payments?";
+          answer = "ANC temporarily holds seller funds in an internal ledger until they are transferred to the seller’s designated payout account. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any issues, and service fees will be refunded accordingly if necessary.";
           category = "General";
           lastUpdated = Time.now();
           isActive = true;
@@ -1031,6 +1107,144 @@ actor {
       Runtime.trap("Unauthorized: Only admins can update funnel partners");
     };
     merchantFunnelPartner := partner;
+  };
+
+  // Seller Payout Profile Management
+
+  public shared ({ caller }) func createOrUpdatePayoutProfile(payoutAccount : Text) : async SellerPayoutProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create payout profiles");
+    };
+
+    let newProfile : SellerPayoutProfile = {
+      sellerPrincipal = caller;
+      designatedPayoutAccount = payoutAccount;
+      internalBalanceCents = 0;
+      createdAt = Time.now();
+      lastUpdated = Time.now();
+    };
+
+    sellerPayoutProfiles.add(caller, newProfile);
+    newProfile;
+  };
+
+  public query ({ caller }) func getPayoutProfile() : async ?SellerPayoutProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access payout profiles");
+    };
+    sellerPayoutProfiles.get(caller);
+  };
+
+  public shared ({ caller }) func recordCredit(amountCents : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can record credits");
+    };
+
+    switch (sellerPayoutProfiles.get(caller)) {
+      case (null) {
+        Runtime.trap("Payout profile not found. Please create one first.");
+      };
+      case (?profile) {
+        let updatedProfile = {
+          profile with
+          internalBalanceCents = profile.internalBalanceCents + amountCents;
+          lastUpdated = Time.now();
+        };
+        sellerPayoutProfiles.add(caller, updatedProfile);
+      };
+    };
+  };
+
+  public shared ({ caller }) func recordPayoutTransfer(amountCents : Nat, payoutAccount : Text) : async SellerPayoutTransferRecord {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can record payouts");
+    };
+
+    let newTransfer : SellerPayoutTransferRecord = {
+      id = Time.now().toText();
+      sellerPrincipal = caller;
+      amountCents;
+      payoutAccount;
+      status = #pending;
+      createdAt = Time.now();
+      processedAt = null;
+      errorMessage = null;
+    };
+
+    sellerPayoutTransfers.add(newTransfer.id, newTransfer);
+    newTransfer;
+  };
+
+  // Seller Account Number Management
+
+  public shared ({ caller }) func createOrGetAccountNumber() : async AccountAssignment {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create account numbers");
+    };
+
+    let newAssignment : AccountAssignment = {
+      sellerPrincipal = caller;
+      accountNumber = Time.now().toText();
+      createdAt = Time.now();
+      active = true;
+    };
+
+    payoutAccountAssignments.add(caller, newAssignment);
+    newAssignment;
+  };
+
+  public query ({ caller }) func getAccountNumber() : async ?Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access account numbers");
+    };
+    switch (payoutAccountAssignments.get(caller)) {
+      case (null) { null };
+      case (?assignment) { ?assignment.accountNumber };
+    };
+  };
+
+  // Seller Debit Card Request Management
+
+  public shared ({ caller }) func requestBusinessDebitCard(businessName : Text) : async BusinessDebitCardRequest {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can request business debit cards");
+    };
+
+    let newRequest : BusinessDebitCardRequest = {
+      id = Time.now().toText();
+      sellerPrincipal = caller;
+      businessName;
+      requestStatus = #submitted;
+      submissionTimestamp = Time.now();
+      reviewTimestamp = null;
+      approvalTimestamp = null;
+      rejectionTimestamp = null;
+    };
+
+    debitCardRequests.add(newRequest.id, newRequest);
+    newRequest;
+  };
+
+  // Seller Credit Card Application Management
+
+  public shared ({ caller }) func submitBusinessCreditCardApplication(businessName : Text) : async BusinessCreditCardApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can submit credit card applications");
+    };
+
+    let newApplication : BusinessCreditCardApplication = {
+      id = Time.now().toText();
+      sellerPrincipal = caller;
+      businessName;
+      applicationStatus = #submitted;
+      submissionTimestamp = Time.now();
+      reviewTimestamp = null;
+      approvalTimestamp = null;
+      rejectionTimestamp = null;
+    };
+
+    creditCardApplications.add(newApplication.id, newApplication);
+    newApplication;
   };
 
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {

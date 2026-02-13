@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ChevronDown, User, LogOut, Settings, X } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, Settings, X, Wallet } from 'lucide-react';
 import CookieConsentBanner from './privacy/CookieConsentBanner';
 import AssistantWidget from './assistant/AssistantWidget';
 import Footer from './Footer';
@@ -55,7 +55,7 @@ export default function Layout() {
         {showBanner && (
           <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm relative">
             <p className="font-medium">
-              🎉 Welcome to ANC Electronics N Services - Your trusted marketplace partner
+              🎉 Welcome to ANC Marketplace - Your trusted marketplace partner
             </p>
             <button
               onClick={() => setShowBanner(false)}
@@ -73,8 +73,8 @@ export default function Layout() {
             <div className="flex h-16 items-center justify-between">
               {/* Logo */}
               <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-                <img src="/assets/generated/anc-logo-transparent.dim_200x200.png" alt="ANC Logo" className="h-10 w-10" />
-                <span className="text-xl font-bold logo-text">ANC Electronics N Services</span>
+                <img src="/assets/generated/anc-logo-transparent.dim_200x200.png" alt="ANC Marketplace Logo" className="h-10 w-10" />
+                <span className="text-xl font-bold logo-text">ANC Marketplace</span>
               </Link>
 
               {/* Desktop Navigation */}
@@ -164,6 +164,11 @@ export default function Layout() {
                         Terms & Conditions
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/marketplace-policy" className="cursor-pointer">
+                        Marketplace Policy
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -183,6 +188,12 @@ export default function Layout() {
                         <Link to="/customer-settings" className="cursor-pointer">
                           <Settings className="mr-2 h-4 w-4" />
                           Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/payouts" className="cursor-pointer">
+                          <Wallet className="mr-2 h-4 w-4" />
+                          Payouts
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -289,6 +300,13 @@ export default function Layout() {
                       >
                         Terms & Conditions
                       </Link>
+                      <Link
+                        to="/marketplace-policy"
+                        className="block py-2 hover:text-primary transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Marketplace Policy
+                      </Link>
                     </div>
                     {isAuthenticated && (
                       <div className="border-t pt-4">
@@ -297,17 +315,25 @@ export default function Layout() {
                           className="block py-2 hover:text-primary transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          <Settings className="inline mr-2 h-4 w-4" />
+                          <Settings className="inline-block mr-2 h-4 w-4" />
                           Settings
+                        </Link>
+                        <Link
+                          to="/payouts"
+                          className="block py-2 hover:text-primary transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Wallet className="inline-block mr-2 h-4 w-4" />
+                          Payouts
                         </Link>
                         <button
                           onClick={() => {
                             handleLogout();
                             setMobileMenuOpen(false);
                           }}
-                          className="block w-full text-left py-2 hover:text-destructive transition-colors"
+                          className="block py-2 text-destructive hover:opacity-80 transition-opacity w-full text-left"
                         >
-                          <LogOut className="inline mr-2 h-4 w-4" />
+                          <LogOut className="inline-block mr-2 h-4 w-4" />
                           Logout
                         </button>
                       </div>

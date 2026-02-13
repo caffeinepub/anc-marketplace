@@ -12,6 +12,10 @@ import {
   PolicyIdentifier as BackendPolicyIdentifier,
   PolicySignatureRecord,
   AccessRole,
+  SellerPayoutProfile,
+  AccountAssignment,
+  BusinessDebitCardRequest,
+  BusinessCreditCardApplication,
 } from '../backend';
 import { PolicyMetadata } from '../lib/policies';
 
@@ -37,8 +41,11 @@ function policyIdentifierToBackend(identifier: string): BackendPolicyIdentifier 
       return { returns: null } as unknown as BackendPolicyIdentifier;
     case 'terms':
       return { terms: null } as unknown as BackendPolicyIdentifier;
+    case 'marketplaceWide':
+      return { marketplaceWide: null } as unknown as BackendPolicyIdentifier;
     default:
-      return { privacy: null } as unknown as BackendPolicyIdentifier;
+      console.error(`Unknown policy identifier: ${identifier}`);
+      throw new Error(`Unknown policy identifier: ${identifier}`);
   }
 }
 
@@ -272,22 +279,7 @@ export function useSignPolicy() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['policySignature'] });
-      queryClient.invalidateQueries({ queryKey: ['policySignatureVerification'] });
     },
-  });
-}
-
-export function useGetSignatureByPolicy(policyIdentifier: string) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<PolicySignatureRecord | null>({
-    queryKey: ['policySignature', policyIdentifier],
-    queryFn: async () => {
-      if (!actor) return null;
-      const backendIdentifier = policyIdentifierToBackend(policyIdentifier);
-      return await actor.getSignatureByPolicy(backendIdentifier);
-    },
-    enabled: !!actor && !isFetching,
   });
 }
 
@@ -295,12 +287,111 @@ export function useVerifyPolicySignature(policy: PolicyMetadata) {
   const { actor, isFetching } = useActor();
 
   return useQuery<boolean>({
-    queryKey: ['policySignatureVerification', policy.identifier, policy.version],
+    queryKey: ['policySignature', policy.identifier, policy.version],
     queryFn: async () => {
       if (!actor) return false;
-      const backendIdentifier = policyIdentifierToBackend(policy.identifier);
-      return await actor.verifyPolicySignature(backendIdentifier, policy.version);
+      try {
+        const backendIdentifier = policyIdentifierToBackend(policy.identifier);
+        return await actor.verifyPolicySignature(backendIdentifier, policy.version);
+      } catch (error) {
+        console.error('Error verifying policy signature:', error);
+        return false;
+      }
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+// Seller Payout Hooks
+
+export function useGetPayoutProfile() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SellerPayoutProfile | null>({
+    queryKey: ['payoutProfile'],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getPayoutProfile();
+      } catch (error) {
+        if (isPermissionError(error)) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateOrUpdatePayoutProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payoutAccount: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return await actor.createOrUpdatePayoutProfile(payoutAccount);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payoutProfile'] });
+    },
+  });
+}
+
+export function useGetAccountNumber() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<string | null>({
+    queryKey: ['accountNumber'],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getAccountNumber();
+      } catch (error) {
+        if (isPermissionError(error)) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateOrGetAccountNumber() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return await actor.createOrGetAccountNumber();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accountNumber'] });
+    },
+  });
+}
+
+export function useRequestBusinessDebitCard() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (businessName: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return await actor.requestBusinessDebitCard(businessName);
+    },
+  });
+}
+
+export function useSubmitBusinessCreditCardApplication() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (businessName: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return await actor.submitBusinessCreditCardApplication(businessName);
+    },
   });
 }

@@ -6,7 +6,7 @@ import { SiVisa, SiMastercard, SiAmericanexpress, SiDiscover } from 'react-icons
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const appIdentifier = encodeURIComponent(
-    typeof window !== 'undefined' ? window.location.hostname : 'anc-electronics-n-services'
+    typeof window !== 'undefined' ? window.location.hostname : 'anc-marketplace'
   );
 
   return (
@@ -38,6 +38,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/marketplace-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Marketplace Policy
+                </Link>
+              </li>
+              <li>
                 <Link to="/pci-compliance" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   PCI Compliance
                 </Link>
@@ -49,8 +54,9 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
             <div className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">ANC Electronics N More and ANC Marketplace</p>
-              <p>EIN: 33-3107359</p>
+              <p className="font-semibold text-foreground">ANC Marketplace</p>
+              <p className="text-xs italic">Featuring stores like ANC Electronics N Services</p>
+              <p className="mt-2">EIN: 33-3107359</p>
               <p>Florida DBA G25000056278</p>
               <p className="mt-3">Owner: Angela MW Miller</p>
               <p>Email: <a href="mailto:support@anc-electronics-n-services.net" className="hover:text-primary transition-colors">support@anc-electronics-n-services.net</a></p>
@@ -88,7 +94,7 @@ export default function Footer() {
         <div className="mt-8 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-              <p>© {currentYear} ANC Electronics N More</p>
+              <p>© {currentYear} ANC Marketplace</p>
               <p className="hidden md:block">•</p>
               <p>PCI Compliant # 201100278838</p>
             </div>

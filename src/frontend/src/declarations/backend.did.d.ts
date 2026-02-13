@@ -13,6 +13,12 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type AccessRole = { 'b2bMember' : null } |
   { 'startUpMember' : null } |
   { 'guest' : null };
+export interface AccountAssignment {
+  'sellerPrincipal' : Principal,
+  'active' : boolean,
+  'createdAt' : bigint,
+  'accountNumber' : string,
+}
 export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
@@ -42,6 +48,36 @@ export interface AssistantKnowledgeEntry {
   'isActive' : boolean,
   'category' : string,
 }
+export interface BusinessCreditCardApplication {
+  'id' : string,
+  'sellerPrincipal' : Principal,
+  'submissionTimestamp' : bigint,
+  'businessName' : string,
+  'approvalTimestamp' : [] | [bigint],
+  'applicationStatus' : CreditCardApplicationStatus,
+  'rejectionTimestamp' : [] | [bigint],
+  'reviewTimestamp' : [] | [bigint],
+}
+export interface BusinessDebitCardRequest {
+  'id' : string,
+  'sellerPrincipal' : Principal,
+  'submissionTimestamp' : bigint,
+  'businessName' : string,
+  'approvalTimestamp' : [] | [bigint],
+  'rejectionTimestamp' : [] | [bigint],
+  'requestStatus' : DebitCardRequestStatus,
+  'reviewTimestamp' : [] | [bigint],
+}
+export type CreditCardApplicationStatus = { 'submitted' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null } |
+  { 'under_review' : null } |
+  { 'draft' : null };
+export type DebitCardRequestStatus = { 'submitted' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null } |
+  { 'under_review' : null } |
+  { 'draft' : null };
 export interface FunnelPartner {
   'partnerName' : string,
   'signupLink' : string,
@@ -55,9 +91,13 @@ export interface MarketplaceRoadmap {
   'roadmapId' : string,
   'notes' : string,
 }
+export type PayoutTransferStatus = { 'pending' : null } |
+  { 'processed' : null } |
+  { 'failed' : null };
 export type PolicyIdentifier = { 'terms' : null } |
   { 'shipping' : null } |
   { 'privacy' : null } |
+  { 'marketplaceWide' : null } |
   { 'returns' : null };
 export interface PolicySignatureRecord {
   'signerName' : string,
@@ -65,6 +105,23 @@ export interface PolicySignatureRecord {
   'policyVersion' : string,
   'policyIdentifier' : PolicyIdentifier,
   'timestamp' : bigint,
+}
+export interface SellerPayoutProfile {
+  'sellerPrincipal' : Principal,
+  'createdAt' : bigint,
+  'lastUpdated' : bigint,
+  'designatedPayoutAccount' : string,
+  'internalBalanceCents' : bigint,
+}
+export interface SellerPayoutTransferRecord {
+  'id' : string,
+  'status' : PayoutTransferStatus,
+  'sellerPrincipal' : Principal,
+  'createdAt' : bigint,
+  'errorMessage' : [] | [string],
+  'amountCents' : bigint,
+  'processedAt' : [] | [bigint],
+  'payoutAccount' : string,
 }
 export interface ShoppingItem {
   'productName' : string,
@@ -153,6 +210,9 @@ export interface _SERVICE {
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'createOrGetAccountNumber' : ActorMethod<[], AccountAssignment>,
+  'createOrUpdatePayoutProfile' : ActorMethod<[string], SellerPayoutProfile>,
+  'getAccountNumber' : ActorMethod<[], [] | [string]>,
   'getActiveKnowledgeByCategory' : ActorMethod<
     [string],
     Array<AssistantKnowledgeEntry>
@@ -162,6 +222,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFunnelPartner' : ActorMethod<[], FunnelPartner>,
+  'getPayoutProfile' : ActorMethod<[], [] | [SellerPayoutProfile]>,
   'getSignatureByPolicy' : ActorMethod<
     [PolicyIdentifier],
     [] | [PolicySignatureRecord]
@@ -173,10 +234,20 @@ export interface _SERVICE {
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'recordCredit' : ActorMethod<[bigint], undefined>,
+  'recordPayoutTransfer' : ActorMethod<
+    [bigint, string],
+    SellerPayoutTransferRecord
+  >,
+  'requestBusinessDebitCard' : ActorMethod<[string], BusinessDebitCardRequest>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'signPolicy' : ActorMethod<[PolicySignatureRecord], undefined>,
+  'submitBusinessCreditCardApplication' : ActorMethod<
+    [string],
+    BusinessCreditCardApplication
+  >,
   'submitBusinessOpsQuestion' : ActorMethod<[string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
