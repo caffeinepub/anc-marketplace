@@ -1,157 +1,37 @@
 {
   "kind": "build_request",
-  "title": "Add legal policy pages, cookie consent, digital policy signatures, and compliance/contact footer updates",
+  "title": "Set site-wide page background to white (disable dark background)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add site-wide footer content on every page (via the shared layout) that includes: (a) copyright notice \"© ANC Electronics N More\"; (b) \"PCI Compliant # 201100278838\"; (c) the provided business/contact information exactly as written; (d) a \"Partners\" line mentioning \"Authorize.net\" and \"Zen dash\"; and (e) major credit/debit card brand logos (Visa, Mastercard, and other major brands) displayed in the footer.",
+      "text": "Ensure all site pages render with a white (light) background instead of a black (dark) background, regardless of the user’s OS/system theme settings.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-8"
         ],
         "quotes": [
-          "add copyright ©️ ANC Electronics N More",
-          "add PCI Compliant # 201100278838",
-          "add contact info ... Add the Visa, Mastercard and other major credit or debit card logos all on the footer also put partners with \"Authorize.net and Zen dash for payment processors\""
+          "The background of the site pages should be white not black"
         ]
       },
       "acceptanceCriteria": [
-        "The footer renders on every route/page using the app's shared layout.",
-        "Footer displays \"© ANC Electronics N More\" and \"PCI Compliant # 201100278838\".",
-        "Footer displays the provided contact/business info block exactly as provided (including EIN, DBA, owner name, email, phone, address).",
-        "Footer displays a Partners mention containing the strings \"Authorize.net\" and \"Zen dash\".",
-        "Footer displays a row/strip of payment method logos including at least Visa and Mastercard plus additional major card brands (e.g., AmEx/Discover) as icons or a single strip image."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Create new legal policy pages for Shipping Policy, Returns Policy, and Terms & Conditions, and make them accessible from the footer on every page.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "add a shipping and a returns policy then add a terms and conditions. And a cookies permission pop up. The shipping, returns, terms and conditions policies you can add to the footer of the app to be available on every page of the site."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Routes exist for Shipping Policy, Returns Policy, and Terms & Conditions pages and load without errors.",
-        "Each policy page is linked from the footer and is reachable from any page.",
-        "Policy pages use English, readable formatting (headings/sections) and are consistent with existing app styling."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Update the existing Privacy Policy page content to use the privacy policy text the user uploads (replace the current placeholder policy content), while keeping the route/path to the privacy policy page stable.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "add this privacy policy to it that I upload with these instructions."
-        ]
-      },
-      "acceptanceCriteria": [
-        "The Privacy Policy page continues to be available at the existing privacy policy route.",
-        "The visible privacy policy body text can be replaced with the user-provided uploaded policy text without requiring code changes to other pages/routes.",
-        "No placeholder/privacy copy remains once the uploaded policy content is provided."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Ensure a cookie permission pop-up is present and functional: allow users to Accept or Reject cookies, persist their choice locally, and provide a clear link to view the Privacy Policy from the banner.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "And a cookies permission pop up."
-        ]
-      },
-      "acceptanceCriteria": [
-        "A cookie consent banner/popup appears for users who have not previously made a cookie choice.",
-        "Accept and Reject both persist the user choice and hide the banner afterward.",
-        "The banner includes a working link/button that navigates to the Privacy Policy page."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement a digital policy acceptance + signature flow that applies to both customers and sellers: users must (1) explicitly accept and (2) digitally sign each of the following policies: Privacy Policy, Shipping Policy, Returns Policy, Terms & Conditions. Store per-user acceptance records including policy identifier, policy version/last-updated value, signature name/text, and timestamp.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Make each policy something that customers and sellers alike have to accept and digitally sign."
-        ]
-      },
-      "acceptanceCriteria": [
-        "A signed-in user can open a policy acceptance UI that lists all four policies and shows signed/unsigned status per policy.",
-        "For each policy, the user must check an acceptance checkbox and enter a signature (typed full name or similar) before submission is allowed.",
-        "Backend stores acceptance records per authenticated principal including: policy type, policy version (or last-updated string), signature text, and signed timestamp.",
-        "Frontend can fetch the current user's policy acceptance status from the backend and display it reliably after refresh.",
-        "The acceptance/signature flow is available to any authenticated user regardless of role (customer/seller)."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Enforce policy signing: when an authenticated user has not signed all required policies, block access to actions that imply usage of the marketplace (at minimum: purchasing/checkout flows and seller/business tools) until all required policies are signed, and provide a clear navigation path to complete signing.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Make each policy something that customers and sellers alike have to accept and digitally sign."
-        ]
-      },
-      "acceptanceCriteria": [
-        "When a logged-in user is missing any required policy signatures, the UI prevents completing marketplace-critical actions (e.g., checkout) and prompts the user to sign the missing policies.",
-        "The prompt includes a direct way to open the signing flow and completes successfully once all policies are signed.",
-        "Once all policies are signed, the user can proceed with the previously blocked action without further prompts."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Add the new policy routes (Shipping, Returns, Terms) to the app router and include them in both desktop and mobile navigation only where appropriate (footer links are required; header nav can remain unchanged unless necessary).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "add a shipping and a returns policy then add a terms and conditions. ... add to the footer of the app to be available on every page of the site."
-        ]
-      },
-      "acceptanceCriteria": [
-        "App router includes routes for all new policy pages and they render inside the shared layout.",
-        "Footer links work on both desktop and mobile views.",
-        "No existing routes break (home, store, startup dashboard, etc.)."
+        "When visiting any route (e.g., /, /customer-faq, /privacy-policy), the page background is light/white and not dark/black.",
+        "On devices with system dark mode enabled, the app still renders with a light/white background by default.",
+        "No UI areas that use the global background token (e.g., Layout container and header using bg-background) appear black due to dark theme being applied automatically."
       ]
     }
   ],
   "constraints": [
-    "Use English for any user-facing text.",
-    "Do not modify files under frontend/src/components/ui (read-only); compose existing UI components instead.",
-    "Backend changes must remain within the single Motoko actor (backend/main.mo)."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any code in frontend/src/components/ui (immutable paths).",
+    "Keep the existing single-actor Motoko backend architecture unchanged."
   ],
   "nonGoals": [
-    "Providing legally vetted policy text (content is user-provided; generated placeholders, if any, are not legal advice).",
-    "Implementing third-party authentication methods (only Internet Identity is supported).",
-    "Integrating external databases or third-party storage for signatures."
+    "Performing a full codebase review for bugs, glitches, misspellings, or general QA beyond the background color issue.",
+    "Adding a user-facing theme toggle or dark-mode support features (unless required to keep the background white)."
   ],
   "imageRequirements": {
-    "required": [
-      "Payment card brand logos strip in a clean monochrome style (payment-logos-strip.dim_800x120.png)",
-      "Authorize.net logo in monochrome (authorize-net-logo.dim_240x80.png)",
-      "Zen dash logo in monochrome (zen-dash-logo.dim_240x80.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

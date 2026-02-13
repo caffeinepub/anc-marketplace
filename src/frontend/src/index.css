@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /* Navy blue primary palette (hue 250) */
-    --background: oklch(98% 0.01 250);
+    --background: oklch(99% 0.005 250);
     --foreground: oklch(15% 0.02 250);
     --card: oklch(100% 0 0);
     --card-foreground: oklch(15% 0.02 250);
@@ -62,8 +62,13 @@
   * {
     @apply border-border;
   }
+  html {
+    color-scheme: light;
+  }
   body {
     @apply bg-background text-foreground;
+    background-color: oklch(99% 0.005 250);
+    color: oklch(15% 0.02 250);
   }
 }
 

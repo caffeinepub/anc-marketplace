@@ -12,9 +12,9 @@ import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
   include MixinStorage();
 

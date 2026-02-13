@@ -1,251 +1,26 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Legal policy pages, cookie consent, policy signatures, and compliance footer updates",
+  "title": "Force site-wide light (white) background regardless of system theme",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add a site-wide footer (shared layout) with copyright/PCI text, exact business contact info, partners line, and payment brand logos.",
+      "summary": "Force the application to use a light theme so global background tokens never switch to dark based on OS/system settings.",
       "acceptanceCriteria": [
-        "The footer renders on every route/page using the app's shared layout.",
-        "Footer displays \"© ANC Electronics N More\" and \"PCI Compliant # 201100278838\".",
-        "Footer displays the provided contact/business info block exactly as provided (including EIN, DBA, owner name, email, phone, address).",
-        "Footer displays a Partners mention containing the strings \"Authorize.net\" and \"Zen dash\".",
-        "Footer displays a row/strip of payment method logos including at least Visa and Mastercard plus additional major card brands (e.g., AmEx/Discover) as icons or a single strip image."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "create",
-          "description": "Create a reusable Footer component that renders: copyright line \"© ANC Electronics N More\", \"PCI Compliant # 201100278838\", a business/contact info block sourced from a static text asset, a Partners line mentioning \"Authorize.net\" and \"Zen dash\", and a payment logos strip image. Wire footer links to legal policy routes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/public/policies/business-contact-info.txt",
-          "operation": "create",
-          "description": "Add a plain-text business/contact information block that can be updated by replacing this file (so it can match the user-provided text exactly, including EIN, DBA, owner name, email, phone, address). This file is rendered verbatim in the footer."
-        },
-        {
-          "path": "frontend/public/assets/generated/payment-logos-strip.dim_800x120.png",
-          "operation": "create",
-          "description": "Add the generated monochrome payment card brand logos strip asset at this exact path and filename for use in the site footer."
-        },
-        {
-          "path": "frontend/public/assets/generated/authorize-net-logo.dim_240x80.png",
-          "operation": "create",
-          "description": "Add the generated monochrome Authorize.net logo asset at this exact path and filename for use in the site footer (partners line/branding)."
-        },
-        {
-          "path": "frontend/public/assets/generated/zen-dash-logo.dim_240x80.png",
-          "operation": "create",
-          "description": "Add the generated monochrome Zen dash logo asset at this exact path and filename for use in the site footer (partners line/branding)."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Render the new Footer component on every page via the shared layout (below main content). Ensure footer links and images display correctly on desktop and mobile. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Create new Shipping Policy, Returns Policy, and Terms & Conditions pages and make them accessible from the footer.",
-      "acceptanceCriteria": [
-        "Routes exist for Shipping Policy, Returns Policy, and Terms & Conditions pages and load without errors.",
-        "Each policy page is linked from the footer and is reachable from any page.",
-        "Policy pages use English, readable formatting (headings/sections) and are consistent with existing app styling."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/ShippingPolicyPage.tsx",
-          "operation": "create",
-          "description": "Create a Shipping Policy page that renders policy content from a static policy file (readable headings/sections) using the app’s existing UI primitives (no changes under frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ReturnsPolicyPage.tsx",
-          "operation": "create",
-          "description": "Create a Returns Policy page that renders policy content from a static policy file (readable headings/sections) using the app’s existing UI primitives. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/TermsConditionsPage.tsx",
-          "operation": "create",
-          "description": "Create a Terms & Conditions page that renders policy content from a static policy file (readable headings/sections) using the app’s existing UI primitives. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/policies/PolicyDocument.tsx",
-          "operation": "create",
-          "description": "Create a shared policy document renderer component (loads policy text/markdown from frontend/public/policies and displays with consistent styling, headings, and last-updated/version label). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/public/policies/shipping-policy.md",
-          "operation": "create",
-          "description": "Add initial Shipping Policy placeholder content (English, sectioned headings). This is not legal advice and is intended to be replaced with user-provided text."
-        },
-        {
-          "path": "frontend/public/policies/returns-policy.md",
-          "operation": "create",
-          "description": "Add initial Returns Policy placeholder content (English, sectioned headings). This is not legal advice and is intended to be replaced with user-provided text."
-        },
-        {
-          "path": "frontend/public/policies/terms-and-conditions.md",
-          "operation": "create",
-          "description": "Add initial Terms & Conditions placeholder content (English, sectioned headings). This is not legal advice and is intended to be replaced with user-provided text."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Add footer links to Shipping Policy, Returns Policy, and Terms & Conditions routes so they are reachable from any page. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Replace Privacy Policy placeholder content with user-provided uploaded text while keeping the existing privacy policy route stable.",
-      "acceptanceCriteria": [
-        "The Privacy Policy page continues to be available at the existing privacy policy route.",
-        "The visible privacy policy body text can be replaced with the user-provided uploaded policy text without requiring code changes to other pages/routes.",
-        "No placeholder/privacy copy remains once the uploaded policy content is provided."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/policies/privacy-policy.md",
-          "operation": "create",
-          "description": "Add a Privacy Policy content file to be replaced by the user-provided uploaded policy text. Updating this file should update the visible privacy policy without needing route changes."
-        },
-        {
-          "path": "frontend/src/pages/PrivacyPolicyPage.tsx",
-          "operation": "modify",
-          "description": "Refactor the Privacy Policy page to render content from frontend/public/policies/privacy-policy.md using the shared PolicyDocument renderer while keeping the existing route/path unchanged. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/policies/PolicyDocument.tsx",
-          "operation": "modify",
-          "description": "Ensure the policy renderer supports the Privacy Policy formatting needs (headings/sections, scroll area, and a clear last-updated/version label) without relying on hard-coded placeholder copy. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Ensure a functional cookie consent banner with Accept/Reject persistence and a link to the Privacy Policy.",
-      "acceptanceCriteria": [
-        "A cookie consent banner/popup appears for users who have not previously made a cookie choice.",
-        "Accept and Reject both persist the user choice and hide the banner afterward.",
-        "The banner includes a working link/button that navigates to the Privacy Policy page."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/privacy/CookieConsentBanner.tsx",
-          "operation": "modify",
-          "description": "Review and adjust banner copy/behavior as needed to ensure it meets requirements (Accept/Reject persist locally and hide the banner; link navigates to the stable Privacy Policy route). Keep all user-facing text in English and consistent with existing styling. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/lib/cookieConsent.ts",
-          "operation": "modify",
-          "description": "If needed, harden consent storage helpers to reliably detect unset state vs accepted/rejected and to be resilient to unexpected stored values."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Confirm CookieConsentBanner remains rendered site-wide via the shared layout (no route-specific regressions). Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Implement a digital policy acceptance + signature UI for authenticated users to accept and sign four policies and store/fetch status via existing backend capabilities.",
-      "acceptanceCriteria": [
-        "A signed-in user can open a policy acceptance UI that lists all four policies and shows signed/unsigned status per policy.",
-        "For each policy, the user must check an acceptance checkbox and enter a signature (typed full name or similar) before submission is allowed.",
-        "Backend stores acceptance records per authenticated principal including: policy type, policy version (or last-updated string), signature text, and signed timestamp.",
-        "Frontend can fetch the current user's policy acceptance status from the backend and display it reliably after refresh.",
-        "The acceptance/signature flow is available to any authenticated user regardless of role (customer/seller)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/lib/policies.ts",
-          "operation": "create",
-          "description": "Define policy metadata used by the UI: the four policy identifiers, display names, routes, and a policyVersion/lastUpdated string per policy. This version string is sent when signing and used when verifying signatures. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/usePolicySignatures.ts",
-          "operation": "create",
-          "description": "Add React Query hooks to integrate with existing backend capabilities for policy signatures: fetch signature record per PolicyIdentifier, verify signature for current policy version, and submit a PolicySignatureRecord. Use the selected authorization component’s authenticated identity flow (principal available only after login) to ensure calls are made only when authenticated. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/policies/PolicySignaturesPanel.tsx",
-          "operation": "create",
-          "description": "Create a signing UI panel that lists all four policies with signed/unsigned and up-to-date/outdated status, provides per-policy accept checkbox + typed signature input, and submits signing via backend calls. Use the selected authorization component to rely on authenticated identity and (where available) the user profile full name as the default signerName. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CustomerSettingsPage.tsx",
-          "operation": "modify",
-          "description": "Add a \"Policy Signatures\" section that renders PolicySignaturesPanel for authenticated users, providing a clear place for any user (customer/seller) to complete required signing. Keep existing settings content intact. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/policies/PolicyDocument.tsx",
-          "operation": "modify",
-          "description": "Add an optional call-to-action area for authenticated users (e.g., a button/link) to navigate to the signing section in Settings when they are missing signatures, without forcing new top-level routes. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Enforce policy signing by blocking marketplace-critical actions (at minimum checkout and seller/business tools) until all required policies are signed, with a clear path to complete signing.",
-      "acceptanceCriteria": [
-        "When a logged-in user is missing any required policy signatures, the UI prevents completing marketplace-critical actions (e.g., checkout) and prompts the user to sign the missing policies.",
-        "The prompt includes a direct way to open the signing flow and completes successfully once all policies are signed.",
-        "Once all policies are signed, the user can proceed with the previously blocked action without further prompts."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/policies/RequirePolicySignatures.tsx",
-          "operation": "create",
-          "description": "Create a reusable guard component/helper that checks the current authenticated user’s required policy signature status (using verify/signature status hooks) and either renders children or shows a blocking prompt with a direct navigation link to the Policy Signatures section in Settings. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/StorePage.tsx",
-          "operation": "modify",
-          "description": "Before initiating checkout, require that an authenticated user has signed all required policies for the current policy versions. If missing, block checkout, show a clear prompt, and provide a direct navigation path to complete signing (Settings → Policy Signatures). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/StoreBuilderPage.tsx",
-          "operation": "modify",
-          "description": "Before starting Store Builder subscription/checkout (seller/business tool), require that an authenticated user has signed all required policies. If missing, block the subscription action and link to Settings → Policy Signatures. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/StartupDashboard.tsx",
-          "operation": "modify",
-          "description": "Add policy-signing enforcement at the entry or action level (seller/business tool context): if authenticated user is missing signatures, show a prompt with a direct link to Settings → Policy Signatures and prevent marketplace/tool actions from proceeding. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/B2BDashboard.tsx",
-          "operation": "modify",
-          "description": "Add policy-signing enforcement at the entry or action level (seller/business tool context): if authenticated user is missing signatures, show a prompt with a direct link to Settings → Policy Signatures and prevent marketplace/tool actions from proceeding. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Add policy routes to the router and ensure footer links work on desktop and mobile without breaking existing routes.",
-      "acceptanceCriteria": [
-        "App router includes routes for all new policy pages and they render inside the shared layout.",
-        "Footer links work on both desktop and mobile views.",
-        "No existing routes break (home, store, startup dashboard, etc.)."
+        "When visiting any route (e.g., /, /customer-faq, /privacy-policy), the page background is light/white and not dark/black.",
+        "On devices with system dark mode enabled, the app still renders with a light/white background by default.",
+        "No UI areas that use the global background token (e.g., Layout container and header using bg-background) appear black due to dark theme being applied automatically."
       ],
       "file_operations": [
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Register routes for /shipping-policy, /returns-policy, and /terms-and-conditions using the existing TanStack router setup and ensure they render under the shared Layout."
+          "description": "Update the next-themes ThemeProvider configuration to force the light theme (disable following the system theme), ensuring the 'dark' class is not applied based on OS settings."
         },
         {
-          "path": "frontend/src/components/Footer.tsx",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Ensure footer links are accessible and usable in both desktop and mobile layouts (responsive layout, touch targets). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Ensure the shared layout continues to wrap all routes (including new legal routes) and that mobile navigation behavior is unaffected (header nav can remain unchanged). Verify the component's usage instructions before implementing."
+          "description": "Add/adjust global base styles to enforce a light color scheme and a white/light background fallback at the document/body level to prevent any dark rendering even if a dark class is accidentally present."
         }
       ]
     }
