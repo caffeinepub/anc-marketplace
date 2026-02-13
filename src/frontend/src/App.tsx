@@ -18,6 +18,8 @@ import TermsConditionsPage from './pages/TermsConditionsPage';
 import MarketplacePolicyPage from './pages/MarketplacePolicyPage';
 import CustomerSettingsPage from './pages/CustomerSettingsPage';
 import SellerPayoutsPage from './pages/SellerPayoutsPage';
+import AdminCenterPage from './pages/AdminCenterPage';
+import AccountPortalPage from './pages/AccountPortalPage';
 import RuntimeErrorBoundary from './components/RuntimeErrorBoundary';
 import RouterErrorScreen from './components/RouterErrorScreen';
 
@@ -126,6 +128,18 @@ const payoutsRoute = createRoute({
   component: SellerPayoutsPage,
 });
 
+const adminCenterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: AdminCenterPage,
+});
+
+const accountPortalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/portal',
+  component: AccountPortalPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   customerFAQRoute,
@@ -142,6 +156,8 @@ const routeTree = rootRoute.addChildren([
   marketplacePolicyRoute,
   customerSettingsRoute,
   payoutsRoute,
+  adminCenterRoute,
+  accountPortalRoute,
 ]);
 
 const router = createRouter({ routeTree });

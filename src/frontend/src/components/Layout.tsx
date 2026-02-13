@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ChevronDown, User, LogOut, Settings, X, Wallet } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, Settings, X, Wallet, Shield, Building2 } from 'lucide-react';
 import CookieConsentBanner from './privacy/CookieConsentBanner';
 import AssistantWidget from './assistant/AssistantWidget';
 import Footer from './Footer';
@@ -90,15 +90,15 @@ export default function Layout() {
                       Customer <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Customer Resources</DropdownMenuLabel>
+                  <DropdownMenuContent align="end" className="w-48 menu-surface">
+                    <DropdownMenuLabel className="menu-label">Customer Resources</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/customer-faq" className="cursor-pointer">
                         FAQ
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/customer-blog" className="cursor-pointer">
                         Blog
                       </Link>
@@ -113,15 +113,15 @@ export default function Layout() {
                       Sellers & Businesses <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Business Resources</DropdownMenuLabel>
+                  <DropdownMenuContent align="end" className="w-56 menu-surface">
+                    <DropdownMenuLabel className="menu-label">Business Resources</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/sellers-businesses-faq" className="cursor-pointer">
                         FAQ
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/sellers-businesses-blog" className="cursor-pointer">
                         Blog
                       </Link>
@@ -136,35 +136,35 @@ export default function Layout() {
                       Legal <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Legal & Compliance</DropdownMenuLabel>
+                  <DropdownMenuContent align="end" className="w-48 menu-surface">
+                    <DropdownMenuLabel className="menu-label">Legal & Compliance</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/pci-compliance" className="cursor-pointer">
                         PCI Compliance
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/privacy-policy" className="cursor-pointer">
                         Privacy Policy
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/shipping-policy" className="cursor-pointer">
                         Shipping Policy
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/returns-policy" className="cursor-pointer">
                         Returns Policy
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/terms-and-conditions" className="cursor-pointer">
                         Terms & Conditions
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="menu-item">
                       <Link to="/marketplace-policy" className="cursor-pointer">
                         Marketplace Policy
                       </Link>
@@ -181,23 +181,40 @@ export default function Layout() {
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuContent align="end" className="w-48 menu-surface">
+                      <DropdownMenuLabel className="menu-label">My Account</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="menu-item">
                         <Link to="/customer-settings" className="cursor-pointer">
                           <Settings className="mr-2 h-4 w-4" />
                           Settings
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="menu-item">
+                        <Link to="/portal" className="cursor-pointer">
+                          <Building2 className="mr-2 h-4 w-4" />
+                          Account Portal
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="menu-item">
                         <Link to="/payouts" className="cursor-pointer">
                           <Wallet className="mr-2 h-4 w-4" />
                           Payouts
                         </Link>
                       </DropdownMenuItem>
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild className="menu-item">
+                            <Link to="/admin" className="cursor-pointer">
+                              <Shield className="mr-2 h-4 w-4" />
+                              Admin Center
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive menu-item">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
                       </DropdownMenuItem>
@@ -217,92 +234,92 @@ export default function Layout() {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto">
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto menu-surface">
                   <SheetHeader>
-                    <SheetTitle>Menu</SheetTitle>
+                    <SheetTitle className="menu-label">Menu</SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col gap-4 mt-6">
                     <Link
                       to="/"
-                      className="text-lg font-medium hover:text-primary transition-colors"
+                      className="text-lg font-medium menu-link"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Home
                     </Link>
                     <div className="border-t pt-4">
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">Customer</p>
+                      <p className="text-sm font-semibold menu-section-label mb-2">Customer</p>
                       <Link
                         to="/customer-faq"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         FAQ
                       </Link>
                       <Link
                         to="/customer-blog"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Blog
                       </Link>
                     </div>
                     <div className="border-t pt-4">
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">Sellers & Businesses</p>
+                      <p className="text-sm font-semibold menu-section-label mb-2">Sellers & Businesses</p>
                       <Link
                         to="/sellers-businesses-faq"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         FAQ
                       </Link>
                       <Link
                         to="/sellers-businesses-blog"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Blog
                       </Link>
                     </div>
                     <div className="border-t pt-4">
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">Legal</p>
+                      <p className="text-sm font-semibold menu-section-label mb-2">Legal</p>
                       <Link
                         to="/pci-compliance"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         PCI Compliance
                       </Link>
                       <Link
                         to="/privacy-policy"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Privacy Policy
                       </Link>
                       <Link
                         to="/shipping-policy"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Shipping Policy
                       </Link>
                       <Link
                         to="/returns-policy"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Returns Policy
                       </Link>
                       <Link
                         to="/terms-and-conditions"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Terms & Conditions
                       </Link>
                       <Link
                         to="/marketplace-policy"
-                        className="block py-2 hover:text-primary transition-colors"
+                        className="block py-2 menu-link"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Marketplace Policy
@@ -310,30 +327,44 @@ export default function Layout() {
                     </div>
                     {isAuthenticated && (
                       <div className="border-t pt-4">
+                        <p className="text-sm font-semibold menu-section-label mb-2">My Account</p>
                         <Link
                           to="/customer-settings"
-                          className="block py-2 hover:text-primary transition-colors"
+                          className="block py-2 menu-link"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          <Settings className="inline-block mr-2 h-4 w-4" />
                           Settings
                         </Link>
                         <Link
-                          to="/payouts"
-                          className="block py-2 hover:text-primary transition-colors"
+                          to="/portal"
+                          className="block py-2 menu-link"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          <Wallet className="inline-block mr-2 h-4 w-4" />
+                          Account Portal
+                        </Link>
+                        <Link
+                          to="/payouts"
+                          className="block py-2 menu-link"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
                           Payouts
                         </Link>
+                        {isAdmin && (
+                          <Link
+                            to="/admin"
+                            className="block py-2 menu-link"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Admin Center
+                          </Link>
+                        )}
                         <button
                           onClick={() => {
                             handleLogout();
                             setMobileMenuOpen(false);
                           }}
-                          className="block py-2 text-destructive hover:opacity-80 transition-opacity w-full text-left"
+                          className="block w-full text-left py-2 text-destructive hover:text-destructive/80 transition-colors font-medium"
                         >
-                          <LogOut className="inline-block mr-2 h-4 w-4" />
                           Logout
                         </button>
                       </div>

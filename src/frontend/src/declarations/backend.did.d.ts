@@ -23,6 +23,10 @@ export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
 }
+export interface AdminFinancialState {
+  'creditAccount' : CreditAccount,
+  'availableFundsCents' : bigint,
+}
 export type AdminPageSection = { 'b2b' : null } |
   { 'marketplace' : null } |
   { 'startups' : null } |
@@ -67,6 +71,10 @@ export interface BusinessDebitCardRequest {
   'rejectionTimestamp' : [] | [bigint],
   'requestStatus' : DebitCardRequestStatus,
   'reviewTimestamp' : [] | [bigint],
+}
+export interface CreditAccount {
+  'creditLimitCents' : bigint,
+  'usedAmountCents' : bigint,
 }
 export type CreditCardApplicationStatus = { 'submitted' : null } |
   { 'approved' : null } |
@@ -218,6 +226,7 @@ export interface _SERVICE {
     Array<AssistantKnowledgeEntry>
   >,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
+  'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
   'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -239,6 +248,7 @@ export interface _SERVICE {
     [bigint, string],
     SellerPayoutTransferRecord
   >,
+  'repayCredit' : ActorMethod<[bigint], undefined>,
   'requestBusinessDebitCard' : ActorMethod<[string], BusinessDebitCardRequest>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
@@ -251,6 +261,8 @@ export interface _SERVICE {
   'submitBusinessOpsQuestion' : ActorMethod<[string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
+  'updateAvailableFunds' : ActorMethod<[bigint], undefined>,
+  'updateCreditUsedAmount' : ActorMethod<[bigint], undefined>,
   'updateFunnelPartner' : ActorMethod<[FunnelPartner], undefined>,
   'updateKnowledgeEntry' : ActorMethod<[string, string], undefined>,
   'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,

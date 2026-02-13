@@ -1,77 +1,61 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T07:46:13.548Z",
-  "summary": "Branding appears updated to \"ANC Marketplace\" in several key frontend locations (header/banner, homepage hero, footer, index.html meta/title, manifest). A new seller payouts page/route and related React Query hooks were added. Policy/terms docs were updated to describe temporarily holding seller funds. However, the diff summary does not provide clear evidence that the backend seeded assistant knowledge base was updated (REQ-2/REQ-8), nor that the backend escrow ledger/payout/account-number/card-application storage+APIs are implemented (REQ-3/REQ-4/REQ-6). Also, the payouts page truncation prevents confirming the held-balance display and payout transfer listing requirements (REQ-5/REQ-7).",
+  "generatedAt": "2026-02-13T09:45:38.014Z",
+  "summary": "REQ-1 is partially addressed via new menu-specific CSS tokens/classes and usage of a `menu-surface` class on at least one dropdown menu. However, the diff evidence is truncated and does not clearly show the same treatment applied to all required desktop dropdowns and the mobile slide-over (SheetContent). Additionally, several unrelated styling/product changes appear to have been introduced, which violates the request to keep changes limited to menu styling/readability and avoid broader theme/site changes or new routes/navigation.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Update the backend seeded assistant knowledge base content so it describes \"ANC Marketplace\" as the platform and \"ANC Electronics N Services\" as a store within it (business/industrial focus).",
-      "reason": "The backend diff excerpt for backend/main.mo does not show any seeded assistant knowledge base/Q&A content changes; no other backend file is shown that would contain the seeded assistant KB updates.",
+      "id": "REQ-1",
+      "requirement": "Desktop dropdown menus (Customer, Sellers & Businesses, Legal, and authenticated user menu) render on a white or very light blue background and the menu item text is clearly readable.",
+      "reason": "The diff snippet shows `DropdownMenuContent` for the Customer dropdown using `className=\"w-48 menu-surface\"`, but the file is truncated before showing Sellers & Businesses, Legal, and the authenticated user menu dropdown content classes. Cannot confirm they were updated.",
       "evidence": [
-        "backend/main.mo (truncated)"
+        "frontend/src/components/Layout.tsx (truncated)"
       ]
     },
     {
-      "id": "REQ-3",
-      "requirement": "Implement backend escrow-style internal ledger for held seller funds, including payout profiles, held balance, credit recording tied to an order/reference, and payout transfers with status + auth.",
-      "reason": "Frontend hooks/types suggest payout functionality, but the backend diff excerpt does not show data structures or public methods implementing payout profiles, held balances, credits, or payout transfer lifecycle/accounting and authorization.",
+      "id": "REQ-1",
+      "requirement": "Mobile menu (SheetContent) renders on a white or very light blue background and all listed links/sections are clearly readable.",
+      "reason": "`SheetContent` is imported, and menu styling classes are defined in CSS, but the truncated Layout diff does not show `SheetContent` being given `menu-surface` (or equivalent) classes. Cannot confirm the mobile slide-over background/readability changes were applied.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useQueries.ts (truncated)"
+        "frontend/src/components/Layout.tsx (truncated)",
+        "frontend/src/index.css"
       ]
     },
     {
-      "id": "REQ-4",
-      "requirement": "Provide sellers with a generated, stable, human-readable internal account number persisted per seller and retrievable via backend API.",
-      "reason": "The frontend references account-number hooks/types, but the backend diff excerpt does not show generation/persistence of a seller account identifier nor an API to retrieve it.",
+      "id": "REQ-1",
+      "requirement": "Hover/focus states maintain strong contrast and do not reduce readability across desktop and mobile menus.",
+      "reason": "CSS defines `.menu-item` hover/focus background, but the truncated diff does not show `DropdownMenuItem` (and mobile links) actually using the `.menu-item` / `.menu-link` classes throughout. Cannot confirm the hover/focus behavior is applied to all menu items.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useQueries.ts (truncated)",
-        "frontend/src/pages/SellerPayoutsPage.tsx (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Seller-facing payouts UI: show payout account number, held balance, form for external payout account details, and list of payout transfers with status (React Query + loading/error states).",
-      "reason": "A /payouts route and SellerPayoutsPage were added, and the page includes a payout account update form and card-request forms. But the provided truncation does not show a payout transfer list (amount/date/status) or confirm held-balance display and related loading/error UI states.",
-      "evidence": [
-        "frontend/src/pages/SellerPayoutsPage.tsx (truncated)",
-        "frontend/src/App.tsx (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Backend debit/credit card request workflows as stored application records with status lifecycle and timestamp history, with APIs to create/submit and fetch the caller’s applications + auth.",
-      "reason": "The frontend includes hooks to request a debit card and submit a credit card application, but the backend diff excerpt does not show persistent application records, status/timestamp history, or the required backend methods/authorization.",
-      "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useQueries.ts (truncated)",
-        "frontend/src/pages/SellerPayoutsPage.tsx (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Update conflicting copy so it does not contradict temporary holding of seller funds; at minimum update the seeded assistant knowledge entry that says the platform does not process seller/merchant money directly.",
-      "reason": "Public policy/terms markdown was updated to state ANC Marketplace temporarily holds seller funds, but no evidence is shown that the seeded assistant knowledge base entry was updated accordingly.",
-      "evidence": [
-        "frontend/public/policies/marketplace-policy.md (truncated)",
-        "frontend/public/policies/terms-and-conditions.md (truncated)",
-        "backend/main.mo (truncated)"
+        "frontend/src/index.css",
+        "frontend/src/components/Layout.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a new backend policy identifier variant `#marketplaceWide` and related policy typing changes not explicitly requested.",
-      "reason": "REQ-8 asked to update conflicting policy/terms copy, but did not request new policy identifier variants/types in the backend.",
+      "description": "Global theme/background changes beyond menu styling (forcing light color scheme and setting `body { background: white; }`).",
+      "reason": "Non-goals/constraints request keeping changes limited to menu styling/readability and not changing non-menu page backgrounds; this change affects the entire app background and theme behavior.",
       "evidence": [
-        "backend/main.mo (truncated)"
+        "frontend/src/index.css"
       ]
     },
     {
-      "description": "Multiple unrelated frontend page/dashboard modifications (e.g., StartupDashboard, B2BDashboard, AdminDashboard, PaymentSuccess/Failure, global CSS changes) beyond the rebrand + payouts/cards workflow scope.",
-      "reason": "BuildRequest focuses on rebranding + seller payouts/escrow + card request/application workflow + copy alignment. The diff summary indicates broad additional changes not requested.",
+      "description": "Animated gradient logo text styling (`.logo-text` with gradient animation).",
+      "reason": "Not requested by REQ-1 and not limited to menu readability; it changes broader header branding styling.",
+      "evidence": [
+        "frontend/src/index.css"
+      ]
+    },
+    {
+      "description": "Promotional banner added/modified in header with emoji and close button behavior.",
+      "reason": "Not part of menu background/readability requirements and constitutes additional header UI behavior outside requested scope.",
+      "evidence": [
+        "frontend/src/components/Layout.tsx (truncated)"
+      ]
+    },
+    {
+      "description": "Introduction/mention of new routes and pages like `/admin` and `/portal`, profile setup modal, dashboard pages, payment success/failure flows, etc.",
+      "reason": "Explicit constraint: do not introduce new navigation items or routes; the modified `frontend-file-summaries.txt` describes new routes/features unrelated to menu styling.",
       "evidence": [
         "frontend-file-summaries.txt (truncated)"
       ]
@@ -79,18 +63,9 @@
   ],
   "confidence": 0.62,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/public/manifest.json",
-    "frontend/public/policies/marketplace-policy.md",
-    "frontend/public/policies/terms-and-conditions.md",
-    "frontend/src/App.tsx",
-    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/SellerPayoutsPage.tsx",
+    "frontend/src/index.css",
     "project_state.json"
   ]
 }

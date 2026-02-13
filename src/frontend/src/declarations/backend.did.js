@@ -88,6 +88,14 @@ export const AdminDashboardData = IDL.Record({
   'adminSections' : IDL.Vec(AdminPageSectionStatus),
   'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
 });
+export const CreditAccount = IDL.Record({
+  'creditLimitCents' : IDL.Nat,
+  'usedAmountCents' : IDL.Nat,
+});
+export const AdminFinancialState = IDL.Record({
+  'creditAccount' : CreditAccount,
+  'availableFundsCents' : IDL.Nat,
+});
 export const AccessRole = IDL.Variant({
   'b2bMember' : IDL.Null,
   'startUpMember' : IDL.Null,
@@ -263,6 +271,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
+  'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
   'getAssistantKnowledgeBase' : IDL.Func(
       [],
       [IDL.Vec(AssistantKnowledgeEntry)],
@@ -298,6 +307,7 @@ export const idlService = IDL.Service({
       [SellerPayoutTransferRecord],
       [],
     ),
+  'repayCredit' : IDL.Func([IDL.Nat], [], []),
   'requestBusinessDebitCard' : IDL.Func(
       [IDL.Text],
       [BusinessDebitCardRequest],
@@ -319,6 +329,8 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'updateAdminDashboardData' : IDL.Func([], [], []),
+  'updateAvailableFunds' : IDL.Func([IDL.Nat], [], []),
+  'updateCreditUsedAmount' : IDL.Func([IDL.Nat], [], []),
   'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
   'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateMarketplaceRoadmap' : IDL.Func([], [], []),
@@ -411,6 +423,14 @@ export const idlFactory = ({ IDL }) => {
   const AdminDashboardData = IDL.Record({
     'adminSections' : IDL.Vec(AdminPageSectionStatus),
     'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
+  });
+  const CreditAccount = IDL.Record({
+    'creditLimitCents' : IDL.Nat,
+    'usedAmountCents' : IDL.Nat,
+  });
+  const AdminFinancialState = IDL.Record({
+    'creditAccount' : CreditAccount,
+    'availableFundsCents' : IDL.Nat,
   });
   const AccessRole = IDL.Variant({
     'b2bMember' : IDL.Null,
@@ -584,6 +604,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
+    'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
     'getAssistantKnowledgeBase' : IDL.Func(
         [],
         [IDL.Vec(AssistantKnowledgeEntry)],
@@ -623,6 +644,7 @@ export const idlFactory = ({ IDL }) => {
         [SellerPayoutTransferRecord],
         [],
       ),
+    'repayCredit' : IDL.Func([IDL.Nat], [], []),
     'requestBusinessDebitCard' : IDL.Func(
         [IDL.Text],
         [BusinessDebitCardRequest],
@@ -644,6 +666,8 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'updateAdminDashboardData' : IDL.Func([], [], []),
+    'updateAvailableFunds' : IDL.Func([IDL.Nat], [], []),
+    'updateCreditUsedAmount' : IDL.Func([IDL.Nat], [], []),
     'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
     'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateMarketplaceRoadmap' : IDL.Func([], [], []),

@@ -94,7 +94,7 @@ export default function Footer() {
         <div className="mt-8 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-              <p>© {currentYear} ANC Marketplace</p>
+              <p>© {currentYear} ANC Electronics N More</p>
               <p className="hidden md:block">•</p>
               <p>PCI Compliant # 201100278838</p>
             </div>

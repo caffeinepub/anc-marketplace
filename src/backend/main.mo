@@ -13,6 +13,8 @@ import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
 
+
+
 actor {
   include MixinStorage();
 
@@ -427,6 +429,16 @@ actor {
     rejectionTimestamp : ?Int;
   };
 
+  public type CreditAccount = {
+    creditLimitCents : Nat;
+    usedAmountCents : Nat;
+  };
+
+  public type AdminFinancialState = {
+    availableFundsCents : Nat;
+    creditAccount : CreditAccount;
+  };
+
   let accessControlState = AccessControl.initState();
 
   let userStore = Map.empty<Principal, UserProfile>();
@@ -462,6 +474,15 @@ actor {
 
   let knowledgeBase = Map.empty<Text, AssistantKnowledgeEntry>();
   let unansweredQuestions = Map.empty<Text, UnansweredQuestion>();
+
+  // New persistent state for admin financial data
+  var adminFinancialState : AdminFinancialState = {
+    availableFundsCents = 702598; // $7,025.98 initial
+    creditAccount = {
+      creditLimitCents = 10_000_00; // $10,000.00 initial
+      usedAmountCents = 0;
+    };
+  };
 
   let adminSections : [AdminPageSectionStatus] = [
     {
@@ -1249,5 +1270,56 @@ actor {
 
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
     OutCall.transform(input);
+  };
+
+  //////////////////// FUNDING /////////////////////
+
+  public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can access financial data");
+    };
+    adminFinancialState;
+  };
+
+  public shared ({ caller }) func updateAvailableFunds(amountCents : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update available funds");
+    };
+    adminFinancialState := {
+      adminFinancialState with
+      availableFundsCents = amountCents;
+    };
+  };
+
+  public shared ({ caller }) func updateCreditUsedAmount(usedAmountCents : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update credit usage");
+    };
+    adminFinancialState := {
+      adminFinancialState with
+      creditAccount = {
+        adminFinancialState.creditAccount with
+        usedAmountCents;
+      };
+    };
+  };
+
+  public shared ({ caller }) func repayCredit(amountCents : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can repay credit");
+    };
+
+    if (amountCents > adminFinancialState.creditAccount.usedAmountCents) {
+      Runtime.trap("Cannot repay more than outstanding debt. Credit cannot be overpaid");
+    };
+
+    adminFinancialState := {
+      adminFinancialState with
+      creditAccount = {
+        adminFinancialState.creditAccount with
+        usedAmountCents = adminFinancialState.creditAccount.usedAmountCents
+        - amountCents;
+      };
+    };
   };
 };

@@ -2,14 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-all-user-facing-branding-so-the-platform-is-named-anc-marketplace-and-anc-electronics-n-services-is-described-as-a-store-within-the-marketplace-that-sells-business-and-industrial-products-and-services-apply-this-consistently-across-the-header-homepage-hero-promotional-banner-footer-pwa-manifest-and-html-meta-title-tags",
-      "featureTitle": "Update all user-facing branding so the platform is named \"ANC Marketplace\" (and \"ANC Electronics N Services\" is described as a store within the marketplace that sells business and industrial products and services). Apply this consistently across the header, homepage hero, promotional banner, footer, PWA manifest, and HTML meta/title tags.",
+      "featureId": "feature-update-the-header-navigation-menus-to-use-a-white-or-very-light-blue-background-with-a-professional-look-ensuring-menu-items-are-clearly-readable-in-both-desktop-dropdown-menus-and-the-mobile-slide-over-menu",
+      "featureTitle": "Update the header navigation menus to use a white or very light blue background with a professional look, ensuring menu items are clearly readable in both desktop dropdown menus and the mobile slide-over menu.",
       "files": [
-        "frontend/index.html",
-        "frontend/public/manifest.json",
-        "frontend/src/components/Footer.tsx",
         "frontend/src/components/Layout.tsx",
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/index.css"
       ],
       "components": [
         "authorization@3.0.0",
@@ -24,78 +21,6 @@
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-seller-facing-ui-page-section-where-authenticated-sellers-can-view-their-payout-account-number-view-held-balance-enter-update-the-designated-external-payout-account-details-as-plain-fields-and-view-a-list-of-payout-transfers-with-status",
-      "featureTitle": "Add a seller-facing UI page/section where authenticated sellers can: view their payout account number, view held balance, enter/update the designated external payout account details (as plain fields), and view a list of payout transfers with status.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/SellerPayoutsPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-extend-the-seller-payout-ui-page-section-to-include-1-a-request-business-debit-card-form-and-2-a-apply-for-credit-card-form-each-form-must-submit-to-the-backend-and-show-the-current-application-status-after-submission",
-      "featureTitle": "Extend the seller payout UI page/section to include: (1) a \"Request Business Debit Card\" form and (2) a \"Apply for Credit Card\" form. Each form must submit to the backend and show the current application status after submission.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/SellerPayoutsPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-7"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-any-conflicting-platform-copy-that-states-the-platform-does-not-process-or-hold-seller-merchant-funds-so-it-does-not-contradict-the-new-temporary-hold-until-transfer-capability-at-minimum-update-the-seeded-assistant-knowledge-entry-that-says-anc-does-not-process-seller-merchant-money-directly-and-update-any-relevant-public-policy-terms-copy-where-it-explicitly-conflicts",
-      "featureTitle": "Update any conflicting platform copy that states the platform does not process or hold seller/merchant funds so it does not contradict the new \"temporary hold until transfer\" capability. At minimum, update the seeded assistant knowledge entry that says ANC does not process seller/merchant money directly, and update any relevant public policy/terms copy where it explicitly conflicts.",
-      "files": [
-        "frontend/public/policies/marketplace-policy.md",
-        "frontend/public/policies/terms-and-conditions.md",
-        "frontend/src/components/Layout.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-8"
       ],
       "confidence": "high"
     }

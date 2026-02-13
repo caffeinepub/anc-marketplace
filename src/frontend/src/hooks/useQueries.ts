@@ -16,6 +16,7 @@ import {
   AccountAssignment,
   BusinessDebitCardRequest,
   BusinessCreditCardApplication,
+  AdminFinancialState,
 } from '../backend';
 import { PolicyMetadata } from '../lib/policies';
 
@@ -296,6 +297,28 @@ export function useVerifyPolicySignature(policy: PolicyMetadata) {
       } catch (error) {
         console.error('Error verifying policy signature:', error);
         return false;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Admin Financial State Hooks
+
+export function useGetAdminFinancialState() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<AdminFinancialState>({
+    queryKey: ['adminFinancialState'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.getAdminFinancialState();
+      } catch (error) {
+        if (isPermissionError(error)) {
+          throw new Error('Unauthorized: Only admins can access financial data');
+        }
+        throw error;
       }
     },
     enabled: !!actor && !isFetching,

@@ -89,6 +89,10 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface CreditAccount {
+    creditLimitCents: bigint;
+    usedAmountCents: bigint;
+}
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
@@ -235,6 +239,10 @@ export interface ShoppingItem {
     priceInCents: bigint;
     productDescription: string;
 }
+export interface AdminFinancialState {
+    creditAccount: CreditAccount;
+    availableFundsCents: bigint;
+}
 export interface UserProfile {
     accountCreated: bigint;
     fullName: string;
@@ -306,6 +314,7 @@ export interface backendInterface {
     getAccountNumber(): Promise<string | null>;
     getActiveKnowledgeByCategory(category: string): Promise<Array<AssistantKnowledgeEntry>>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
+    getAdminFinancialState(): Promise<AdminFinancialState>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -321,6 +330,7 @@ export interface backendInterface {
     isStripeConfigured(): Promise<boolean>;
     recordCredit(amountCents: bigint): Promise<void>;
     recordPayoutTransfer(amountCents: bigint, payoutAccount: string): Promise<SellerPayoutTransferRecord>;
+    repayCredit(amountCents: bigint): Promise<void>;
     requestBusinessDebitCard(businessName: string): Promise<BusinessDebitCardRequest>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
@@ -330,6 +340,8 @@ export interface backendInterface {
     submitBusinessOpsQuestion(question: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
+    updateAvailableFunds(amountCents: bigint): Promise<void>;
+    updateCreditUsedAmount(usedAmountCents: bigint): Promise<void>;
     updateFunnelPartner(partner: FunnelPartner): Promise<void>;
     updateKnowledgeEntry(id: string, newAnswer: string): Promise<void>;
     updateMarketplaceRoadmap(): Promise<void>;
@@ -562,6 +574,20 @@ export class Backend implements backendInterface {
             return from_candid_AdminDashboardData_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getAdminFinancialState(): Promise<AdminFinancialState> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdminFinancialState();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdminFinancialState();
+            return result;
+        }
+    }
     async getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>> {
         if (this.processError) {
             try {
@@ -772,6 +798,20 @@ export class Backend implements backendInterface {
             return from_candid_SellerPayoutTransferRecord_n38(this._uploadFile, this._downloadFile, result);
         }
     }
+    async repayCredit(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.repayCredit(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.repayCredit(arg0);
+            return result;
+        }
+    }
     async requestBusinessDebitCard(arg0: string): Promise<BusinessDebitCardRequest> {
         if (this.processError) {
             try {
@@ -895,6 +935,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateAdminDashboardData();
+            return result;
+        }
+    }
+    async updateAvailableFunds(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateAvailableFunds(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateAvailableFunds(arg0);
+            return result;
+        }
+    }
+    async updateCreditUsedAmount(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCreditUsedAmount(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCreditUsedAmount(arg0);
             return result;
         }
     }

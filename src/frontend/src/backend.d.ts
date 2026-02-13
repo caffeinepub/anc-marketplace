@@ -7,6 +7,10 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface CreditAccount {
+    creditLimitCents: bigint;
+    usedAmountCents: bigint;
+}
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
@@ -146,6 +150,10 @@ export interface ShoppingItem {
     priceInCents: bigint;
     productDescription: string;
 }
+export interface AdminFinancialState {
+    creditAccount: CreditAccount;
+    availableFundsCents: bigint;
+}
 export interface UserProfile {
     accountCreated: bigint;
     fullName: string;
@@ -207,6 +215,7 @@ export interface backendInterface {
     getAccountNumber(): Promise<string | null>;
     getActiveKnowledgeByCategory(category: string): Promise<Array<AssistantKnowledgeEntry>>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
+    getAdminFinancialState(): Promise<AdminFinancialState>;
     getAssistantKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -222,6 +231,7 @@ export interface backendInterface {
     isStripeConfigured(): Promise<boolean>;
     recordCredit(amountCents: bigint): Promise<void>;
     recordPayoutTransfer(amountCents: bigint, payoutAccount: string): Promise<SellerPayoutTransferRecord>;
+    repayCredit(amountCents: bigint): Promise<void>;
     requestBusinessDebitCard(businessName: string): Promise<BusinessDebitCardRequest>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
@@ -231,6 +241,8 @@ export interface backendInterface {
     submitBusinessOpsQuestion(question: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
+    updateAvailableFunds(amountCents: bigint): Promise<void>;
+    updateCreditUsedAmount(usedAmountCents: bigint): Promise<void>;
     updateFunnelPartner(partner: FunnelPartner): Promise<void>;
     updateKnowledgeEntry(id: string, newAnswer: string): Promise<void>;
     updateMarketplaceRoadmap(): Promise<void>;
