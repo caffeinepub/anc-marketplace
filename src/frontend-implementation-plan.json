@@ -1,27 +1,53 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Improve header menu background and readability",
+  "title": "Internet Identity registration gate + Profile Setup route and header state",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Restyle desktop dropdown menus and the mobile slide-over menu to use a white or very light blue background with high-contrast readable text and accessible hover/focus states, without changing navigation structure.",
+      "id": "REQ-5",
+      "summary": "Add a routable Profile Setup page and enforce a registration gate that redirects authenticated-but-unregistered users to profile setup before accessing authenticated areas.",
       "acceptanceCriteria": [
-        "Desktop dropdown menus (Customer, Sellers & Businesses, Legal, and authenticated user menu) render on a white or very light blue background and the menu item text is clearly readable.",
-        "Mobile menu (SheetContent) renders on a white or very light blue background and all listed links/sections are clearly readable.",
-        "Hover/focus states maintain strong contrast and do not reduce readability.",
-        "No layout regressions: menu spacing, alignment, and click/tap targets remain functional across desktop and mobile."
+        "The app has a routable path (e.g., /profile-setup) that renders the existing ProfileSetup component.",
+        "When a user logs in and the backend returns no profile, the UI directs the user to the Profile Setup page.",
+        "After the profile is successfully saved, the user can navigate to authenticated pages without being redirected back to Profile Setup.",
+        "If the user logs out, authenticated-only routes are not accessible and the app returns to public behavior."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/ProfileSetupPage.tsx",
+          "operation": "create",
+          "description": "Create a dedicated page component that renders the existing ProfileSetup component and supports an optional post-setup redirect (e.g., via search param). Use the authorization component’s frontend guidance to check registration state via getCallerUserProfile (Verify the component's usage instructions before implementing)."
+        },
+        {
+          "path": "frontend/src/components/RequireRegisteredUser.tsx",
+          "operation": "create",
+          "description": "Add a lightweight route/page guard wrapper that (1) allows public access when not authenticated, (2) redirects authenticated users with a missing profile to /profile-setup (optionally preserving intended destination), and (3) renders children when profile exists. Use the authorization component’s recommended pattern to avoid profile-setup flash by relying on isFetched + userProfile === null (Verify the component's usage instructions before implementing)."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register the new /profile-setup route to render ProfileSetupPage, and wire the registration gate by wrapping authenticated routes (at minimum /settings and any other existing authenticated pages wired into the router such as messages/purchase history/wishlist if present) with RequireRegisteredUser so authenticated-but-unregistered users are redirected before seeing protected content."
+        },
+        {
+          "path": "frontend/src/components/ProfileSetup.tsx",
+          "operation": "modify",
+          "description": "After a successful saveCallerUserProfile mutation, navigate the user away from profile setup (e.g., back to an intended destination or a default authenticated page) so they are not stuck on the setup screen. Keep all user-facing text in English. Use the authorization component’s frontend guidance for profile setup flows (Verify the component's usage instructions before implementing)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Update the header/user-menu to reflect registration state, providing a clear way to finish profile setup when authenticated but unregistered while preserving current login/logout behavior.",
+      "acceptanceCriteria": [
+        "When authenticated and profile is missing, the header provides an obvious way to reach the Profile Setup page (link or menu item).",
+        "When authenticated and profile exists, the header behaves as it does today (user icon menu with Settings/Admin Center/Logout).",
+        "Login/Logout still uses the existing Internet Identity hook and continues clearing React Query cache on logout (as in the current Layout)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Update the header navigation composition to apply a consistent light menu surface style for: (1) all shadcn-ui DropdownMenuContent instances (Customer, Sellers & Businesses, Legal, authenticated user menu) and (2) the shadcn-ui SheetContent mobile menu. Do this via className/props on Layout-owned components only (do not edit frontend/src/components/ui/*). Ensure dropdown/menu surfaces use white or very light blue background, stronger border/shadow separation, and menu item/link text + focus/hover states maintain high contrast and readability. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Add small, menu-specific styling helpers (e.g., Tailwind @apply-based utility classes or CSS variables) to standardize the light menu surface background and readable interactive states used by the header dropdowns and mobile menu. Keep changes limited to menu styling/readability and avoid altering non-menu page backgrounds."
+          "description": "In the authenticated header state, query current user profile (via existing React Query hook) and: (1) if authenticated but profile is missing, show an obvious 'Finish Profile Setup' navigation option to /profile-setup; (2) if profile exists, keep current user menu (Settings/Admin Center/Logout) unchanged; (3) keep existing login/logout flow intact including React Query cache clearing. Use the authorization component’s frontend guidance for checking registration state with getCallerUserProfile (Verify the component's usage instructions before implementing)."
         }
       ]
     }

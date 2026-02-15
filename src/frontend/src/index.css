@@ -31,12 +31,12 @@
     --chart-4: oklch(75% 0.10 100);
     --chart-5: oklch(68% 0.13 50);
 
-    /* Menu-specific tokens for light, professional appearance */
-    --menu-surface: oklch(100% 0 0);
-    --menu-text: oklch(15% 0.02 250);
-    --menu-text-muted: oklch(45% 0.02 250);
-    --menu-border: oklch(90% 0.01 250);
-    --menu-hover: oklch(96% 0.01 240);
+    /* Menu-specific tokens - fully opaque, high contrast */
+    --menu-surface: 100% 0 0;
+    --menu-label: 15% 0.02 250;
+    --menu-label-hover: 30% 0.08 250;
+    --menu-border: 85% 0.01 250;
+    --menu-item-hover: 96% 0.01 240;
   }
 
   * {
@@ -61,27 +61,27 @@
 @layer components {
   /* Menu surface styling for dropdowns and mobile sheet */
   .menu-surface {
-    @apply bg-white border-2 border-[var(--menu-border)] shadow-lg;
+    @apply bg-white border-2 border-[oklch(85%_0.01_250)] shadow-lg;
   }
 
   /* Menu label styling */
   .menu-label {
-    @apply text-[var(--menu-text)] font-semibold;
+    @apply text-[oklch(15%_0.02_250)] font-semibold;
   }
 
   /* Menu section label for mobile menu */
   .menu-section-label {
-    @apply text-[var(--menu-text-muted)] font-semibold;
+    @apply text-[oklch(45%_0.02_250)] font-semibold;
   }
 
   /* Menu item styling with high contrast */
   .menu-item {
-    @apply text-[var(--menu-text)] hover:bg-[var(--menu-hover)] focus:bg-[var(--menu-hover)] transition-colors;
+    @apply text-[oklch(15%_0.02_250)] hover:bg-[oklch(96%_0.01_240)] focus:bg-[oklch(96%_0.01_240)] transition-colors;
   }
 
   /* Menu link styling for mobile menu */
   .menu-link {
-    @apply text-[var(--menu-text)] hover:text-primary focus:text-primary transition-colors;
+    @apply text-[oklch(15%_0.02_250)] hover:text-primary focus:text-primary transition-colors;
   }
 }
 

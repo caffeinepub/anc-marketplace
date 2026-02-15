@@ -19,16 +19,6 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const AssistantKnowledgeEntry = IDL.Record({
-  'id' : IDL.Text,
-  'question' : IDL.Text,
-  'isBusinessOps' : IDL.Bool,
-  'usageCount' : IDL.Nat,
-  'lastUpdated' : IDL.Int,
-  'answer' : IDL.Text,
-  'isActive' : IDL.Bool,
-  'category' : IDL.Text,
-});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -40,19 +30,6 @@ export const ShoppingItem = IDL.Record({
   'quantity' : IDL.Nat,
   'priceInCents' : IDL.Nat,
   'productDescription' : IDL.Text,
-});
-export const AccountAssignment = IDL.Record({
-  'sellerPrincipal' : IDL.Principal,
-  'active' : IDL.Bool,
-  'createdAt' : IDL.Int,
-  'accountNumber' : IDL.Text,
-});
-export const SellerPayoutProfile = IDL.Record({
-  'sellerPrincipal' : IDL.Principal,
-  'createdAt' : IDL.Int,
-  'lastUpdated' : IDL.Int,
-  'designatedPayoutAccount' : IDL.Text,
-  'internalBalanceCents' : IDL.Nat,
 });
 export const AdminPageSection = IDL.Variant({
   'b2b' : IDL.Null,
@@ -88,14 +65,6 @@ export const AdminDashboardData = IDL.Record({
   'adminSections' : IDL.Vec(AdminPageSectionStatus),
   'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
 });
-export const CreditAccount = IDL.Record({
-  'creditLimitCents' : IDL.Nat,
-  'usedAmountCents' : IDL.Nat,
-});
-export const AdminFinancialState = IDL.Record({
-  'creditAccount' : CreditAccount,
-  'availableFundsCents' : IDL.Nat,
-});
 export const AccessRole = IDL.Variant({
   'b2bMember' : IDL.Null,
   'startUpMember' : IDL.Null,
@@ -108,25 +77,6 @@ export const UserProfile = IDL.Record({
   'subscriptionId' : IDL.Opt(IDL.Text),
   'activeRole' : AccessRole,
 });
-export const FunnelPartner = IDL.Record({
-  'partnerName' : IDL.Text,
-  'signupLink' : IDL.Text,
-  'profileLink' : IDL.Text,
-});
-export const PolicyIdentifier = IDL.Variant({
-  'terms' : IDL.Null,
-  'shipping' : IDL.Null,
-  'privacy' : IDL.Null,
-  'marketplaceWide' : IDL.Null,
-  'returns' : IDL.Null,
-});
-export const PolicySignatureRecord = IDL.Record({
-  'signerName' : IDL.Text,
-  'signature' : IDL.Text,
-  'policyVersion' : IDL.Text,
-  'policyIdentifier' : PolicyIdentifier,
-  'timestamp' : IDL.Int,
-});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -134,70 +84,14 @@ export const StripeSessionStatus = IDL.Variant({
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
 });
-export const UnansweredQuestion = IDL.Record({
-  'id' : IDL.Text,
-  'question' : IDL.Text,
-  'creationTime' : IDL.Int,
-  'interactionCount' : IDL.Nat,
-  'categorySuggestion' : IDL.Text,
-});
 export const UserRoleSummary = IDL.Record({
   'guestCount' : IDL.Nat,
   'adminCount' : IDL.Nat,
   'userCount' : IDL.Nat,
 });
-export const PayoutTransferStatus = IDL.Variant({
-  'pending' : IDL.Null,
-  'processed' : IDL.Null,
-  'failed' : IDL.Null,
-});
-export const SellerPayoutTransferRecord = IDL.Record({
-  'id' : IDL.Text,
-  'status' : PayoutTransferStatus,
-  'sellerPrincipal' : IDL.Principal,
-  'createdAt' : IDL.Int,
-  'errorMessage' : IDL.Opt(IDL.Text),
-  'amountCents' : IDL.Nat,
-  'processedAt' : IDL.Opt(IDL.Int),
-  'payoutAccount' : IDL.Text,
-});
-export const DebitCardRequestStatus = IDL.Variant({
-  'submitted' : IDL.Null,
-  'approved' : IDL.Null,
-  'rejected' : IDL.Null,
-  'under_review' : IDL.Null,
-  'draft' : IDL.Null,
-});
-export const BusinessDebitCardRequest = IDL.Record({
-  'id' : IDL.Text,
-  'sellerPrincipal' : IDL.Principal,
-  'submissionTimestamp' : IDL.Int,
-  'businessName' : IDL.Text,
-  'approvalTimestamp' : IDL.Opt(IDL.Int),
-  'rejectionTimestamp' : IDL.Opt(IDL.Int),
-  'requestStatus' : DebitCardRequestStatus,
-  'reviewTimestamp' : IDL.Opt(IDL.Int),
-});
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
   'secretKey' : IDL.Text,
-});
-export const CreditCardApplicationStatus = IDL.Variant({
-  'submitted' : IDL.Null,
-  'approved' : IDL.Null,
-  'rejected' : IDL.Null,
-  'under_review' : IDL.Null,
-  'draft' : IDL.Null,
-});
-export const BusinessCreditCardApplication = IDL.Record({
-  'id' : IDL.Text,
-  'sellerPrincipal' : IDL.Principal,
-  'submissionTimestamp' : IDL.Int,
-  'businessName' : IDL.Text,
-  'approvalTimestamp' : IDL.Opt(IDL.Int),
-  'applicationStatus' : CreditCardApplicationStatus,
-  'rejectionTimestamp' : IDL.Opt(IDL.Int),
-  'reviewTimestamp' : IDL.Opt(IDL.Int),
 });
 export const http_header = IDL.Record({
   'value' : IDL.Text,
@@ -245,12 +139,6 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-  'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-  'askAssistant' : IDL.Func(
-      [IDL.Text, IDL.Text],
-      [IDL.Opt(IDL.Text)],
-      ['query'],
-    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createCheckoutSession' : IDL.Func(
@@ -258,40 +146,10 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
-  'createOrGetAccountNumber' : IDL.Func([], [AccountAssignment], []),
-  'createOrUpdatePayoutProfile' : IDL.Func(
-      [IDL.Text],
-      [SellerPayoutProfile],
-      [],
-    ),
-  'getAccountNumber' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
-  'getActiveKnowledgeByCategory' : IDL.Func(
-      [IDL.Text],
-      [IDL.Vec(AssistantKnowledgeEntry)],
-      ['query'],
-    ),
   'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
-  'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
-  'getAssistantKnowledgeBase' : IDL.Func(
-      [],
-      [IDL.Vec(AssistantKnowledgeEntry)],
-      ['query'],
-    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
-  'getPayoutProfile' : IDL.Func([], [IDL.Opt(SellerPayoutProfile)], ['query']),
-  'getSignatureByPolicy' : IDL.Func(
-      [PolicyIdentifier],
-      [IDL.Opt(PolicySignatureRecord)],
-      ['query'],
-    ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-  'getUnansweredQuestions' : IDL.Func(
-      [],
-      [IDL.Vec(UnansweredQuestion)],
-      ['query'],
-    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -301,44 +159,16 @@ export const idlService = IDL.Service({
   'initializeAccessControl' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-  'recordCredit' : IDL.Func([IDL.Nat], [], []),
-  'recordPayoutTransfer' : IDL.Func(
-      [IDL.Nat, IDL.Text],
-      [SellerPayoutTransferRecord],
-      [],
-    ),
-  'repayCredit' : IDL.Func([IDL.Nat], [], []),
-  'requestBusinessDebitCard' : IDL.Func(
-      [IDL.Text],
-      [BusinessDebitCardRequest],
-      [],
-    ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-  'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
-  'submitBusinessCreditCardApplication' : IDL.Func(
-      [IDL.Text],
-      [BusinessCreditCardApplication],
-      [],
-    ),
-  'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
     ),
   'updateAdminDashboardData' : IDL.Func([], [], []),
-  'updateAvailableFunds' : IDL.Func([IDL.Nat], [], []),
-  'updateCreditUsedAmount' : IDL.Func([IDL.Nat], [], []),
-  'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
-  'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateMarketplaceRoadmap' : IDL.Func([], [], []),
-  'verifyPolicySignature' : IDL.Func(
-      [PolicyIdentifier, IDL.Text],
-      [IDL.Bool],
-      ['query'],
-    ),
 });
 
 export const idlInitArgs = [];
@@ -355,16 +185,6 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const AssistantKnowledgeEntry = IDL.Record({
-    'id' : IDL.Text,
-    'question' : IDL.Text,
-    'isBusinessOps' : IDL.Bool,
-    'usageCount' : IDL.Nat,
-    'lastUpdated' : IDL.Int,
-    'answer' : IDL.Text,
-    'isActive' : IDL.Bool,
-    'category' : IDL.Text,
-  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -376,19 +196,6 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'priceInCents' : IDL.Nat,
     'productDescription' : IDL.Text,
-  });
-  const AccountAssignment = IDL.Record({
-    'sellerPrincipal' : IDL.Principal,
-    'active' : IDL.Bool,
-    'createdAt' : IDL.Int,
-    'accountNumber' : IDL.Text,
-  });
-  const SellerPayoutProfile = IDL.Record({
-    'sellerPrincipal' : IDL.Principal,
-    'createdAt' : IDL.Int,
-    'lastUpdated' : IDL.Int,
-    'designatedPayoutAccount' : IDL.Text,
-    'internalBalanceCents' : IDL.Nat,
   });
   const AdminPageSection = IDL.Variant({
     'b2b' : IDL.Null,
@@ -424,14 +231,6 @@ export const idlFactory = ({ IDL }) => {
     'adminSections' : IDL.Vec(AdminPageSectionStatus),
     'marketplaceRoadmap' : IDL.Vec(MarketplaceRoadmap),
   });
-  const CreditAccount = IDL.Record({
-    'creditLimitCents' : IDL.Nat,
-    'usedAmountCents' : IDL.Nat,
-  });
-  const AdminFinancialState = IDL.Record({
-    'creditAccount' : CreditAccount,
-    'availableFundsCents' : IDL.Nat,
-  });
   const AccessRole = IDL.Variant({
     'b2bMember' : IDL.Null,
     'startUpMember' : IDL.Null,
@@ -444,25 +243,6 @@ export const idlFactory = ({ IDL }) => {
     'subscriptionId' : IDL.Opt(IDL.Text),
     'activeRole' : AccessRole,
   });
-  const FunnelPartner = IDL.Record({
-    'partnerName' : IDL.Text,
-    'signupLink' : IDL.Text,
-    'profileLink' : IDL.Text,
-  });
-  const PolicyIdentifier = IDL.Variant({
-    'terms' : IDL.Null,
-    'shipping' : IDL.Null,
-    'privacy' : IDL.Null,
-    'marketplaceWide' : IDL.Null,
-    'returns' : IDL.Null,
-  });
-  const PolicySignatureRecord = IDL.Record({
-    'signerName' : IDL.Text,
-    'signature' : IDL.Text,
-    'policyVersion' : IDL.Text,
-    'policyIdentifier' : PolicyIdentifier,
-    'timestamp' : IDL.Int,
-  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -470,70 +250,14 @@ export const idlFactory = ({ IDL }) => {
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
   });
-  const UnansweredQuestion = IDL.Record({
-    'id' : IDL.Text,
-    'question' : IDL.Text,
-    'creationTime' : IDL.Int,
-    'interactionCount' : IDL.Nat,
-    'categorySuggestion' : IDL.Text,
-  });
   const UserRoleSummary = IDL.Record({
     'guestCount' : IDL.Nat,
     'adminCount' : IDL.Nat,
     'userCount' : IDL.Nat,
   });
-  const PayoutTransferStatus = IDL.Variant({
-    'pending' : IDL.Null,
-    'processed' : IDL.Null,
-    'failed' : IDL.Null,
-  });
-  const SellerPayoutTransferRecord = IDL.Record({
-    'id' : IDL.Text,
-    'status' : PayoutTransferStatus,
-    'sellerPrincipal' : IDL.Principal,
-    'createdAt' : IDL.Int,
-    'errorMessage' : IDL.Opt(IDL.Text),
-    'amountCents' : IDL.Nat,
-    'processedAt' : IDL.Opt(IDL.Int),
-    'payoutAccount' : IDL.Text,
-  });
-  const DebitCardRequestStatus = IDL.Variant({
-    'submitted' : IDL.Null,
-    'approved' : IDL.Null,
-    'rejected' : IDL.Null,
-    'under_review' : IDL.Null,
-    'draft' : IDL.Null,
-  });
-  const BusinessDebitCardRequest = IDL.Record({
-    'id' : IDL.Text,
-    'sellerPrincipal' : IDL.Principal,
-    'submissionTimestamp' : IDL.Int,
-    'businessName' : IDL.Text,
-    'approvalTimestamp' : IDL.Opt(IDL.Int),
-    'rejectionTimestamp' : IDL.Opt(IDL.Int),
-    'requestStatus' : DebitCardRequestStatus,
-    'reviewTimestamp' : IDL.Opt(IDL.Int),
-  });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
     'secretKey' : IDL.Text,
-  });
-  const CreditCardApplicationStatus = IDL.Variant({
-    'submitted' : IDL.Null,
-    'approved' : IDL.Null,
-    'rejected' : IDL.Null,
-    'under_review' : IDL.Null,
-    'draft' : IDL.Null,
-  });
-  const BusinessCreditCardApplication = IDL.Record({
-    'id' : IDL.Text,
-    'sellerPrincipal' : IDL.Principal,
-    'submissionTimestamp' : IDL.Int,
-    'businessName' : IDL.Text,
-    'approvalTimestamp' : IDL.Opt(IDL.Int),
-    'applicationStatus' : CreditCardApplicationStatus,
-    'rejectionTimestamp' : IDL.Opt(IDL.Int),
-    'reviewTimestamp' : IDL.Opt(IDL.Int),
   });
   const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
   const http_request_result = IDL.Record({
@@ -578,12 +302,6 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-    'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-    'askAssistant' : IDL.Func(
-        [IDL.Text, IDL.Text],
-        [IDL.Opt(IDL.Text)],
-        ['query'],
-      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createCheckoutSession' : IDL.Func(
@@ -591,44 +309,10 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
-    'createOrGetAccountNumber' : IDL.Func([], [AccountAssignment], []),
-    'createOrUpdatePayoutProfile' : IDL.Func(
-        [IDL.Text],
-        [SellerPayoutProfile],
-        [],
-      ),
-    'getAccountNumber' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
-    'getActiveKnowledgeByCategory' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(AssistantKnowledgeEntry)],
-        ['query'],
-      ),
     'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
-    'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
-    'getAssistantKnowledgeBase' : IDL.Func(
-        [],
-        [IDL.Vec(AssistantKnowledgeEntry)],
-        ['query'],
-      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getFunnelPartner' : IDL.Func([], [FunnelPartner], ['query']),
-    'getPayoutProfile' : IDL.Func(
-        [],
-        [IDL.Opt(SellerPayoutProfile)],
-        ['query'],
-      ),
-    'getSignatureByPolicy' : IDL.Func(
-        [PolicyIdentifier],
-        [IDL.Opt(PolicySignatureRecord)],
-        ['query'],
-      ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-    'getUnansweredQuestions' : IDL.Func(
-        [],
-        [IDL.Vec(UnansweredQuestion)],
-        ['query'],
-      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -638,44 +322,16 @@ export const idlFactory = ({ IDL }) => {
     'initializeAccessControl' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-    'recordCredit' : IDL.Func([IDL.Nat], [], []),
-    'recordPayoutTransfer' : IDL.Func(
-        [IDL.Nat, IDL.Text],
-        [SellerPayoutTransferRecord],
-        [],
-      ),
-    'repayCredit' : IDL.Func([IDL.Nat], [], []),
-    'requestBusinessDebitCard' : IDL.Func(
-        [IDL.Text],
-        [BusinessDebitCardRequest],
-        [],
-      ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-    'signPolicy' : IDL.Func([PolicySignatureRecord], [], []),
-    'submitBusinessCreditCardApplication' : IDL.Func(
-        [IDL.Text],
-        [BusinessCreditCardApplication],
-        [],
-      ),
-    'submitBusinessOpsQuestion' : IDL.Func([IDL.Text], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
       ),
     'updateAdminDashboardData' : IDL.Func([], [], []),
-    'updateAvailableFunds' : IDL.Func([IDL.Nat], [], []),
-    'updateCreditUsedAmount' : IDL.Func([IDL.Nat], [], []),
-    'updateFunnelPartner' : IDL.Func([FunnelPartner], [], []),
-    'updateKnowledgeEntry' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateMarketplaceRoadmap' : IDL.Func([], [], []),
-    'verifyPolicySignature' : IDL.Func(
-        [PolicyIdentifier, IDL.Text],
-        [IDL.Bool],
-        ['query'],
-      ),
   });
 };
 

@@ -80,10 +80,9 @@ export default function Footer() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Payment Partners:</p>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Authorize.net</p>
-                  <p>Zen dash</p>
+                <p className="text-sm text-muted-foreground mb-2">Payment Partner:</p>
+                <div className="text-sm text-muted-foreground">
+                  <p>Stripe</p>
                 </div>
               </div>
             </div>

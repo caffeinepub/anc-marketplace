@@ -1,37 +1,70 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T09:45:38.017Z",
+  "generatedAt": "2026-02-15T00:53:52.761Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Update the header navigation menus to use a white or very light blue background with a professional look, ensuring menu items are clearly readable in both desktop dropdown menus and the mobile slide-over menu.",
+        "id": "REQ-3",
+        "summary": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/index.css"
+          "frontend/src/pages/ProfileSetupPage.tsx",
+          "frontend/src/components/RequireRegisteredUser.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/ProfileSetup.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/index.css"
+          "frontend/src/pages/ProfileSetupPage.tsx",
+          "frontend/src/components/RequireRegisteredUser.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/ProfileSetup.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Layout.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/App.tsx",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/index.css",
+    "frontend/src/components/ProfileSetup.tsx",
+    "frontend/src/components/RequireRegisteredUser.tsx",
+    "frontend/src/pages/ProfileSetupPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

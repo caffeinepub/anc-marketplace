@@ -1,402 +1,424 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, Outlet } from '@tanstack/react-router';
+import React from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIsCallerAdmin } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ChevronDown, User, LogOut, Settings, X, Wallet, Shield, Building2 } from 'lucide-react';
-import CookieConsentBanner from './privacy/CookieConsentBanner';
-import AssistantWidget from './assistant/AssistantWidget';
-import Footer from './Footer';
-import { VoiceSettingsProvider } from '../contexts/VoiceSettingsContext';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, ChevronDown, User, LogOut, Settings, UserPlus } from 'lucide-react';
 
-export default function Layout() {
-  const navigate = useNavigate();
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
+  const { login, clear, loginStatus, identity } = useInternetIdentity();
+  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
   const queryClient = useQueryClient();
-  const { identity, clear, login, loginStatus } = useInternetIdentity();
-  const { data: isAdmin } = useIsCallerAdmin();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showBanner, setShowBanner] = useState(true);
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const isAuthenticated = !!identity;
-  const isLoggingIn = loginStatus === 'logging-in';
+  const disabled = loginStatus === 'logging-in';
+  const buttonText = loginStatus === 'logging-in' ? 'Logging in...' : isAuthenticated ? 'Logout' : 'Login';
 
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
-    navigate({ to: '/' });
-  };
+  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
-  const handleLogin = async () => {
-    try {
-      await login();
-    } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.message === 'User is already authenticated') {
-        await clear();
-        setTimeout(() => login(), 300);
+  const handleAuth = async () => {
+    if (isAuthenticated) {
+      await clear();
+      queryClient.clear();
+      navigate({ to: '/' });
+    } else {
+      try {
+        await login();
+      } catch (error: any) {
+        console.error('Login error:', error);
+        if (error.message === 'User is already authenticated') {
+          await clear();
+          setTimeout(() => login(), 300);
+        }
       }
     }
   };
 
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
-    <VoiceSettingsProvider>
-      <div className="min-h-screen flex flex-col bg-background">
-        {/* Promotional Banner */}
-        {showBanner && (
-          <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm relative">
-            <p className="font-medium">
-              🎉 Welcome to ANC Marketplace - Your trusted marketplace partner
-            </p>
-            <button
-              onClick={() => setShowBanner(false)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-80 transition-opacity"
-              aria-label="Close banner"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b-2 border-menu-border bg-white shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-menu-label">ANC Marketplace</span>
+            </Link>
 
-        {/* Header */}
-        <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4">
-            <div className="flex h-16 items-center justify-between">
-              {/* Logo */}
-              <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-                <img src="/assets/generated/anc-logo-transparent.dim_200x200.png" alt="ANC Marketplace Logo" className="h-10 w-10" />
-                <span className="text-xl font-bold logo-text">ANC Marketplace</span>
-              </Link>
-
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-6">
-                <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
-                  Home
-                </Link>
-
-                {/* Customer Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1">
-                      Customer <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 menu-surface">
-                    <DropdownMenuLabel className="menu-label">Customer Resources</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/customer-faq" className="cursor-pointer">
-                        FAQ
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/customer-blog" className="cursor-pointer">
-                        Blog
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Sellers & Businesses Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1">
-                      Sellers & Businesses <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 menu-surface">
-                    <DropdownMenuLabel className="menu-label">Business Resources</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/sellers-businesses-faq" className="cursor-pointer">
-                        FAQ
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/sellers-businesses-blog" className="cursor-pointer">
-                        Blog
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Legal Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1">
-                      Legal <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 menu-surface">
-                    <DropdownMenuLabel className="menu-label">Legal & Compliance</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/pci-compliance" className="cursor-pointer">
-                        PCI Compliance
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/privacy-policy" className="cursor-pointer">
-                        Privacy Policy
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/shipping-policy" className="cursor-pointer">
-                        Shipping Policy
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/returns-policy" className="cursor-pointer">
-                        Returns Policy
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/terms-and-conditions" className="cursor-pointer">
-                        Terms & Conditions
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="menu-item">
-                      <Link to="/marketplace-policy" className="cursor-pointer">
-                        Marketplace Policy
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* User Menu / Login */}
-                {isAuthenticated ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <User className="h-4 w-4" />
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 menu-surface">
-                      <DropdownMenuLabel className="menu-label">My Account</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="menu-item">
-                        <Link to="/customer-settings" className="cursor-pointer">
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="menu-item">
-                        <Link to="/portal" className="cursor-pointer">
-                          <Building2 className="mr-2 h-4 w-4" />
-                          Account Portal
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="menu-item">
-                        <Link to="/payouts" className="cursor-pointer">
-                          <Wallet className="mr-2 h-4 w-4" />
-                          Payouts
-                        </Link>
-                      </DropdownMenuItem>
-                      {isAdmin && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild className="menu-item">
-                            <Link to="/admin" className="cursor-pointer">
-                              <Shield className="mr-2 h-4 w-4" />
-                              Admin Center
-                            </Link>
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive menu-item">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button onClick={handleLogin} disabled={isLoggingIn} size="sm">
-                    {isLoggingIn ? 'Logging in...' : 'Login'}
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-1">
+              {/* Customer Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover">
+                    Customer <ChevronDown className="ml-1 h-4 w-4" />
                   </Button>
-                )}
-              </nav>
-
-              {/* Mobile Menu Toggle */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto menu-surface">
-                  <SheetHeader>
-                    <SheetTitle className="menu-label">Menu</SheetTitle>
-                  </SheetHeader>
-                  <nav className="flex flex-col gap-4 mt-6">
-                    <Link
-                      to="/"
-                      className="text-lg font-medium menu-link"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Home
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-white border-2 border-menu-border shadow-menu">
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/customer-faq" className="text-menu-label hover:text-menu-label-hover">
+                      FAQ
                     </Link>
-                    <div className="border-t pt-4">
-                      <p className="text-sm font-semibold menu-section-label mb-2">Customer</p>
-                      <Link
-                        to="/customer-faq"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        FAQ
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/customer-blog" className="text-menu-label hover:text-menu-label-hover">
+                      Blog
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Sellers & Businesses Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover">
+                    Sellers & Businesses <ChevronDown className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-white border-2 border-menu-border shadow-menu">
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/sellers-businesses-faq" className="text-menu-label hover:text-menu-label-hover">
+                      FAQ
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/sellers-businesses-blog" className="text-menu-label hover:text-menu-label-hover">
+                      Blog
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Legal Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover">
+                    Legal <ChevronDown className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 bg-white border-2 border-menu-border shadow-menu">
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/privacy-policy" className="text-menu-label hover:text-menu-label-hover">
+                      Privacy Policy
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/shipping-policy" className="text-menu-label hover:text-menu-label-hover">
+                      Shipping Policy
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/returns-policy" className="text-menu-label hover:text-menu-label-hover">
+                      Returns Policy
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/terms-and-conditions" className="text-menu-label hover:text-menu-label-hover">
+                      Terms & Conditions
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/marketplace-policy" className="text-menu-label hover:text-menu-label-hover">
+                      Marketplace Policy
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                    <Link to="/pci-compliance" className="text-menu-label hover:text-menu-label-hover">
+                      PCI Compliance
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Profile Setup Link (when authenticated but no profile) */}
+              {showProfileSetup && (
+                <Button
+                  asChild
+                  variant="default"
+                  className="ml-2"
+                >
+                  <Link to="/profile-setup">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Finish Profile Setup
+                  </Link>
+                </Button>
+              )}
+
+              {/* User Menu (when authenticated with profile) */}
+              {isAuthenticated && !showProfileSetup && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover">
+                      <User className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-white border-2 border-menu-border shadow-menu">
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                      <Link to="/settings" className="text-menu-label hover:text-menu-label-hover">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
                       </Link>
-                      <Link
-                        to="/customer-blog"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Blog
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-menu-item-hover">
+                      <Link to="/admin" className="text-menu-label hover:text-menu-label-hover">
+                        Admin Center
                       </Link>
-                    </div>
-                    <div className="border-t pt-4">
-                      <p className="text-sm font-semibold menu-section-label mb-2">Sellers & Businesses</p>
-                      <Link
-                        to="/sellers-businesses-faq"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-menu-border" />
+                    <DropdownMenuItem onClick={handleAuth} disabled={disabled} className="cursor-pointer text-menu-label hover:text-menu-label-hover focus:bg-menu-item-hover">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {buttonText}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Login Button (when not authenticated) */}
+              {!isAuthenticated && (
+                <Button
+                  onClick={handleAuth}
+                  disabled={disabled}
+                  className="ml-2"
+                >
+                  {buttonText}
+                </Button>
+              )}
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon" className="text-menu-label">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] bg-white border-l-2 border-menu-border">
+                <nav className="flex flex-col space-y-4 mt-8">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-menu-label px-2">Customer</p>
+                    <Link
+                      to="/customer-faq"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      FAQ
+                    </Link>
+                    <Link
+                      to="/customer-blog"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Blog
+                    </Link>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-menu-label px-2">Sellers & Businesses</p>
+                    <Link
+                      to="/sellers-businesses-faq"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      FAQ
+                    </Link>
+                    <Link
+                      to="/sellers-businesses-blog"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Blog
+                    </Link>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-menu-label px-2">Legal</p>
+                    <Link
+                      to="/privacy-policy"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Privacy Policy
+                    </Link>
+                    <Link
+                      to="/shipping-policy"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Shipping Policy
+                    </Link>
+                    <Link
+                      to="/returns-policy"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Returns Policy
+                    </Link>
+                    <Link
+                      to="/terms-and-conditions"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Terms & Conditions
+                    </Link>
+                    <Link
+                      to="/marketplace-policy"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Marketplace Policy
+                    </Link>
+                    <Link
+                      to="/pci-compliance"
+                      className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      PCI Compliance
+                    </Link>
+                  </div>
+
+                  {/* Profile Setup Link (mobile) */}
+                  {showProfileSetup && (
+                    <div className="pt-4 border-t border-menu-border">
+                      <Button
+                        asChild
+                        variant="default"
+                        className="w-full"
+                        onClick={closeMobileMenu}
                       >
-                        FAQ
-                      </Link>
-                      <Link
-                        to="/sellers-businesses-blog"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Blog
-                      </Link>
-                    </div>
-                    <div className="border-t pt-4">
-                      <p className="text-sm font-semibold menu-section-label mb-2">Legal</p>
-                      <Link
-                        to="/pci-compliance"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        PCI Compliance
-                      </Link>
-                      <Link
-                        to="/privacy-policy"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Privacy Policy
-                      </Link>
-                      <Link
-                        to="/shipping-policy"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Shipping Policy
-                      </Link>
-                      <Link
-                        to="/returns-policy"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Returns Policy
-                      </Link>
-                      <Link
-                        to="/terms-and-conditions"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Terms & Conditions
-                      </Link>
-                      <Link
-                        to="/marketplace-policy"
-                        className="block py-2 menu-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Marketplace Policy
-                      </Link>
-                    </div>
-                    {isAuthenticated && (
-                      <div className="border-t pt-4">
-                        <p className="text-sm font-semibold menu-section-label mb-2">My Account</p>
-                        <Link
-                          to="/customer-settings"
-                          className="block py-2 menu-link"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Settings
+                        <Link to="/profile-setup">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Finish Profile Setup
                         </Link>
-                        <Link
-                          to="/portal"
-                          className="block py-2 menu-link"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Account Portal
-                        </Link>
-                        <Link
-                          to="/payouts"
-                          className="block py-2 menu-link"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Payouts
-                        </Link>
-                        {isAdmin && (
-                          <Link
-                            to="/admin"
-                            className="block py-2 menu-link"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Admin Center
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setMobileMenuOpen(false);
-                          }}
-                          className="block w-full text-left py-2 text-destructive hover:text-destructive/80 transition-colors font-medium"
-                        >
-                          Logout
-                        </button>
-                      </div>
-                    )}
-                    {!isAuthenticated && (
-                      <div className="border-t pt-4">
-                        <Button onClick={handleLogin} disabled={isLoggingIn} className="w-full">
-                          {isLoggingIn ? 'Logging in...' : 'Login'}
-                        </Button>
-                      </div>
-                    )}
-                  </nav>
-                </SheetContent>
-              </Sheet>
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* User Menu (mobile) */}
+                  {isAuthenticated && !showProfileSetup && (
+                    <div className="pt-4 border-t border-menu-border space-y-2">
+                      <Link
+                        to="/settings"
+                        className="flex items-center px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                      <Link
+                        to="/admin"
+                        className="block px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        Admin Center
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleAuth();
+                          closeMobileMenu();
+                        }}
+                        disabled={disabled}
+                        className="flex items-center w-full px-2 py-2 text-menu-label hover:text-menu-label-hover hover:bg-menu-item-hover rounded-md transition-colors disabled:opacity-50"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {buttonText}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Login Button (mobile) */}
+                  {!isAuthenticated && (
+                    <div className="pt-4 border-t border-menu-border">
+                      <Button
+                        onClick={() => {
+                          handleAuth();
+                          closeMobileMenu();
+                        }}
+                        disabled={disabled}
+                        className="w-full"
+                      >
+                        {buttonText}
+                      </Button>
+                    </div>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
+
+      {/* Footer */}
+      <footer className="border-t bg-muted/30 py-8 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="font-semibold mb-3">ANC Marketplace</h3>
+              <p className="text-sm text-muted-foreground">
+                Your trusted platform for business solutions and marketplace services.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3">Quick Links</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link to="/customer-faq" className="text-muted-foreground hover:text-foreground">
+                    Customer FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/sellers-businesses-faq" className="text-muted-foreground hover:text-foreground">
+                    Sellers & Businesses FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy-policy" className="text-muted-foreground hover:text-foreground">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3">Contact</h3>
+              <p className="text-sm text-muted-foreground">ancelectronicsnservices@gmail.com</p>
             </div>
           </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <Outlet />
-        </main>
-
-        {/* Footer */}
-        <Footer />
-
-        {/* Cookie Consent Banner */}
-        <CookieConsentBanner />
-
-        {/* AI Assistant Widget */}
-        <AssistantWidget />
-      </div>
-    </VoiceSettingsProvider>
+          <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
+            <p>
+              © {new Date().getFullYear()} ANC Marketplace. Built with ❤️ using{' '}
+              <a
+                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(
+                  typeof window !== 'undefined' ? window.location.hostname : 'anc-marketplace'
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                caffeine.ai
+              </a>
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

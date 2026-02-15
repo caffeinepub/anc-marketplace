@@ -1,19 +1,17 @@
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Map "mo:core/Map";
-import Text "mo:core/Text";
+import Array "mo:core/Array";
 import List "mo:core/List";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Stripe "stripe/stripe";
 import OutCall "http-outcalls/outcall";
 import Principal "mo:core/Principal";
-import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Nat "mo:core/Nat";
-
-
 
 actor {
   include MixinStorage();
@@ -23,7 +21,7 @@ actor {
     #shipping;
     #returns;
     #terms;
-    #marketplaceWide; // New variant for marketplace-wide policy
+    #marketplaceWide;
   };
 
   public type PolicyVersion = {
@@ -465,7 +463,7 @@ actor {
 
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
   var ownerPrincipal : ?Principal = null;
-  var saleServiceFee : Nat = 500; // $5 fee represented in cents
+  var saleServiceFee : Nat = 500;
   var merchantFunnelPartner : FunnelPartner = {
     partnerName = "ClickFunnels";
     signupLink = "https://clickfunnels.com/signup-flow?aff=anc_marketplace_sellers";
@@ -475,11 +473,10 @@ actor {
   let knowledgeBase = Map.empty<Text, AssistantKnowledgeEntry>();
   let unansweredQuestions = Map.empty<Text, UnansweredQuestion>();
 
-  // New persistent state for admin financial data
   var adminFinancialState : AdminFinancialState = {
-    availableFundsCents = 702598; // $7,025.98 initial
+    availableFundsCents = 7_025_98;
     creditAccount = {
-      creditLimitCents = 10_000_00; // $10,000.00 initial
+      creditLimitCents = 10_000_00;
       usedAmountCents = 0;
     };
   };
@@ -588,6 +585,36 @@ actor {
 
   let marketplaceRoadmap = Map.empty<Text, MarketplaceRoadmap>();
 
+  public query ({ caller }) func isStripeConfigured() : async Bool {
+    stripeConfiguration != null;
+  };
+
+  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update Stripe settings");
+    };
+    stripeConfiguration := ?config;
+  };
+
+  func getStripeConfiguration() : Stripe.StripeConfiguration {
+    switch (stripeConfiguration) {
+      case (null) { Runtime.trap("Stripe needs to be first configured") };
+      case (?value) { value };
+    };
+  };
+
+  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
+  };
+
+  public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+  };
+
+  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
   public shared ({ caller }) func initializeAccessControl() : async () {
     AccessControl.initialize(accessControlState, caller);
     await updateMarketplaceRoadmap();
@@ -607,9 +634,6 @@ actor {
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
-    };
     userStore.get(caller);
   };
 
@@ -621,10 +645,8 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
     userStore.add(caller, profile);
+    AccessControl.assignRole(accessControlState, caller, caller, #user);
   };
 
   public shared ({ caller }) func setOwnerPrincipal() : async () {
@@ -814,9 +836,7 @@ actor {
         },
       ];
 
-      // Add business-operations-focused knowledge entries
       let businessOpsEntries = [
-        // Funnel generation/setup
         {
           id = "funnel_guidance";
           question = "How do I set up a marketing funnel using the platform?";
@@ -879,7 +899,6 @@ actor {
         },
       ];
 
-      // Manually add all entries
       for (entry in generalEntries.values()) {
         knowledgeBase.add(entry.id, entry);
       };
@@ -892,433 +911,8 @@ actor {
       for (entry in startupEntries.values()) {
         knowledgeBase.add(entry.id, entry);
       };
-      // Add business-operations-focused entries
       for (entry in businessOpsEntries.values()) {
         knowledgeBase.add(entry.id, entry);
-      };
-    };
-  };
-
-  public shared ({ caller }) func signPolicy(policyRecord : PolicySignatureRecord) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can sign policies");
-    };
-
-    // Get current policy signatures for user or create new empty list
-    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
-      case (?existing) { existing };
-      case (null) { List.empty<PolicySignatureRecord>() };
-    };
-
-    // Check if user already signed this policy version
-    switch (currentSignatures.find(func(record) { record.policyIdentifier == policyRecord.policyIdentifier and record.policyVersion == policyRecord.policyVersion })) {
-      case (?_) { Runtime.trap("Policy already signed") };
-      case (null) {
-        currentSignatures.add(policyRecord);
-        policySignaturesByUser.add(caller, currentSignatures);
-      };
-    };
-  };
-
-  public query ({ caller }) func getSignatureByPolicy(policyIdentifier : PolicyIdentifier) : async ?PolicySignatureRecord {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can access policy signatures");
-    };
-    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
-      case (?existing) { existing };
-      case (null) { List.empty<PolicySignatureRecord>() };
-    };
-    currentSignatures.find(func(record) { record.policyIdentifier == policyIdentifier });
-  };
-
-  public query ({ caller }) func verifyPolicySignature(policyIdentifier : PolicyIdentifier, policyVersion : Text) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can verify policy signatures");
-    };
-    let currentSignatures : List.List<PolicySignatureRecord> = switch (policySignaturesByUser.get(caller)) {
-      case (?existing) { existing };
-      case (null) { List.empty<PolicySignatureRecord>() };
-    };
-
-    let matchingSignature = currentSignatures.find(func(record) { record.policyIdentifier == policyIdentifier and record.policyVersion == policyVersion });
-    switch (matchingSignature) {
-      case (null) { false };
-      case (?_) { true };
-    };
-  };
-
-  // Public read access - no authorization needed (guests can view)
-  public query ({ caller }) func getAssistantKnowledgeBase() : async [AssistantKnowledgeEntry] {
-    let values = knowledgeBase.values().toArray();
-    values;
-  };
-
-  // Public read access - no authorization needed (guests can view)
-  public query ({ caller }) func getActiveKnowledgeByCategory(category : Text) : async [AssistantKnowledgeEntry] {
-    let filteredEntries = List.empty<AssistantKnowledgeEntry>();
-
-    for ((_, entry) in knowledgeBase.entries()) {
-      if (entry.category.toLower() == category.toLower() and entry.isActive) {
-        filteredEntries.add(entry);
-      };
-    };
-
-    filteredEntries.toArray();
-  };
-
-  func calculateSimilarity(question1 : Text, question2 : Text) : Float {
-    if (question1 == question2) { return 1.0 };
-
-    let words1 = question1.toArray().toText().split(#char(' ')).toArray();
-    let words2 = question2.toArray().toText().split(#char(' ')).toArray();
-
-    if (words1.size() == 0 or words2.size() == 0) { return 0.0 };
-
-    func wordMatches(word1 : Text) : Bool {
-      words2.any(func(word2) { word1 == word2 });
-    };
-
-    let commonWordsCount = words1.foldLeft(
-      0,
-      func(acc, word) {
-        if (wordMatches(word)) { acc + 1 } else { acc };
-      },
-    );
-
-    let totalWords = Nat.max(words1.size(), words2.size());
-
-    if (totalWords == 0) {
-      0.0;
-    } else {
-      let similarity = commonWordsCount.toFloat() / totalWords.toFloat();
-      similarity;
-    };
-  };
-
-  func getBestMatchingAnswer(question : Text, category : Text) : ?AssistantKnowledgeEntry {
-    let categoryLower = category.toLower();
-    var bestMatch : ?AssistantKnowledgeEntry = null;
-    var bestScore : Float = 0.0;
-
-    for ((_, entry) in knowledgeBase.entries()) {
-      if (entry.category.toLower().startsWith(#text(categoryLower))) {
-        let score = calculateSimilarity(question, entry.question);
-        if (score > bestScore and score > 0.5) {
-          bestMatch := ?entry;
-          bestScore := score;
-        };
-      };
-    };
-
-    bestMatch;
-  };
-
-  // Public access - no authorization needed (guests can ask questions)
-  public query ({ caller }) func askAssistant(question : Text, category : Text) : async ?Text {
-    let normalizedQuestion = question.toLower();
-
-    let bestMatch = getBestMatchingAnswer(normalizedQuestion, category);
-
-    switch (bestMatch) {
-      case (null) {
-        addUnansweredQuestion(normalizedQuestion, category);
-        null;
-      };
-      case (?matchingEntry) {
-        ?matchingEntry.answer;
-      };
-    };
-  };
-
-  func addUnansweredQuestion(question : Text, category : Text) {
-    let id = Time.now().toText() # "_" # category;
-    let unansweredQuestion : UnansweredQuestion = {
-      id;
-      question;
-      categorySuggestion = category;
-      creationTime = Time.now();
-      interactionCount = 1;
-    };
-
-    unansweredQuestions.add(id, unansweredQuestion);
-  };
-
-  // Admin-only access - contains sensitive data
-  public query ({ caller }) func getUnansweredQuestions() : async [UnansweredQuestion] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view unanswered questions");
-    };
-    unansweredQuestions.values().toArray();
-  };
-
-  public shared ({ caller }) func updateKnowledgeEntry(id : Text, newAnswer : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update knowledge entries");
-    };
-    switch (knowledgeBase.get(id)) {
-      case (null) {
-        Runtime.trap("Knowledge entry not found");
-      };
-      case (?entry) {
-        let updatedEntry = {
-          entry with
-          lastUpdated = Time.now();
-          answer = newAnswer;
-        };
-        knowledgeBase.add(id, updatedEntry);
-      };
-    };
-  };
-
-  public shared ({ caller }) func addKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can add knowledge entries");
-    };
-    knowledgeBase.add(entry.id, entry);
-  };
-
-  // User-only access - requires authentication to submit questions
-  public shared ({ caller }) func submitBusinessOpsQuestion(question : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can submit business operations questions");
-    };
-    addUnansweredQuestion(question, "Business Operations");
-  };
-
-  // Stripe Integration
-  public query ({ caller }) func isStripeConfigured() : async Bool {
-    stripeConfiguration != null;
-  };
-
-  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
-    stripeConfiguration := ?config;
-  };
-
-  func getStripeConfiguration() : Stripe.StripeConfiguration {
-    switch (stripeConfiguration) {
-      case (null) { Runtime.trap("Stripe needs to be first configured") };
-      case (?value) { value };
-    };
-  };
-
-  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can check session status");
-    };
-    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
-  };
-
-  public shared ({ caller }) func createCheckoutSession(items : [ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create checkout sessions");
-    };
-    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
-  };
-
-  // Public access - funnel partners are marketing information accessible to all
-  public query ({ caller }) func getFunnelPartner() : async FunnelPartner {
-    merchantFunnelPartner;
-  };
-
-  public shared ({ caller }) func updateFunnelPartner(partner : FunnelPartner) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update funnel partners");
-    };
-    merchantFunnelPartner := partner;
-  };
-
-  // Seller Payout Profile Management
-
-  public shared ({ caller }) func createOrUpdatePayoutProfile(payoutAccount : Text) : async SellerPayoutProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create payout profiles");
-    };
-
-    let newProfile : SellerPayoutProfile = {
-      sellerPrincipal = caller;
-      designatedPayoutAccount = payoutAccount;
-      internalBalanceCents = 0;
-      createdAt = Time.now();
-      lastUpdated = Time.now();
-    };
-
-    sellerPayoutProfiles.add(caller, newProfile);
-    newProfile;
-  };
-
-  public query ({ caller }) func getPayoutProfile() : async ?SellerPayoutProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access payout profiles");
-    };
-    sellerPayoutProfiles.get(caller);
-  };
-
-  public shared ({ caller }) func recordCredit(amountCents : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can record credits");
-    };
-
-    switch (sellerPayoutProfiles.get(caller)) {
-      case (null) {
-        Runtime.trap("Payout profile not found. Please create one first.");
-      };
-      case (?profile) {
-        let updatedProfile = {
-          profile with
-          internalBalanceCents = profile.internalBalanceCents + amountCents;
-          lastUpdated = Time.now();
-        };
-        sellerPayoutProfiles.add(caller, updatedProfile);
-      };
-    };
-  };
-
-  public shared ({ caller }) func recordPayoutTransfer(amountCents : Nat, payoutAccount : Text) : async SellerPayoutTransferRecord {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can record payouts");
-    };
-
-    let newTransfer : SellerPayoutTransferRecord = {
-      id = Time.now().toText();
-      sellerPrincipal = caller;
-      amountCents;
-      payoutAccount;
-      status = #pending;
-      createdAt = Time.now();
-      processedAt = null;
-      errorMessage = null;
-    };
-
-    sellerPayoutTransfers.add(newTransfer.id, newTransfer);
-    newTransfer;
-  };
-
-  // Seller Account Number Management
-
-  public shared ({ caller }) func createOrGetAccountNumber() : async AccountAssignment {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create account numbers");
-    };
-
-    let newAssignment : AccountAssignment = {
-      sellerPrincipal = caller;
-      accountNumber = Time.now().toText();
-      createdAt = Time.now();
-      active = true;
-    };
-
-    payoutAccountAssignments.add(caller, newAssignment);
-    newAssignment;
-  };
-
-  public query ({ caller }) func getAccountNumber() : async ?Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access account numbers");
-    };
-    switch (payoutAccountAssignments.get(caller)) {
-      case (null) { null };
-      case (?assignment) { ?assignment.accountNumber };
-    };
-  };
-
-  // Seller Debit Card Request Management
-
-  public shared ({ caller }) func requestBusinessDebitCard(businessName : Text) : async BusinessDebitCardRequest {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can request business debit cards");
-    };
-
-    let newRequest : BusinessDebitCardRequest = {
-      id = Time.now().toText();
-      sellerPrincipal = caller;
-      businessName;
-      requestStatus = #submitted;
-      submissionTimestamp = Time.now();
-      reviewTimestamp = null;
-      approvalTimestamp = null;
-      rejectionTimestamp = null;
-    };
-
-    debitCardRequests.add(newRequest.id, newRequest);
-    newRequest;
-  };
-
-  // Seller Credit Card Application Management
-
-  public shared ({ caller }) func submitBusinessCreditCardApplication(businessName : Text) : async BusinessCreditCardApplication {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can submit credit card applications");
-    };
-
-    let newApplication : BusinessCreditCardApplication = {
-      id = Time.now().toText();
-      sellerPrincipal = caller;
-      businessName;
-      applicationStatus = #submitted;
-      submissionTimestamp = Time.now();
-      reviewTimestamp = null;
-      approvalTimestamp = null;
-      rejectionTimestamp = null;
-    };
-
-    creditCardApplications.add(newApplication.id, newApplication);
-    newApplication;
-  };
-
-  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
-  };
-
-  //////////////////// FUNDING /////////////////////
-
-  public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access financial data");
-    };
-    adminFinancialState;
-  };
-
-  public shared ({ caller }) func updateAvailableFunds(amountCents : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update available funds");
-    };
-    adminFinancialState := {
-      adminFinancialState with
-      availableFundsCents = amountCents;
-    };
-  };
-
-  public shared ({ caller }) func updateCreditUsedAmount(usedAmountCents : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update credit usage");
-    };
-    adminFinancialState := {
-      adminFinancialState with
-      creditAccount = {
-        adminFinancialState.creditAccount with
-        usedAmountCents;
-      };
-    };
-  };
-
-  public shared ({ caller }) func repayCredit(amountCents : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can repay credit");
-    };
-
-    if (amountCents > adminFinancialState.creditAccount.usedAmountCents) {
-      Runtime.trap("Cannot repay more than outstanding debt. Credit cannot be overpaid");
-    };
-
-    adminFinancialState := {
-      adminFinancialState with
-      creditAccount = {
-        adminFinancialState.creditAccount with
-        usedAmountCents = adminFinancialState.creditAccount.usedAmountCents
-        - amountCents;
       };
     };
   };

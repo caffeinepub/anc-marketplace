@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Settings, Shield, Lock, Bell, User, Mic, Volume2, Radio, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useVoiceSettings } from '../contexts/VoiceSettingsContext';
 import { isSpeechRecognitionSupported, isSpeechSynthesisSupported } from '../lib/voice/browserVoice';
-import PolicySignaturesPanel from '../components/policies/PolicySignaturesPanel';
 
 export default function CustomerSettingsPage() {
   const { identity } = useInternetIdentity();
@@ -99,49 +97,40 @@ export default function CustomerSettingsPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-6xl">
-          {/* Policy Signatures Panel - Full Width */}
-          <div className="md:col-span-2">
-            <PolicySignaturesPanel />
-          </div>
-
-          {/* Voice & Permissions Card */}
-          <Card className="md:col-span-2">
+          {/* Voice & Permissions */}
+          <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <Mic className="h-5 w-5 text-primary" />
-                <CardTitle>Voice & Permissions</CardTitle>
-              </div>
-              <CardDescription>Configure voice assistant and microphone access</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Mic className="h-5 w-5" />
+                Voice & Permissions
+              </CardTitle>
+              <CardDescription>Configure voice features and microphone access</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {!voiceFeaturesSupported ? (
+              {!voiceFeaturesSupported && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Voice features are not available in your current browser. Please use Chrome, Edge, or Safari for full voice support.
+                    Voice features are not supported in your browser. Please use Chrome, Edge, or Safari.
                   </AlertDescription>
                 </Alert>
-              ) : (
+              )}
+
+              {voiceFeaturesSupported && (
                 <>
-                  {/* Microphone Permission Status */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base font-semibold">Microphone Permission</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Required for voice input features
-                        </p>
-                      </div>
+                      <Label className="text-sm font-medium">Microphone Permission</Label>
                       {getPermissionStatusDisplay()}
                     </div>
 
                     {micPermissionStatus === 'prompt' && (
                       <Button
                         onClick={handleRequestPermission}
-                        disabled={isRequestingPermission || !isMicSupported}
+                        disabled={isRequestingPermission}
                         className="w-full"
+                        variant="outline"
                       >
-                        <Mic className="h-4 w-4 mr-2" />
                         {isRequestingPermission ? 'Requesting...' : 'Request Microphone Access'}
                       </Button>
                     )}
@@ -150,70 +139,54 @@ export default function CustomerSettingsPage() {
                       <div className="space-y-2">
                         <Alert variant="destructive">
                           <AlertDescription className="text-sm">
-                            Microphone access was denied. To enable voice features, please allow microphone access in your browser settings and try again.
+                            Microphone access was denied. Please enable it in your browser settings.
                           </AlertDescription>
                         </Alert>
-                        <Button
-                          onClick={handleRetryPermission}
-                          disabled={isRequestingPermission}
-                          variant="outline"
-                          className="w-full"
-                        >
+                        <Button onClick={handleRetryPermission} variant="outline" className="w-full">
                           Retry Permission Request
                         </Button>
                       </div>
                     )}
-
-                    {micPermissionStatus === 'unavailable' && (
-                      <Alert>
-                        <AlertDescription className="text-sm">
-                          Microphone is not available on this device or browser.
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
 
-                  {/* Voice Settings (only show if permission granted) */}
                   {micPermissionStatus === 'granted' && (
                     <>
-                      <div className="border-t pt-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Radio className="h-4 w-4 text-primary" />
-                              <Label htmlFor="voice-activation-setting" className="text-base font-semibold cursor-pointer">
-                                Voice Activation
-                              </Label>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Continuously listen for voice input while assistant is open
-                            </p>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <Radio className="h-4 w-4 text-primary" />
+                            <Label htmlFor="voice-activation" className="cursor-pointer">
+                              Voice Activation
+                            </Label>
                           </div>
-                          <Switch
-                            id="voice-activation-setting"
-                            checked={preferences.voiceActivationEnabled}
-                            onCheckedChange={handleVoiceActivationToggle}
-                          />
+                          <p className="text-xs text-muted-foreground">
+                            Automatically listen when assistant is open
+                          </p>
                         </div>
+                        <Switch
+                          id="voice-activation"
+                          checked={preferences.voiceActivationEnabled}
+                          onCheckedChange={handleVoiceActivationToggle}
+                        />
+                      </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Volume2 className="h-4 w-4 text-primary" />
-                              <Label htmlFor="spoken-replies-setting" className="text-base font-semibold cursor-pointer">
-                                Spoken Replies
-                              </Label>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Read assistant responses aloud automatically
-                            </p>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <Volume2 className="h-4 w-4 text-primary" />
+                            <Label htmlFor="spoken-replies" className="cursor-pointer">
+                              Spoken Replies
+                            </Label>
                           </div>
-                          <Switch
-                            id="spoken-replies-setting"
-                            checked={preferences.spokenRepliesEnabled}
-                            onCheckedChange={setSpokenRepliesEnabled}
-                          />
+                          <p className="text-xs text-muted-foreground">
+                            Hear assistant responses read aloud
+                          </p>
                         </div>
+                        <Switch
+                          id="spoken-replies"
+                          checked={preferences.spokenRepliesEnabled}
+                          onCheckedChange={setSpokenRepliesEnabled}
+                        />
                       </div>
                     </>
                   )}
@@ -222,49 +195,46 @@ export default function CustomerSettingsPage() {
             </CardContent>
           </Card>
 
+          {/* Profile Settings */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle>Profile Settings</CardTitle>
-              </div>
-              <CardDescription>Update your personal information</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Settings
+              </CardTitle>
+              <CardDescription>Manage your account information</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground">
                 Profile management features coming soon.
               </p>
             </CardContent>
           </Card>
 
+          {/* Privacy & Security */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <Lock className="h-5 w-5 text-primary" />
-                <CardTitle>Privacy & Security</CardTitle>
-              </div>
-              <CardDescription>Manage your privacy settings</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Privacy & Security
+              </CardTitle>
+              <CardDescription>Control your data and security preferences</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Your account is secured with Internet Identity passkey authentication.
+              <p className="text-sm text-muted-foreground">
+                Privacy settings coming soon.
               </p>
-              <Button variant="outline" asChild>
-                <Link to="/privacy-policy">
-                  <Shield className="h-4 w-4 mr-2" />
-                  View Privacy Policy
-                </Link>
-              </Button>
             </CardContent>
           </Card>
 
+          {/* Notifications */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-primary" />
-                <CardTitle>Notifications</CardTitle>
-              </div>
-              <CardDescription>Configure notification preferences</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notifications
+              </CardTitle>
+              <CardDescription>Manage notification preferences</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
@@ -273,17 +243,18 @@ export default function CustomerSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Account Settings */}
+          <Card className="md:col-span-2">
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <Settings className="h-5 w-5 text-primary" />
-                <CardTitle>Account Settings</CardTitle>
-              </div>
-              <CardDescription>General account preferences</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Account Settings
+              </CardTitle>
+              <CardDescription>Manage your account and authentication</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Additional account settings coming soon.
+                Account management features coming soon.
               </p>
             </CardContent>
           </Card>

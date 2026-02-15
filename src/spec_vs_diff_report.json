@@ -1,71 +1,74 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T09:45:38.014Z",
-  "summary": "REQ-1 is partially addressed via new menu-specific CSS tokens/classes and usage of a `menu-surface` class on at least one dropdown menu. However, the diff evidence is truncated and does not clearly show the same treatment applied to all required desktop dropdowns and the mobile slide-over (SheetContent). Additionally, several unrelated styling/product changes appear to have been introduced, which violates the request to keep changes limited to menu styling/readability and avoid broader theme/site changes or new routes/navigation.",
+  "generatedAt": "2026-02-15T00:53:52.758Z",
+  "summary": "Frontend changes add a /profile-setup route, a registration gate component (RequireRegisteredUser) that redirects authenticated users without a profile to /profile-setup, and header logic intended to surface a profile-setup call-to-action. Backend requirements (REQ-3/REQ-4) cannot be confirmed from the truncated backend diff. Several additional UI/content changes appear in the diff summary but were not requested.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Desktop dropdown menus (Customer, Sellers & Businesses, Legal, and authenticated user menu) render on a white or very light blue background and the menu item text is clearly readable.",
-      "reason": "The diff snippet shows `DropdownMenuContent` for the Customer dropdown using `className=\"w-48 menu-surface\"`, but the file is truncated before showing Sellers & Businesses, Legal, and the authenticated user menu dropdown content classes. Cannot confirm they were updated.",
+      "id": "REQ-3",
+      "requirement": "Backend must allow a newly authenticated principal (with no prior #user permission) to create/save their own UserProfile, then fetch it, and automatically grant a standard non-guest user role after profile setup (idempotent update allowed).",
+      "reason": "The backend/main.mo diff is heavily truncated and shows no visible additions/changes to user-profile save/fetch methods, authorization behavior, or role granting. There is no diff evidence that profile save is permitted without existing permissions or that a standard role is granted post-setup.",
       "evidence": [
-        "frontend/src/components/Layout.tsx (truncated)"
+        "backend/main.mo (truncated; no relevant methods shown)"
       ]
     },
     {
-      "id": "REQ-1",
-      "requirement": "Mobile menu (SheetContent) renders on a white or very light blue background and all listed links/sections are clearly readable.",
-      "reason": "`SheetContent` is imported, and menu styling classes are defined in CSS, but the truncated Layout diff does not show `SheetContent` being given `menu-surface` (or equivalent) classes. Cannot confirm the mobile slide-over background/readability changes were applied.",
+      "id": "REQ-4",
+      "requirement": "Backend getCallerUserProfile must be safe for authenticated-but-unregistered users by returning null/none instead of trapping Unauthorized.",
+      "reason": "The diff summary provides no evidence of changes to getCallerUserProfile to return null/none for authenticated-but-unregistered users; backend code is truncated before any relevant method implementations are shown.",
       "evidence": [
-        "frontend/src/components/Layout.tsx (truncated)",
-        "frontend/src/index.css"
+        "backend/main.mo (truncated; no relevant methods shown)"
       ]
     },
     {
-      "id": "REQ-1",
-      "requirement": "Hover/focus states maintain strong contrast and do not reduce readability across desktop and mobile menus.",
-      "reason": "CSS defines `.menu-item` hover/focus background, but the truncated diff does not show `DropdownMenuItem` (and mobile links) actually using the `.menu-item` / `.menu-link` classes throughout. Cannot confirm the hover/focus behavior is applied to all menu items.",
+      "id": "REQ-5",
+      "requirement": "Enforce the registration gate for authenticated areas including Settings, Messages, Purchase History, and Wishlist (examples given), redirecting authenticated users without a profile to Profile Setup, and allow navigation after profile is saved; logout returns to public behavior.",
+      "reason": "The router diff clearly wraps /admin with RequireRegisteredUser and the file summary mentions /settings, but there is no diff evidence that other authenticated routes (Messages, Purchase History, Wishlist) are similarly gated or even present/updated.",
       "evidence": [
-        "frontend/src/index.css",
-        "frontend/src/components/Layout.tsx (truncated)"
+        "frontend/src/App.tsx (shows /admin wrapped; truncated before showing other routes)",
+        "frontend-file-summaries.txt (mentions guards wrapping /admin and /settings only)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Global theme/background changes beyond menu styling (forcing light color scheme and setting `body { background: white; }`).",
-      "reason": "Non-goals/constraints request keeping changes limited to menu styling/readability and not changing non-menu page backgrounds; this change affects the entire app background and theme behavior.",
+      "description": "Marketing/rebrand content updates across multiple pages (e.g., HomePage and StorePage content about a free marketplace model with a $5 per-sale service fee and an optional Store Builder upgrade).",
+      "reason": "Not requested in REQ-3/4/5/6 and outside the stated non-goals; these are additional product/marketing content changes unrelated to enabling basic user accounts with Internet Identity.",
       "evidence": [
-        "frontend/src/index.css"
+        "frontend-file-summaries.txt (HomePage, StorePage summaries)"
       ]
     },
     {
-      "description": "Animated gradient logo text styling (`.logo-text` with gradient animation).",
-      "reason": "Not requested by REQ-1 and not limited to menu readability; it changes broader header branding styling.",
+      "description": "Large additions/changes to startup/B2B/admin dashboards (tabs, deep-linked URL params, access control handling, theme/styling, status badges, additional widgets).",
+      "reason": "Not requested for Step 1 user account registration/profile setup; also appears to expand admin/dashboard functionality beyond what is required to support basic user accounts.",
       "evidence": [
-        "frontend/src/index.css"
+        "frontend-file-summaries.txt (StartupDashboard, B2BDashboard, AdminDashboard summaries)"
       ]
     },
     {
-      "description": "Promotional banner added/modified in header with emoji and close button behavior.",
-      "reason": "Not part of menu background/readability requirements and constitutes additional header UI behavior outside requested scope.",
+      "description": "New/updated payment success/failure page content and styling changes.",
+      "reason": "Not requested by REQ-3/4/5/6 and unrelated to profile setup/registration gating.",
       "evidence": [
-        "frontend/src/components/Layout.tsx (truncated)"
+        "frontend-file-summaries.txt (PaymentSuccess, PaymentFailure summaries)"
       ]
     },
     {
-      "description": "Introduction/mention of new routes and pages like `/admin` and `/portal`, profile setup modal, dashboard pages, payment success/failure flows, etc.",
-      "reason": "Explicit constraint: do not introduce new navigation items or routes; the modified `frontend-file-summaries.txt` describes new routes/features unrelated to menu styling.",
+      "description": "Global CSS design token overhaul (OKLCH color system and menu tokens).",
+      "reason": "Not requested; unrelated to enabling user accounts with Internet Identity and profile setup gating.",
       "evidence": [
-        "frontend-file-summaries.txt (truncated)"
+        "frontend-file-summaries.txt (frontend/src/index.css summary)"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/App.tsx",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/index.css",
+    "frontend/src/components/ProfileSetup.tsx",
+    "frontend/src/components/RequireRegisteredUser.tsx",
+    "frontend/src/pages/ProfileSetupPage.tsx",
     "project_state.json"
   ]
 }

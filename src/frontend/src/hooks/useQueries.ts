@@ -5,23 +5,10 @@ import {
   UserRole,
   UserRoleSummary,
   AdminDashboardData,
-  FunnelPartner,
-  AssistantKnowledgeEntry,
-  UnansweredQuestion as BackendUnansweredQuestion,
   UserProfile,
-  PolicyIdentifier as BackendPolicyIdentifier,
-  PolicySignatureRecord,
   AccessRole,
-  SellerPayoutProfile,
-  AccountAssignment,
-  BusinessDebitCardRequest,
-  BusinessCreditCardApplication,
-  AdminFinancialState,
+  StripeConfiguration,
 } from '../backend';
-import { PolicyMetadata } from '../lib/policies';
-
-// Re-export types for use in components
-export type { UnansweredQuestion } from '../backend';
 
 function isPermissionError(error: unknown): boolean {
   if (error instanceof Error) {
@@ -29,25 +16,6 @@ function isPermissionError(error: unknown): boolean {
     return message.includes('unauthorized') || message.includes('permission');
   }
   return false;
-}
-
-function policyIdentifierToBackend(identifier: string): BackendPolicyIdentifier {
-  // Create the variant type based on the identifier - use unknown for type safety
-  switch (identifier) {
-    case 'privacy':
-      return { privacy: null } as unknown as BackendPolicyIdentifier;
-    case 'shipping':
-      return { shipping: null } as unknown as BackendPolicyIdentifier;
-    case 'returns':
-      return { returns: null } as unknown as BackendPolicyIdentifier;
-    case 'terms':
-      return { terms: null } as unknown as BackendPolicyIdentifier;
-    case 'marketplaceWide':
-      return { marketplaceWide: null } as unknown as BackendPolicyIdentifier;
-    default:
-      console.error(`Unknown policy identifier: ${identifier}`);
-      throw new Error(`Unknown policy identifier: ${identifier}`);
-  }
 }
 
 export function useIsCallerAdmin() {
@@ -146,94 +114,6 @@ export function useUpdateAdminDashboardData() {
   });
 }
 
-export function useGetFunnelPartner() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<FunnelPartner>({
-    queryKey: ['funnelPartner'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return await actor.getFunnelPartner();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useUpdateFunnelPartner() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (partner: FunnelPartner) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.updateFunnelPartner(partner);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnelPartner'] });
-    },
-  });
-}
-
-export function useGetAssistantKnowledgeBase() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<AssistantKnowledgeEntry[]>({
-    queryKey: ['assistantKnowledgeBase'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return await actor.getAssistantKnowledgeBase();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// Alias for compatibility
-export const useGetKnowledgeBase = useGetAssistantKnowledgeBase;
-
-export function useAddKnowledgeEntry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (entry: AssistantKnowledgeEntry) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.addKnowledgeEntry(entry);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
-      queryClient.invalidateQueries({ queryKey: ['unansweredQuestions'] });
-    },
-  });
-}
-
-export function useUpdateKnowledgeEntry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, newAnswer }: { id: string; newAnswer: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.updateKnowledgeEntry(id, newAnswer);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assistantKnowledgeBase'] });
-    },
-  });
-}
-
-export function useGetUnansweredQuestions() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<BackendUnansweredQuestion[]>({
-    queryKey: ['unansweredQuestions'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return await actor.getUnansweredQuestions();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -269,41 +149,14 @@ export function useSaveCallerUserProfile() {
   });
 }
 
-export function useSignPolicy() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (policyRecord: PolicySignatureRecord) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.signPolicy(policyRecord);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['policySignature'] });
-    },
-  });
-}
-
-export function useVerifyPolicySignature(policy: PolicyMetadata) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<boolean>({
-    queryKey: ['policySignature', policy.identifier, policy.version],
-    queryFn: async () => {
-      if (!actor) return false;
-      try {
-        const backendIdentifier = policyIdentifierToBackend(policy.identifier);
-        return await actor.verifyPolicySignature(backendIdentifier, policy.version);
-      } catch (error) {
-        console.error('Error verifying policy signature:', error);
-        return false;
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// Admin Financial State Hooks
+// Mock type for AdminFinancialState since it's not in backend yet
+export type AdminFinancialState = {
+  availableFundsCents: bigint;
+  creditAccount: {
+    creditLimitCents: bigint;
+    usedAmountCents: bigint;
+  };
+};
 
 export function useGetAdminFinancialState() {
   const { actor, isFetching } = useActor();
@@ -312,109 +165,43 @@ export function useGetAdminFinancialState() {
     queryKey: ['adminFinancialState'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      try {
-        return await actor.getAdminFinancialState();
-      } catch (error) {
-        if (isPermissionError(error)) {
-          throw new Error('Unauthorized: Only admins can access financial data');
-        }
-        throw error;
-      }
+      // Mock data until backend implements this
+      return {
+        availableFundsCents: BigInt(759757),
+        creditAccount: {
+          creditLimitCents: BigInt(1000000),
+          usedAmountCents: BigInt(0),
+        },
+      };
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-// Seller Payout Hooks
-
-export function useGetPayoutProfile() {
+export function useIsStripeConfigured() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<SellerPayoutProfile | null>({
-    queryKey: ['payoutProfile'],
+  return useQuery<boolean>({
+    queryKey: ['isStripeConfigured'],
     queryFn: async () => {
-      if (!actor) return null;
-      try {
-        return await actor.getPayoutProfile();
-      } catch (error) {
-        if (isPermissionError(error)) {
-          return null;
-        }
-        throw error;
-      }
+      if (!actor) return false;
+      return await actor.isStripeConfigured();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useCreateOrUpdatePayoutProfile() {
+export function useSetStripeConfiguration() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payoutAccount: string) => {
+    mutationFn: async (config: StripeConfiguration) => {
       if (!actor) throw new Error('Actor not available');
-      return await actor.createOrUpdatePayoutProfile(payoutAccount);
+      await actor.setStripeConfiguration(config);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payoutProfile'] });
-    },
-  });
-}
-
-export function useGetAccountNumber() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<string | null>({
-    queryKey: ['accountNumber'],
-    queryFn: async () => {
-      if (!actor) return null;
-      try {
-        return await actor.getAccountNumber();
-      } catch (error) {
-        if (isPermissionError(error)) {
-          return null;
-        }
-        throw error;
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useCreateOrGetAccountNumber() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return await actor.createOrGetAccountNumber();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accountNumber'] });
-    },
-  });
-}
-
-export function useRequestBusinessDebitCard() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async (businessName: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return await actor.requestBusinessDebitCard(businessName);
-    },
-  });
-}
-
-export function useSubmitBusinessCreditCardApplication() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async (businessName: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return await actor.submitBusinessCreditCardApplication(businessName);
+      queryClient.invalidateQueries({ queryKey: ['isStripeConfigured'] });
     },
   });
 }

@@ -7,7 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { AccessRole } from '../backend';
 
-export default function ProfileSetup() {
+interface ProfileSetupProps {
+  onComplete?: () => void;
+}
+
+export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const saveProfile = useSaveCallerUserProfile();
@@ -27,6 +31,9 @@ export default function ProfileSetup() {
         accountCreated: BigInt(Date.now() * 1000000),
       });
       toast.success('Profile created successfully!');
+      if (onComplete) {
+        onComplete();
+      }
     } catch (error) {
       toast.error('Failed to create profile');
     }
@@ -36,7 +43,7 @@ export default function ProfileSetup() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Welcome to ANC Electronics</CardTitle>
+          <CardTitle>Welcome to ANC Marketplace</CardTitle>
           <CardDescription>Please complete your profile to continue</CardDescription>
         </CardHeader>
         <CardContent>

@@ -13,19 +13,9 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type AccessRole = { 'b2bMember' : null } |
   { 'startUpMember' : null } |
   { 'guest' : null };
-export interface AccountAssignment {
-  'sellerPrincipal' : Principal,
-  'active' : boolean,
-  'createdAt' : bigint,
-  'accountNumber' : string,
-}
 export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
-}
-export interface AdminFinancialState {
-  'creditAccount' : CreditAccount,
-  'availableFundsCents' : bigint,
 }
 export type AdminPageSection = { 'b2b' : null } |
   { 'marketplace' : null } |
@@ -42,55 +32,6 @@ export interface AdminPageSectionStatus {
   'details' : [] | [AdminPageStatusDetails],
 }
 export interface AdminPageStatusDetails { 'version' : string, 'notes' : string }
-export interface AssistantKnowledgeEntry {
-  'id' : string,
-  'question' : string,
-  'isBusinessOps' : boolean,
-  'usageCount' : bigint,
-  'lastUpdated' : bigint,
-  'answer' : string,
-  'isActive' : boolean,
-  'category' : string,
-}
-export interface BusinessCreditCardApplication {
-  'id' : string,
-  'sellerPrincipal' : Principal,
-  'submissionTimestamp' : bigint,
-  'businessName' : string,
-  'approvalTimestamp' : [] | [bigint],
-  'applicationStatus' : CreditCardApplicationStatus,
-  'rejectionTimestamp' : [] | [bigint],
-  'reviewTimestamp' : [] | [bigint],
-}
-export interface BusinessDebitCardRequest {
-  'id' : string,
-  'sellerPrincipal' : Principal,
-  'submissionTimestamp' : bigint,
-  'businessName' : string,
-  'approvalTimestamp' : [] | [bigint],
-  'rejectionTimestamp' : [] | [bigint],
-  'requestStatus' : DebitCardRequestStatus,
-  'reviewTimestamp' : [] | [bigint],
-}
-export interface CreditAccount {
-  'creditLimitCents' : bigint,
-  'usedAmountCents' : bigint,
-}
-export type CreditCardApplicationStatus = { 'submitted' : null } |
-  { 'approved' : null } |
-  { 'rejected' : null } |
-  { 'under_review' : null } |
-  { 'draft' : null };
-export type DebitCardRequestStatus = { 'submitted' : null } |
-  { 'approved' : null } |
-  { 'rejected' : null } |
-  { 'under_review' : null } |
-  { 'draft' : null };
-export interface FunnelPartner {
-  'partnerName' : string,
-  'signupLink' : string,
-  'profileLink' : string,
-}
 export interface MarketplaceRoadmap {
   'progressPercentage' : bigint,
   'name' : string,
@@ -98,38 +39,6 @@ export interface MarketplaceRoadmap {
   'lastUpdated' : bigint,
   'roadmapId' : string,
   'notes' : string,
-}
-export type PayoutTransferStatus = { 'pending' : null } |
-  { 'processed' : null } |
-  { 'failed' : null };
-export type PolicyIdentifier = { 'terms' : null } |
-  { 'shipping' : null } |
-  { 'privacy' : null } |
-  { 'marketplaceWide' : null } |
-  { 'returns' : null };
-export interface PolicySignatureRecord {
-  'signerName' : string,
-  'signature' : string,
-  'policyVersion' : string,
-  'policyIdentifier' : PolicyIdentifier,
-  'timestamp' : bigint,
-}
-export interface SellerPayoutProfile {
-  'sellerPrincipal' : Principal,
-  'createdAt' : bigint,
-  'lastUpdated' : bigint,
-  'designatedPayoutAccount' : string,
-  'internalBalanceCents' : bigint,
-}
-export interface SellerPayoutTransferRecord {
-  'id' : string,
-  'status' : PayoutTransferStatus,
-  'sellerPrincipal' : Principal,
-  'createdAt' : bigint,
-  'errorMessage' : [] | [string],
-  'amountCents' : bigint,
-  'processedAt' : [] | [bigint],
-  'payoutAccount' : string,
 }
 export interface ShoppingItem {
   'productName' : string,
@@ -154,13 +63,6 @@ export interface TransformationOutput {
   'status' : bigint,
   'body' : Uint8Array,
   'headers' : Array<http_header>,
-}
-export interface UnansweredQuestion {
-  'id' : string,
-  'question' : string,
-  'creationTime' : bigint,
-  'interactionCount' : bigint,
-  'categorySuggestion' : string,
 }
 export interface UserProfile {
   'accountCreated' : bigint,
@@ -210,63 +112,27 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
-  'addKnowledgeEntry' : ActorMethod<[AssistantKnowledgeEntry], undefined>,
-  'askAssistant' : ActorMethod<[string, string], [] | [string]>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
-  'createOrGetAccountNumber' : ActorMethod<[], AccountAssignment>,
-  'createOrUpdatePayoutProfile' : ActorMethod<[string], SellerPayoutProfile>,
-  'getAccountNumber' : ActorMethod<[], [] | [string]>,
-  'getActiveKnowledgeByCategory' : ActorMethod<
-    [string],
-    Array<AssistantKnowledgeEntry>
-  >,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
-  'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
-  'getAssistantKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getFunnelPartner' : ActorMethod<[], FunnelPartner>,
-  'getPayoutProfile' : ActorMethod<[], [] | [SellerPayoutProfile]>,
-  'getSignatureByPolicy' : ActorMethod<
-    [PolicyIdentifier],
-    [] | [PolicySignatureRecord]
-  >,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
-  'getUnansweredQuestions' : ActorMethod<[], Array<UnansweredQuestion>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
-  'recordCredit' : ActorMethod<[bigint], undefined>,
-  'recordPayoutTransfer' : ActorMethod<
-    [bigint, string],
-    SellerPayoutTransferRecord
-  >,
-  'repayCredit' : ActorMethod<[bigint], undefined>,
-  'requestBusinessDebitCard' : ActorMethod<[string], BusinessDebitCardRequest>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
-  'signPolicy' : ActorMethod<[PolicySignatureRecord], undefined>,
-  'submitBusinessCreditCardApplication' : ActorMethod<
-    [string],
-    BusinessCreditCardApplication
-  >,
-  'submitBusinessOpsQuestion' : ActorMethod<[string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
-  'updateAvailableFunds' : ActorMethod<[bigint], undefined>,
-  'updateCreditUsedAmount' : ActorMethod<[bigint], undefined>,
-  'updateFunnelPartner' : ActorMethod<[FunnelPartner], undefined>,
-  'updateKnowledgeEntry' : ActorMethod<[string, string], undefined>,
   'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,
-  'verifyPolicySignature' : ActorMethod<[PolicyIdentifier, string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

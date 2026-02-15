@@ -2,11 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-header-navigation-menus-to-use-a-white-or-very-light-blue-background-with-a-professional-look-ensuring-menu-items-are-clearly-readable-in-both-desktop-dropdown-menus-and-the-mobile-slide-over-menu",
-      "featureTitle": "Update the header navigation menus to use a white or very light blue background with a professional look, ensuring menu items are clearly readable in both desktop dropdown menus and the mobile slide-over menu.",
+      "featureId": "feature-frontend-add-a-dedicated-profile-setup-route-page-to-the-router-using-the-existing-profilesetup-component-and-enforce-a-simple-registration-gate-if-the-user-is-authenticated-with-internet-identity-but-has-no-saved-profile-redirect-them-to-profile-setup-before-allowing-access-to-authenticated-areas-e-g-settings-messages-purchase-history-wishlist",
+      "featureTitle": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
       "files": [
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/index.css"
+        "frontend/src/App.tsx",
+        "frontend/src/components/ProfileSetup.tsx",
+        "frontend/src/components/RequireRegisteredUser.tsx",
+        "frontend/src/pages/ProfileSetupPage.tsx"
       ],
       "components": [
         "authorization@3.0.0",
@@ -20,7 +22,29 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-frontend-update-the-authenticated-header-user-menu-behavior-to-reflect-account-state-show-a-clear-navigation-option-to-finish-profile-setup-when-authenticated-but-incomplete-and-keep-existing-login-logout-behavior-intact",
+      "featureTitle": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+      "files": [
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

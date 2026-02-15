@@ -1,16 +1,31 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [],
+  "summary": "Building a multi-vendor marketplace with Amazon/Shopify-like capabilities, plus internal-wallet financial features (virtual cards, gift cards, payouts placeholders), role-based user categories, and external integrations (ID verification + payment providers via API/webhooks).",
+  "architectural_notes": [
+    "Virtual cards and employee cards are internal-only; generate random valid-format card numbers/CVV that are non-functional externally.",
+    "External payouts to banks/cards require third-party providers (e.g., Stripe/PayPal/Payoneer) integrated via API calls + webhooks; canister stores balances/transactions and payout requests.",
+    "Seller gift-card fee logic: platform gift cards add $8.25 fee; seller gift cards add $10.10 fee split 50/50 (seller/platform).",
+    "Sellers/businesses can fully customize their gift cards (including uploading images/logos)."
+  ],
+  "known_issues": [
+    "Build/deploy attempts previously failed when too many features were attempted at once; proceed in small incremental steps."
+  ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-header-navigation-menus-to-use-a-white-or-very-light-blue-background-with-a-professional-look-ensuring-menu-items-are-clearly-readable-in-both-desktop-dropdown-menus-and-the-mobile-slide-over-menu",
-      "title": "Update the header navigation menus to use a white or very light blue background with a professional look, ensuring menu items are clearly readable in both desktop dropdown menus and the mobile slide-over menu.",
+      "id": "feature-frontend-add-a-dedicated-profile-setup-route-page-to-the-router-using-the-existing-profilesetup-component-and-enforce-a-simple-registration-gate-if-the-user-is-authenticated-with-internet-identity-but-has-no-saved-profile-redirect-them-to-profile-setup-before-allowing-access-to-authenticated-areas-e-g-settings-messages-purchase-history-wishlist",
+      "title": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
       "reqIds": [
-        "REQ-1"
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-update-the-authenticated-header-user-menu-behavior-to-reflect-account-state-show-a-clear-navigation-option-to-finish-profile-setup-when-authenticated-but-incomplete-and-keep-existing-login-logout-behavior-intact",
+      "title": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+      "reqIds": [
+        "REQ-6"
       ],
       "version": 1
     }
@@ -18,12 +33,95 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Update menu styling to use a white or very light blue background with a professional look that improves menu item readability",
+      "summary": "Implement user accounts with Internet Identity (buyer + seller identities)",
       "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Build internal virtual card system linked to internal balances (card objects, balances, ledgers, transactions) and assign owner two cards (available balance vs credit balance)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Virtual card rendering/data: 16-digit random valid-format numbers (non-functional), exp month/year, CVV, user name, company name+logo, and card-type label/logo styling using provided logo",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Configure site-wide user categories/roles and required sign-in/sign-up/register/verify flows and permissions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Create placeholder identity verification module (pluggable for future external API/webhooks)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add secure integration framework for connecting external sites/apps/partners via API keys + webhooks",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add payment-provider 'holding place' for Payoneer/Stripe/PayPal transactions in/out (records + statuses, no real money movement until provider added)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Add ability for users/sellers to add payment info (card + checking account) and store provider-linking path for later integration",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add marketplace gift cards as products ($25–$1000) with company logo and +$8.25 purchase fee; make first posted product editable",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Enable seller-customizable gift cards on storefronts with +$10.10 fee split 50/50 between seller and platform",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Allow businesses/sellers to purchase customizable employee virtual cards ($25 each + loaded amount); payments go to platform wallet",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Set uploaded logo/image as the app’s face (store listing/launcher icon/splash branding)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
+      "reqIds": [
+        "REQ-4"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Improve menu background color and readability",
+  "gameProjectType": "none",
+  "projectName": "Step 1: Enable user accounts with Internet Identity (registration + profile)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

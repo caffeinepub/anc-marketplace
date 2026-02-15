@@ -35,7 +35,7 @@ export default {
                 },
                 muted: {
                     DEFAULT: 'oklch(var(--muted) / <alpha-value>)',
-                    foreground: 'oklch(var(--muted-foreground) / <alpha-value>)'
+                    foreground: 'oklch(var(--muted-foreground))'
                 },
                 accent: {
                     DEFAULT: 'oklch(var(--accent) / <alpha-value>)',
@@ -56,16 +56,11 @@ export default {
                     4: 'oklch(var(--chart-4))',
                     5: 'oklch(var(--chart-5))'
                 },
-                sidebar: {
-                    DEFAULT: 'oklch(var(--sidebar))',
-                    foreground: 'oklch(var(--sidebar-foreground))',
-                    primary: 'oklch(var(--sidebar-primary))',
-                    'primary-foreground': 'oklch(var(--sidebar-primary-foreground))',
-                    accent: 'oklch(var(--sidebar-accent))',
-                    'accent-foreground': 'oklch(var(--sidebar-accent-foreground))',
-                    border: 'oklch(var(--sidebar-border))',
-                    ring: 'oklch(var(--sidebar-ring))'
-                }
+                'menu-surface': 'oklch(var(--menu-surface) / <alpha-value>)',
+                'menu-label': 'oklch(var(--menu-label) / <alpha-value>)',
+                'menu-label-hover': 'oklch(var(--menu-label-hover) / <alpha-value>)',
+                'menu-border': 'oklch(var(--menu-border) / <alpha-value>)',
+                'menu-item-hover': 'oklch(var(--menu-item-hover) / <alpha-value>)'
             },
             borderRadius: {
                 lg: 'var(--radius)',
@@ -73,20 +68,31 @@ export default {
                 sm: 'calc(var(--radius) - 4px)'
             },
             boxShadow: {
-                xs: '0 1px 2px 0 rgba(0,0,0,0.05)',
-                sm: '0 2px 4px 0 rgba(0,0,0,0.06)',
-                md: '0 4px 8px 0 rgba(0,0,0,0.08)',
-                lg: '0 8px 16px 0 rgba(0,0,0,0.1)',
-                xl: '0 12px 24px 0 rgba(0,0,0,0.12)'
+                'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+                'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+                '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+                'inner': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+                'menu': '0 4px 12px 0 rgb(0 0 0 / 0.15), 0 2px 4px 0 rgb(0 0 0 / 0.08)'
             },
             keyframes: {
                 'accordion-down': {
-                    from: { height: '0' },
-                    to: { height: 'var(--radix-accordion-content-height)' }
+                    from: {
+                        height: '0'
+                    },
+                    to: {
+                        height: 'var(--radix-accordion-content-height)'
+                    }
                 },
                 'accordion-up': {
-                    from: { height: 'var(--radix-accordion-content-height)' },
-                    to: { height: '0' }
+                    from: {
+                        height: 'var(--radix-accordion-content-height)'
+                    },
+                    to: {
+                        height: '0'
+                    }
                 }
             },
             animation: {
@@ -95,5 +101,5 @@ export default {
             }
         }
     },
-    plugins: [typography, containerQueries, animate]
+    plugins: [animate, typography, containerQueries]
 };

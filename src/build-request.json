@@ -1,48 +1,93 @@
 {
   "kind": "build_request",
-  "title": "Improve menu background color and readability",
+  "title": "Step 1: Enable user accounts with Internet Identity (registration + profile)",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Update the header navigation menus to use a white or very light blue background with a professional look, ensuring menu items are clearly readable in both desktop dropdown menus and the mobile slide-over menu.",
-      "target": "frontend",
+      "id": "REQ-3",
+      "text": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-20"
         ],
         "quotes": [
-          "The menu needs a white or very light blue background with a professional look that makes the menu items listed readable"
+          "Ok start at number one let me know when you complete that"
         ]
       },
       "acceptanceCriteria": [
-        "Desktop dropdown menus (Customer, Sellers & Businesses, Legal, and authenticated user menu) render on a white or very light blue background and the menu item text is clearly readable.",
-        "Mobile menu (SheetContent) renders on a white or very light blue background and all listed links/sections are clearly readable.",
-        "Hover/focus states maintain strong contrast and do not reduce readability.",
-        "No layout regressions: menu spacing, alignment, and click/tap targets remain functional across desktop and mobile."
+        "A logged-in principal with no prior roles can successfully call a backend method to create/save their own UserProfile (no Unauthorized trap).",
+        "After profile creation, the same principal can successfully call getCallerUserProfile and receive the saved profile.",
+        "After profile creation, getCallerUserRole returns a non-guest role appropriate for a standard signed-in user (using the existing AccessControl role system).",
+        "If a user already has a profile, saving updates it for that principal (idempotent/overwrite behavior is acceptable as long as it is consistent)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Ok start at number one let me know when you complete that"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When called by a logged-in principal that has not completed registration/profile setup, getCallerUserProfile returns null/none and does not trap.",
+        "When called by a logged-in principal that has completed profile setup, getCallerUserProfile returns the stored profile."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Ok start at number one let me know when you complete that"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The app has a routable path (e.g., /profile-setup) that renders the existing ProfileSetup component.",
+        "When a user logs in and the backend returns no profile, the UI directs the user to the Profile Setup page.",
+        "After the profile is successfully saved, the user can navigate to authenticated pages without being redirected back to Profile Setup.",
+        "If the user logs out, authenticated-only routes are not accessible and the app returns to public behavior."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Ok start at number one let me know when you complete that"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When authenticated and profile is missing, the header provides an obvious way to reach the Profile Setup page (link or menu item).",
+        "When authenticated and profile exists, the header behaves as it does today (user icon menu with Settings/Admin Center/Logout).",
+        "Login/Logout still uses the existing Internet Identity hook and continues clearing React Query cache on logout (as in the current Layout)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (read-only UI component sources); apply styling via component composition/props/classes in app components such as frontend/src/components/Layout.tsx.",
-    "Keep changes limited to menu styling/readability; do not introduce new navigation items or routes."
+    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts (immutable paths).",
+    "Keep all Motoko backend logic within the existing single actor in backend/main.mo; only add a migration if state schema changes require it.",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Redesigning the entire site theme or changing non-menu page backgrounds.",
-    "Adding new menu features (search, personalization, role-based rework) beyond styling/readability fixes."
+    "Implement seller onboarding, product listings, cart, checkout, orders, payouts, reviews, messaging, or admin enhancements beyond what is required to support basic user accounts.",
+    "Add third-party authentication providers other than Internet Identity."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }
