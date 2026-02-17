@@ -1,74 +1,40 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T00:53:52.758Z",
-  "summary": "Frontend changes add a /profile-setup route, a registration gate component (RequireRegisteredUser) that redirects authenticated users without a profile to /profile-setup, and header logic intended to surface a profile-setup call-to-action. Backend requirements (REQ-3/REQ-4) cannot be confirmed from the truncated backend diff. Several additional UI/content changes appear in the diff summary but were not requested.",
+  "generatedAt": "2026-02-17T06:01:55.336Z",
+  "summary": "Frontend adds a new /seller/onboarding route, an authenticated+registered-user gate with login-required UI and profile-setup redirect, and a seller onboarding wizard with step configuration and React Query hooks to load/save progress. Backend diff evidence shows new onboarding-related types, but the required backend API methods for fetching/saving onboarding progress are not visible in the provided truncated diff summary.",
   "missing_requirements": [
     {
       "id": "REQ-3",
-      "requirement": "Backend must allow a newly authenticated principal (with no prior #user permission) to create/save their own UserProfile, then fetch it, and automatically grant a standard non-guest user role after profile setup (idempotent update allowed).",
-      "reason": "The backend/main.mo diff is heavily truncated and shows no visible additions/changes to user-profile save/fetch methods, authorization behavior, or role granting. There is no diff evidence that profile save is permitted without existing permissions or that a standard role is granted post-setup.",
+      "requirement": "Backend exposes a query to fetch the caller’s seller onboarding state and an update method to save progress (at minimum: currentStep and updatedAt/lastUpdated).",
+      "reason": "The diff summary shows new backend types (SellerOnboardingStep, SellerOnboardingProgress) and the frontend calls actor.getOnboarding() / actor.saveOnboarding(...), but the backend method implementations/exports for these APIs are not shown in the provided backend/main.mo truncated excerpt.",
       "evidence": [
-        "backend/main.mo (truncated; no relevant methods shown)"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Backend getCallerUserProfile must be safe for authenticated-but-unregistered users by returning null/none instead of trapping Unauthorized.",
-      "reason": "The diff summary provides no evidence of changes to getCallerUserProfile to return null/none for authenticated-but-unregistered users; backend code is truncated before any relevant method implementations are shown.",
-      "evidence": [
-        "backend/main.mo (truncated; no relevant methods shown)"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Enforce the registration gate for authenticated areas including Settings, Messages, Purchase History, and Wishlist (examples given), redirecting authenticated users without a profile to Profile Setup, and allow navigation after profile is saved; logout returns to public behavior.",
-      "reason": "The router diff clearly wraps /admin with RequireRegisteredUser and the file summary mentions /settings, but there is no diff evidence that other authenticated routes (Messages, Purchase History, Wishlist) are similarly gated or even present/updated.",
-      "evidence": [
-        "frontend/src/App.tsx (shows /admin wrapped; truncated before showing other routes)",
-        "frontend-file-summaries.txt (mentions guards wrapping /admin and /settings only)"
+        "backend/main.mo",
+        "frontend/src/hooks/useSellerOnboarding.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Marketing/rebrand content updates across multiple pages (e.g., HomePage and StorePage content about a free marketplace model with a $5 per-sale service fee and an optional Store Builder upgrade).",
-      "reason": "Not requested in REQ-3/4/5/6 and outside the stated non-goals; these are additional product/marketing content changes unrelated to enabling basic user accounts with Internet Identity.",
+      "description": "Adds a Seller Onboarding link in the main header navigation (Sellers & Businesses dropdown and mobile views).",
+      "reason": "The BuildRequest only asked for a new route/page and wizard; it did not request modifying global navigation to add a menu entry.",
       "evidence": [
-        "frontend-file-summaries.txt (HomePage, StorePage summaries)"
-      ]
-    },
-    {
-      "description": "Large additions/changes to startup/B2B/admin dashboards (tabs, deep-linked URL params, access control handling, theme/styling, status badges, additional widgets).",
-      "reason": "Not requested for Step 1 user account registration/profile setup; also appears to expand admin/dashboard functionality beyond what is required to support basic user accounts.",
-      "evidence": [
-        "frontend-file-summaries.txt (StartupDashboard, B2BDashboard, AdminDashboard summaries)"
-      ]
-    },
-    {
-      "description": "New/updated payment success/failure page content and styling changes.",
-      "reason": "Not requested by REQ-3/4/5/6 and unrelated to profile setup/registration gating.",
-      "evidence": [
-        "frontend-file-summaries.txt (PaymentSuccess, PaymentFailure summaries)"
-      ]
-    },
-    {
-      "description": "Global CSS design token overhaul (OKLCH color system and menu tokens).",
-      "reason": "Not requested; unrelated to enabling user accounts with Internet Identity and profile setup gating.",
-      "evidence": [
-        "frontend-file-summaries.txt (frontend/src/index.css summary)"
+        "frontend/src/components/Layout.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.64,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/components/ProfileSetup.tsx",
-    "frontend/src/components/RequireRegisteredUser.tsx",
-    "frontend/src/pages/ProfileSetupPage.tsx",
+    "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
+    "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+    "frontend/src/components/seller-onboarding/onboardingSteps.ts",
+    "frontend/src/hooks/useSellerOnboarding.ts",
+    "frontend/src/pages/SellerOnboardingWizardPage.tsx",
     "project_state.json"
   ]
 }

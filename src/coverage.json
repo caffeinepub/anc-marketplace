@@ -1,55 +1,69 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T00:53:52.761Z",
+  "generatedAt": "2026-02-17T06:01:55.340Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 2,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-3",
-        "summary": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
+        "id": "REQ-1",
+        "summary": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/ProfileSetupPage.tsx",
-          "frontend/src/components/RequireRegisteredUser.tsx",
+          "frontend/src/pages/SellerOnboardingWizardPage.tsx",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
           "frontend/src/App.tsx",
-          "frontend/src/components/ProfileSetup.tsx"
+          "frontend/src/components/Layout.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/ProfileSetupPage.tsx",
-          "frontend/src/components/RequireRegisteredUser.tsx",
+          "frontend/src/pages/SellerOnboardingWizardPage.tsx",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
           "frontend/src/App.tsx",
-          "frontend/src/components/ProfileSetup.tsx"
+          "frontend/src/components/Layout.tsx"
         ]
       },
       {
-        "id": "REQ-6",
-        "summary": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+        "id": "REQ-2",
+        "summary": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
+          "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useSellerOnboarding.ts",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useSellerOnboarding.ts",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/seller-onboarding/onboardingSteps.ts",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/seller-onboarding/onboardingSteps.ts",
+          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
         ]
       }
     ]
@@ -57,14 +71,22 @@
   "changedFiles": [
     "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/components/ProfileSetup.tsx",
-    "frontend/src/components/RequireRegisteredUser.tsx",
-    "frontend/src/pages/ProfileSetupPage.tsx",
+    "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
+    "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+    "frontend/src/components/seller-onboarding/onboardingSteps.ts",
+    "frontend/src/config.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useSellerOnboarding.ts",
+    "frontend/src/pages/SellerOnboardingWizardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -6,6 +6,7 @@ import RequireRegisteredUser from './components/RequireRegisteredUser';
 import HomePage from './pages/HomePage';
 import AdminCenterPage from './pages/AdminCenterPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import SellerOnboardingWizardPage from './pages/SellerOnboardingWizardPage';
 import CustomerFAQ from './pages/CustomerFAQ';
 import SellersBusinessesFAQ from './pages/SellersBusinessesFAQ';
 import CustomerBlog from './pages/CustomerBlog';
@@ -54,6 +55,12 @@ const profileSetupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile-setup',
   component: ProfileSetupPage,
+});
+
+const sellerOnboardingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/seller/onboarding',
+  component: SellerOnboardingWizardPage,
 });
 
 const adminCenterRoute = createRoute({
@@ -163,6 +170,7 @@ const paymentFailureRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   profileSetupRoute,
+  sellerOnboardingRoute,
   adminCenterRoute,
   customerFAQRoute,
   sellersBusinessesFAQRoute,

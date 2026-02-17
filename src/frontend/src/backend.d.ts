@@ -7,6 +7,10 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface AdminPageStatusDetails {
+    version: string;
+    notes: string;
+}
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
@@ -33,6 +37,13 @@ export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
+}
+export interface SellerOnboardingProgress {
+    isCompleted: boolean;
+    lastUpdated: bigint;
+    timestamps: Array<[SellerOnboardingStep, bigint]>;
+    currentStep: SellerOnboardingStep;
+    completedSteps: Array<SellerOnboardingStep>;
 }
 export interface ShoppingItem {
     productName: string;
@@ -65,10 +76,6 @@ export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
 }
-export interface AdminPageStatusDetails {
-    version: string;
-    notes: string;
-}
 export interface UserRoleSummary {
     guestCount: bigint;
     adminCount: bigint;
@@ -95,6 +102,14 @@ export enum AdminPageSection {
     affiliate = "affiliate",
     funding = "funding"
 }
+export enum SellerOnboardingStep {
+    marketing = "marketing",
+    termsAndConditions = "termsAndConditions",
+    signup = "signup",
+    storeSetup = "storeSetup",
+    websiteIntegration = "websiteIntegration",
+    companyDetails = "companyDetails"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -112,6 +127,7 @@ export interface backendInterface {
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getOnboarding(): Promise<SellerOnboardingProgress | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUserRoleSummary(): Promise<UserRoleSummary>;
@@ -119,6 +135,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveOnboarding(wizardState: SellerOnboardingProgress): Promise<void>;
     setOwnerPrincipal(): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;

@@ -1,53 +1,102 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Internet Identity registration gate + Profile Setup route and header state",
+  "title": "ANC Seller Onboarding – Step-by-step wizard (route + guards + progress persistence)",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Add a routable Profile Setup page and enforce a registration gate that redirects authenticated-but-unregistered users to profile setup before accessing authenticated areas.",
+      "id": "REQ-1",
+      "summary": "Add a dedicated /seller/onboarding route that renders a seller onboarding wizard framework with step navigation, progress indicator, per-step placeholder screens, and a safe exit path.",
       "acceptanceCriteria": [
-        "The app has a routable path (e.g., /profile-setup) that renders the existing ProfileSetup component.",
-        "When a user logs in and the backend returns no profile, the UI directs the user to the Profile Setup page.",
-        "After the profile is successfully saved, the user can navigate to authenticated pages without being redirected back to Profile Setup.",
-        "If the user logs out, authenticated-only routes are not accessible and the app returns to public behavior."
+        "A new route exists for seller onboarding (e.g., /seller/onboarding) and renders a dedicated onboarding wizard page.",
+        "The wizard UI shows a clear multi-step progress component (stepper/progress bar) and allows Next/Back navigation between steps.",
+        "Each step has its own placeholder screen with a title and short description indicating it will be implemented later (in English).",
+        "The wizard can be exited safely (e.g., back to home/dashboard) without breaking navigation.",
+        "The implementation composes existing UI components from frontend/src/components/ui without modifying files in immutablePaths."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/ProfileSetupPage.tsx",
+          "path": "frontend/src/pages/SellerOnboardingWizardPage.tsx",
           "operation": "create",
-          "description": "Create a dedicated page component that renders the existing ProfileSetup component and supports an optional post-setup redirect (e.g., via search param). Use the authorization component’s frontend guidance to check registration state via getCallerUserProfile (Verify the component's usage instructions before implementing)."
+          "description": "Create the Seller Onboarding Wizard page UI shell: step list, progress indicator, per-step placeholder panel, Next/Back controls, and an Exit link (e.g., to '/'). Compose existing shadcn/ui components from frontend/src/components/ui for layout/controls. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/RequireRegisteredUser.tsx",
+          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
           "operation": "create",
-          "description": "Add a lightweight route/page guard wrapper that (1) allows public access when not authenticated, (2) redirects authenticated users with a missing profile to /profile-setup (optionally preserving intended destination), and (3) renders children when profile exists. Use the authorization component’s recommended pattern to avoid profile-setup flash by relying on isFetched + userProfile === null (Verify the component's usage instructions before implementing)."
+          "description": "Implement the wizard framework component (render step headers, placeholder content blocks, and navigation actions) used by SellerOnboardingWizardPage. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Register the new /profile-setup route to render ProfileSetupPage, and wire the registration gate by wrapping authenticated routes (at minimum /settings and any other existing authenticated pages wired into the router such as messages/purchase history/wishlist if present) with RequireRegisteredUser so authenticated-but-unregistered users are redirected before seeing protected content."
+          "description": "Register a new TanStack Router route for '/seller/onboarding' and wire it to render SellerOnboardingWizardPage (wrapped with the appropriate access guard from REQ-2)."
         },
         {
-          "path": "frontend/src/components/ProfileSetup.tsx",
+          "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "After a successful saveCallerUserProfile mutation, navigate the user away from profile setup (e.g., back to an intended destination or a default authenticated page) so they are not stuck on the setup screen. Keep all user-facing text in English. Use the authorization component’s frontend guidance for profile setup flows (Verify the component's usage instructions before implementing)."
+          "description": "Wire navigation entry to '/seller/onboarding' in the existing Sellers & Businesses menu (desktop + mobile), so users can access and also safely navigate away via standard app navigation."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Update the header/user-menu to reflect registration state, providing a clear way to finish profile setup when authenticated but unregistered while preserving current login/logout behavior.",
+      "id": "REQ-2",
+      "summary": "Gate the seller onboarding wizard behind Internet Identity authentication and completed user profile; show login-required UI when logged out and redirect to /profile-setup when profile is missing (with redirect back).",
       "acceptanceCriteria": [
-        "When authenticated and profile is missing, the header provides an obvious way to reach the Profile Setup page (link or menu item).",
-        "When authenticated and profile exists, the header behaves as it does today (user icon menu with Settings/Admin Center/Logout).",
-        "Login/Logout still uses the existing Internet Identity hook and continues clearing React Query cache on logout (as in the current Layout)."
+        "If the user is not authenticated with Internet Identity, the onboarding wizard route renders a clear login-required screen with a call-to-action to log in.",
+        "If the user is authenticated but has no saved user profile, they are redirected to /profile-setup with redirect set to the onboarding route (following the existing pattern used by RequireRegisteredUser).",
+        "If the user is authenticated and has a profile, they can access the onboarding wizard page normally."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Layout.tsx",
+          "path": "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
+          "operation": "create",
+          "description": "Create a route-guard component that (1) blocks unauthenticated users with a login-required screen and a Login CTA using useInternetIdentity(), and (2) redirects authenticated users without a profile to '/profile-setup' with 'redirect' set to the current path (matching the existing RequireRegisteredUser pattern). Compose existing shadcn/ui components from frontend/src/components/ui for the screen and CTA. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "In the authenticated header state, query current user profile (via existing React Query hook) and: (1) if authenticated but profile is missing, show an obvious 'Finish Profile Setup' navigation option to /profile-setup; (2) if profile exists, keep current user menu (Settings/Admin Center/Logout) unchanged; (3) keep existing login/logout flow intact including React Query cache clearing. Use the authorization component’s frontend guidance for checking registration state with getCallerUserProfile (Verify the component's usage instructions before implementing)."
+          "description": "Wrap the '/seller/onboarding' route component with RequireAuthenticatedRegisteredUser so the wizard is not accessible without auth + completed profile."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Persist and restore seller onboarding wizard progress via React Query using existing backend capabilities (getOnboarding/saveOnboarding) so refresh/return resumes the last saved step.",
+      "acceptanceCriteria": [
+        "Frontend uses React Query to load onboarding state on wizard entry and resumes at the saved current step if present.",
+        "When the user clicks Next/Back (or marks a step complete), progress is saved and reflected after refresh.",
+        "If no onboarding state exists yet for the caller, the wizard starts at the first step without errors."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useSellerOnboarding.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for seller onboarding progress: a query that calls actor.getOnboarding() and a mutation that calls actor.saveOnboarding(...), with appropriate query keys and cache invalidation after saves."
+        },
+        {
+          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+          "operation": "modify",
+          "description": "Integrate the onboarding progress hooks to (1) initialize wizard state from saved progress (or defaults when null), (2) save progress on Next/Back and when marking steps complete, and (3) resume the saved current step on reload. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Define initial onboarding steps and consistent ordering across the wizard step list, progress indicator, and navigation: Introduction, Business + Identity Verification (placeholder), Store Profile (placeholder), plus explicit future placeholder steps.",
+      "acceptanceCriteria": [
+        "The wizard shows an initial step that explains the onboarding process at a high level (English-only UI text).",
+        "The wizard includes placeholder steps for Business + Identity Verification and Store Profile, clearly labeled as coming next.",
+        "Additional steps (if included) are explicitly labeled as placeholders and do not attempt to collect real data yet.",
+        "Step ordering is consistent across the step list, the progress indicator, and navigation behavior."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/seller-onboarding/onboardingSteps.ts",
+          "operation": "create",
+          "description": "Define the ordered seller onboarding step configuration used by the wizard (titles, short English descriptions, and placeholder flags). Map the UI steps to the existing backend SellerOnboardingStep enum values while presenting the requested labels (Introduction, Business + Identity Verification, Store Profile) and additional clearly-marked placeholders for future expansion."
+        },
+        {
+          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+          "operation": "modify",
+          "description": "Use the centralized onboardingSteps definition to render the step list, progress indicator, and navigation logic so ordering and labels remain consistent. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
         }
       ]
     }

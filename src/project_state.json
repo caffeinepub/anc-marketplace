@@ -1,31 +1,44 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Building a multi-vendor marketplace with Amazon/Shopify-like capabilities, plus internal-wallet financial features (virtual cards, gift cards, payouts placeholders), role-based user categories, and external integrations (ID verification + payment providers via API/webhooks).",
+  "summary": "Project includes Step 1 Internet Identity login flow deployed (Version 41). Step 2 will implement seller onboarding in phases: first an onboarding step-by-step wizard structure, then business/identity verification, then store profile form.",
   "architectural_notes": [
-    "Virtual cards and employee cards are internal-only; generate random valid-format card numbers/CVV that are non-functional externally.",
-    "External payouts to banks/cards require third-party providers (e.g., Stripe/PayPal/Payoneer) integrated via API calls + webhooks; canister stores balances/transactions and payout requests.",
-    "Seller gift-card fee logic: platform gift cards add $8.25 fee; seller gift cards add $10.10 fee split 50/50 (seller/platform).",
-    "Sellers/businesses can fully customize their gift cards (including uploading images/logos)."
+    "Seller onboarding implementation order: (1) wizard structure, then (2) business/identity verification, then (3) store profile form."
   ],
   "known_issues": [
-    "Build/deploy attempts previously failed when too many features were attempted at once; proceed in small incremental steps."
+    "Draft app expired and required redeploy/rebuild to continue work."
   ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-frontend-add-a-dedicated-profile-setup-route-page-to-the-router-using-the-existing-profilesetup-component-and-enforce-a-simple-registration-gate-if-the-user-is-authenticated-with-internet-identity-but-has-no-saved-profile-redirect-them-to-profile-setup-before-allowing-access-to-authenticated-areas-e-g-settings-messages-purchase-history-wishlist",
-      "title": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
+      "id": "feature-add-a-new-seller-onboarding-wizard-route-and-page-that-provides-a-step-by-step-wizard-framework-navigation-progress-indicator-step-list-with-placeholder-screens-for-each-onboarding-step-starting-with-the-wizard-structure-itself-no-full-business-verification-or-store-profile-forms-yet",
+      "title": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
       "reqIds": [
-        "REQ-5"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-update-the-authenticated-header-user-menu-behavior-to-reflect-account-state-show-a-clear-navigation-option-to-finish-profile-setup-when-authenticated-but-incomplete-and-keep-existing-login-logout-behavior-intact",
-      "title": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
+      "id": "feature-require-authentication-and-completed-basic-user-profile-existing-profile-setup-flow-before-allowing-access-to-the-seller-onboarding-wizard-unauthenticated-users-should-be-prompted-to-log-in-and-authenticated-users-without-a-profile-should-be-redirected-to-profile-setup-with-a-redirect-back-to-the-onboarding-route",
+      "title": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
       "reqIds": [
-        "REQ-6"
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-seller-onboarding-wizard-progress-current-step-completed-steps-timestamps-so-that-refreshing-the-page-or-returning-later-restores-the-wizard-to-the-last-saved-step-implement-this-with-a-backend-api-for-the-caller-s-onboarding-state-and-a-react-query-hook-on-the-frontend",
+      "title": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-define-the-initial-onboarding-steps-in-the-wizard-to-match-the-upcoming-implementation-order-1-wizard-introduction-overview-2-business-identity-verification-placeholder-3-store-profile-placeholder-plus-any-additional-placeholder-steps-needed-to-support-future-expansion-e-g-storefront-template-products-without-implementing-their-detailed-forms-yet",
+      "title": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
+      "reqIds": [
+        "REQ-4"
       ],
       "version": 1
     }
@@ -33,95 +46,24 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Implement user accounts with Internet Identity (buyer + seller identities)",
+      "summary": "Implement seller onboarding step-by-step wizard structure (UI + step framework/placeholders)",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Build internal virtual card system linked to internal balances (card objects, balances, ledgers, transactions) and assign owner two cards (available balance vs credit balance)",
+      "summary": "Add Business + Identity Verification step(s) to seller onboarding (business info + documents + identity verification)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Virtual card rendering/data: 16-digit random valid-format numbers (non-functional), exp month/year, CVV, user name, company name+logo, and card-type label/logo styling using provided logo",
+      "summary": "Add Store Profile creation/editing to seller onboarding (store name, basic profile info)",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Configure site-wide user categories/roles and required sign-in/sign-up/register/verify flows and permissions",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Create placeholder identity verification module (pluggable for future external API/webhooks)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Add secure integration framework for connecting external sites/apps/partners via API keys + webhooks",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Add payment-provider 'holding place' for Payoneer/Stripe/PayPal transactions in/out (records + statuses, no real money movement until provider added)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Add ability for users/sellers to add payment info (card + checking account) and store provider-linking path for later integration",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add marketplace gift cards as products ($25–$1000) with company logo and +$8.25 purchase fee; make first posted product editable",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Enable seller-customizable gift cards on storefronts with +$10.10 fee split 50/50 between seller and platform",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Allow businesses/sellers to purchase customizable employee virtual cards ($25 each + loaded amount); payments go to platform wallet",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Set uploaded logo/image as the app’s face (store listing/launcher icon/splash branding)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
-      "reqIds": [
-        "REQ-4"
-      ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Step 1: Enable user accounts with Internet Identity (registration + profile)",
+  "projectName": "ANC Seller Onboarding",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,7 +1,7 @@
 {
-  "frontend/src/App.tsx": "Main application component with TanStack Router setup including /profile-setup route and RequireRegisteredUser guards wrapping authenticated routes (/admin and /settings).",
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup including new /seller/onboarding route and all existing routes with appropriate guards.",
   "frontend/src/hooks/useQueries.ts": "React Query hooks for backend operations including admin checks, user profiles, dashboard data, and Stripe configuration, with mock AdminFinancialState type and data until backend implements getAdminFinancialState.",
-  "frontend/src/components/Layout.tsx": "Application layout component with header navigation that displays \"Finish Profile Setup\" button when authenticated but no profile exists, and standard user menu when profile is complete.",
+  "frontend/src/components/Layout.tsx": "Application layout component with header navigation that includes new Seller Onboarding link in the Sellers & Businesses dropdown menu for both desktop and mobile views.",
   "frontend/src/components/ProfileSetup.tsx": "Modal component for first-time user profile setup requiring full name and email, with optional onComplete callback for post-setup navigation.",
   "frontend/src/pages/HomePage.tsx": "Landing page rebranded to \"ANC Marketplace\" with hero section, comprehensive business solutions, and pricing information for the free marketplace model with $5 per-sale service fee and optional Store Builder upgrade.",
   "frontend/src/pages/StorePage.tsx": "Store page with products tab and pricing info tab, clearly explaining the free marketplace model with $5 per-sale service fee and optional Store Builder upgrade (fixed missing closing brace).",
@@ -89,5 +89,10 @@
   "frontend/src/components/admin/transfers/TransfersStubPanel.tsx": "Bank and debit card transfer workflow stub panel for recording transfer intents (deposit/withdrawal) with clear messaging that real banking rails are not supported.",
   "frontend/src/hooks/useStripeCheckout.ts": "React Query mutation hook that creates Stripe checkout sessions, parses JSON response, validates redirect URL, and performs full-page redirect to Stripe (not router navigation).",
   "frontend/src/pages/ProfileSetupPage.tsx": "Dedicated page component that renders the ProfileSetup component with redirect support via search params, navigating users to their intended destination after profile completion.",
-  "frontend/src/components/RequireRegisteredUser.tsx": "Route guard component that allows public access when not authenticated, redirects authenticated users without profiles to /profile-setup, and renders children only when profile exists."
+  "frontend/src/components/RequireRegisteredUser.tsx": "Route guard component that allows public access when not authenticated, redirects authenticated users without profiles to /profile-setup, and renders children only when profile exists.",
+  "frontend/src/pages/SellerOnboardingWizardPage.tsx": "Seller onboarding wizard page that wraps the wizard component with RequireAuthenticatedRegisteredUser guard to ensure users are logged in and have completed profile setup.",
+  "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx": "Route guard component that blocks unauthenticated users with a login-required screen, redirects authenticated users without profiles to /profile-setup with redirect parameter, and renders children only when both authentication and profile exist.",
+  "frontend/src/components/seller-onboarding/onboardingSteps.ts": "Centralized configuration defining the ordered seller onboarding steps with titles, descriptions, placeholder flags, and helper functions for step navigation and lookup.",
+  "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx": "Multi-step wizard component with progress indicator, step list sidebar, placeholder content screens, Next/Back navigation, and React Query integration for persisting and restoring onboarding progress across sessions.",
+  "frontend/src/hooks/useSellerOnboarding.ts": "React Query hooks for seller onboarding progress including query to fetch saved state and mutation to save wizard progress with automatic cache invalidation."
 }

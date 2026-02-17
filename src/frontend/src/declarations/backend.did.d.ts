@@ -40,6 +40,19 @@ export interface MarketplaceRoadmap {
   'roadmapId' : string,
   'notes' : string,
 }
+export interface SellerOnboardingProgress {
+  'isCompleted' : boolean,
+  'lastUpdated' : bigint,
+  'timestamps' : Array<[SellerOnboardingStep, bigint]>,
+  'currentStep' : SellerOnboardingStep,
+  'completedSteps' : Array<SellerOnboardingStep>,
+}
+export type SellerOnboardingStep = { 'marketing' : null } |
+  { 'termsAndConditions' : null } |
+  { 'signup' : null } |
+  { 'storeSetup' : null } |
+  { 'websiteIntegration' : null } |
+  { 'companyDetails' : null };
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
@@ -121,6 +134,7 @@ export interface _SERVICE {
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
@@ -128,6 +142,7 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveOnboarding' : ActorMethod<[SellerOnboardingProgress], undefined>,
   'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,

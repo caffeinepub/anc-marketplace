@@ -7,14 +7,31 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
+import Nat "mo:core/Nat";
+import Order "mo:core/Order";
 import Stripe "stripe/stripe";
 import OutCall "http-outcalls/outcall";
 import Principal "mo:core/Principal";
-import Order "mo:core/Order";
-import Nat "mo:core/Nat";
 
 actor {
   include MixinStorage();
+
+  public type SellerOnboardingStep = {
+    #signup;
+    #companyDetails;
+    #websiteIntegration;
+    #termsAndConditions;
+    #storeSetup;
+    #marketing;
+  };
+
+  public type SellerOnboardingProgress = {
+    currentStep : SellerOnboardingStep;
+    completedSteps : [SellerOnboardingStep];
+    timestamps : [(SellerOnboardingStep, Int)];
+    lastUpdated : Int;
+    isCompleted : Bool;
+  };
 
   public type PolicyIdentifier = {
     #privacy;
@@ -439,6 +456,7 @@ actor {
 
   let accessControlState = AccessControl.initState();
 
+  let onboardingStore = Map.empty<Principal, SellerOnboardingProgress>();
   let userStore = Map.empty<Principal, UserProfile>();
   let storeBuilderConfigStore = Map.empty<Principal, StoreBuilderConfig>();
   var globalDomainPurchaseLink : ?Text = null;
@@ -915,5 +933,13 @@ actor {
         knowledgeBase.add(entry.id, entry);
       };
     };
+  };
+
+  public shared ({ caller }) func saveOnboarding(wizardState : SellerOnboardingProgress) : async () {
+    onboardingStore.add(caller, wizardState);
+  };
+
+  public query ({ caller }) func getOnboarding() : async ?SellerOnboardingProgress {
+    onboardingStore.get(caller);
   };
 };

@@ -1,90 +1,95 @@
 {
   "kind": "build_request",
-  "title": "Step 1: Enable user accounts with Internet Identity (registration + profile)",
+  "title": "Seller onboarding step-by-step wizard structure (placeholders for verification + store profile)",
+  "projectName": "ANC Seller Onboarding",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-3",
-      "text": "Backend: Allow a newly authenticated Internet Identity principal to create and fetch their own user account profile without first having an existing #user permission, and automatically grant the caller the standard user role when they complete profile setup.",
-      "target": "backend",
+      "id": "REQ-1",
+      "text": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-20"
+          "msg-1"
         ],
         "quotes": [
-          "Ok start at number one let me know when you complete that"
+          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
         ]
       },
       "acceptanceCriteria": [
-        "A logged-in principal with no prior roles can successfully call a backend method to create/save their own UserProfile (no Unauthorized trap).",
-        "After profile creation, the same principal can successfully call getCallerUserProfile and receive the saved profile.",
-        "After profile creation, getCallerUserRole returns a non-guest role appropriate for a standard signed-in user (using the existing AccessControl role system).",
-        "If a user already has a profile, saving updates it for that principal (idempotent/overwrite behavior is acceptable as long as it is consistent)."
+        "A new route exists for seller onboarding (e.g., /seller/onboarding) and renders a dedicated onboarding wizard page.",
+        "The wizard UI shows a clear multi-step progress component (stepper/progress bar) and allows Next/Back navigation between steps.",
+        "Each step has its own placeholder screen with a title and short description indicating it will be implemented later (in English).",
+        "The wizard can be exited safely (e.g., back to home/dashboard) without breaking navigation.",
+        "The implementation composes existing UI components from frontend/src/components/ui without modifying files in immutablePaths."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "If the user is not authenticated with Internet Identity, the onboarding wizard route renders a clear login-required screen with a call-to-action to log in.",
+        "If the user is authenticated but has no saved user profile, they are redirected to /profile-setup with redirect set to the onboarding route (following the existing pattern used by RequireRegisteredUser).",
+        "If the user is authenticated and has a profile, they can access the onboarding wizard page normally."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes query to fetch the caller’s seller onboarding state and an update method to save progress (at minimum: currentStep and updatedAt).",
+        "Frontend uses React Query to load onboarding state on wizard entry and resumes at the saved current step if present.",
+        "When the user clicks Next/Back (or marks a step complete), progress is saved and reflected after refresh.",
+        "If no onboarding state exists yet for the caller, the wizard starts at the first step without errors."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Backend: Make getCallerUserProfile safe for authenticated-but-unregistered users by returning null (or equivalent optional none) instead of trapping with an Unauthorized error, so the frontend can decide whether to show the profile setup flow.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-20"
-        ],
-        "quotes": [
-          "Ok start at number one let me know when you complete that"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When called by a logged-in principal that has not completed registration/profile setup, getCallerUserProfile returns null/none and does not trap.",
-        "When called by a logged-in principal that has completed profile setup, getCallerUserProfile returns the stored profile."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Frontend: Add a dedicated Profile Setup route/page to the router using the existing ProfileSetup component, and enforce a simple registration gate: if the user is authenticated with Internet Identity but has no saved profile, redirect them to Profile Setup before allowing access to authenticated areas (e.g., Settings, Messages, Purchase History, Wishlist).",
+      "text": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-20"
+          "msg-1"
         ],
         "quotes": [
-          "Ok start at number one let me know when you complete that"
+          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
         ]
       },
       "acceptanceCriteria": [
-        "The app has a routable path (e.g., /profile-setup) that renders the existing ProfileSetup component.",
-        "When a user logs in and the backend returns no profile, the UI directs the user to the Profile Setup page.",
-        "After the profile is successfully saved, the user can navigate to authenticated pages without being redirected back to Profile Setup.",
-        "If the user logs out, authenticated-only routes are not accessible and the app returns to public behavior."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Frontend: Update the authenticated header/user-menu behavior to reflect account state: show a clear navigation option to finish profile setup when authenticated but incomplete, and keep existing Login/Logout behavior intact.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-20"
-        ],
-        "quotes": [
-          "Ok start at number one let me know when you complete that"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When authenticated and profile is missing, the header provides an obvious way to reach the Profile Setup page (link or menu item).",
-        "When authenticated and profile exists, the header behaves as it does today (user icon menu with Settings/Admin Center/Logout).",
-        "Login/Logout still uses the existing Internet Identity hook and continues clearing React Query cache on logout (as in the current Layout)."
+        "The wizard shows an initial step that explains the onboarding process at a high level (English-only UI text).",
+        "The wizard includes placeholder steps for Business + Identity Verification and Store Profile, clearly labeled as coming next.",
+        "Additional steps (if included) are explicitly labeled as placeholders and do not attempt to collect real data yet.",
+        "Step ordering is consistent across the step list, the progress indicator, and navigation behavior."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts (immutable paths).",
-    "Keep all Motoko backend logic within the existing single actor in backend/main.mo; only add a migration if state schema changes require it.",
-    "Use English for any user-facing text."
+    "Backend must remain a single Motoko actor with logic in backend/main.mo; only add backend/migration.mo if an upgrade-safe state migration is required.",
+    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any files under frontend/src/components/ui; compose them instead.",
+    "Use English for all user-facing text in the onboarding wizard."
   ],
   "nonGoals": [
-    "Implement seller onboarding, product listings, cart, checkout, orders, payouts, reviews, messaging, or admin enhancements beyond what is required to support basic user accounts.",
-    "Add third-party authentication providers other than Internet Identity."
+    "Do not implement the actual Business + Identity Verification data capture, document upload, or third-party verification integrations in this build (this is the next phase after the wizard structure).",
+    "Do not implement the Store Profile creation/editing forms (store name, business info fields, profile picture/logo upload, logo builder) in this build (this is the phase after verification per the user’s requested order).",
+    "Do not implement storefront template selection, product management, compliance document signing, or $10/month standalone website/app builder flows in this build."
   ],
   "imageRequirements": {
     "required": [],

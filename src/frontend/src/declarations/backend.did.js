@@ -77,6 +77,21 @@ export const UserProfile = IDL.Record({
   'subscriptionId' : IDL.Opt(IDL.Text),
   'activeRole' : AccessRole,
 });
+export const SellerOnboardingStep = IDL.Variant({
+  'marketing' : IDL.Null,
+  'termsAndConditions' : IDL.Null,
+  'signup' : IDL.Null,
+  'storeSetup' : IDL.Null,
+  'websiteIntegration' : IDL.Null,
+  'companyDetails' : IDL.Null,
+});
+export const SellerOnboardingProgress = IDL.Record({
+  'isCompleted' : IDL.Bool,
+  'lastUpdated' : IDL.Int,
+  'timestamps' : IDL.Vec(IDL.Tuple(SellerOnboardingStep, IDL.Int)),
+  'currentStep' : SellerOnboardingStep,
+  'completedSteps' : IDL.Vec(SellerOnboardingStep),
+});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -149,6 +164,11 @@ export const idlService = IDL.Service({
   'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getOnboarding' : IDL.Func(
+      [],
+      [IDL.Opt(SellerOnboardingProgress)],
+      ['query'],
+    ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -160,6 +180,7 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveOnboarding' : IDL.Func([SellerOnboardingProgress], [], []),
   'setOwnerPrincipal' : IDL.Func([], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'transform' : IDL.Func(
@@ -243,6 +264,21 @@ export const idlFactory = ({ IDL }) => {
     'subscriptionId' : IDL.Opt(IDL.Text),
     'activeRole' : AccessRole,
   });
+  const SellerOnboardingStep = IDL.Variant({
+    'marketing' : IDL.Null,
+    'termsAndConditions' : IDL.Null,
+    'signup' : IDL.Null,
+    'storeSetup' : IDL.Null,
+    'websiteIntegration' : IDL.Null,
+    'companyDetails' : IDL.Null,
+  });
+  const SellerOnboardingProgress = IDL.Record({
+    'isCompleted' : IDL.Bool,
+    'lastUpdated' : IDL.Int,
+    'timestamps' : IDL.Vec(IDL.Tuple(SellerOnboardingStep, IDL.Int)),
+    'currentStep' : SellerOnboardingStep,
+    'completedSteps' : IDL.Vec(SellerOnboardingStep),
+  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -312,6 +348,11 @@ export const idlFactory = ({ IDL }) => {
     'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getOnboarding' : IDL.Func(
+        [],
+        [IDL.Opt(SellerOnboardingProgress)],
+        ['query'],
+      ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -323,6 +364,7 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveOnboarding' : IDL.Func([SellerOnboardingProgress], [], []),
     'setOwnerPrincipal' : IDL.Func([], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'transform' : IDL.Func(
