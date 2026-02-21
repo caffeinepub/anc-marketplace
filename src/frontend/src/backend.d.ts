@@ -183,6 +183,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
+    getOwnerEmail(): Promise<string>;
     getPendingRoleApplications(): Promise<Array<RoleApplication>>;
     getSellerEarningsSummary(timeFrame: TimeFrame): Promise<SellerEarningsSummary>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;

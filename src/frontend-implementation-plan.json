@@ -1,96 +1,41 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Center Access Control and Hero Section Text Visibility",
+  "title": "Fix Admin Center Backend Initialization Hang",
   "requirements": [
     {
       "id": "REQ-2",
-      "summary": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
+      "summary": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
       "acceptanceCriteria": [
-        "Text 'Our mission is your success' displays in bold white on HomePage",
-        "Text 'Explore Our Services' displays in bold white on HomePage",
-        "Both text elements are clearly visible against the dark hero background",
-        "Font weight is bold (font-weight: 700 or font-bold class)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/HomePage.tsx",
-          "operation": "modify",
-          "description": "Modify the hero section to apply bold white styling to the text 'Our mission is your success' and 'Explore Our Services'. Update the className attributes to include 'font-bold text-white' classes, ensuring both text elements have sufficient contrast against the dark hero background image (frontend/public/assets/generated/hero-business.dim_1200x600.jpg). Remove any existing color classes that may conflict with white text."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
-      "acceptanceCriteria": [
-        "All dropdown menus have solid opaque backgrounds",
-        "All modal dialogs have solid opaque backgrounds",
-        "All popup overlays have solid backgrounds with no transparency",
-        "Text remains readable when overlays appear on top of existing content"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Update the mobile menu Sheet component and role-based dropdown menus (Customer, Sellers/Businesses, Account) to have solid opaque backgrounds. Add bg-white or bg-gray-900 classes with explicit opacity-100 to ensure no transparency. Remove any bg-opacity or backdrop-blur classes that create semi-transparent effects."
-        },
-        {
-          "path": "frontend/src/components/ProfileSetup.tsx",
-          "operation": "modify",
-          "description": "Ensure the modal dialog has a solid opaque background by adding bg-white class to the DialogContent component. Remove any transparency or blur effects that may reduce text readability when the modal appears over page content."
-        },
-        {
-          "path": "frontend/src/components/security/HumanCheckDialog.tsx",
-          "operation": "modify",
-          "description": "Update the DialogContent to have a solid opaque background by applying bg-white class and removing any transparency effects. Ensure the dialog overlay and content have sufficient opacity for text readability."
-        },
-        {
-          "path": "frontend/src/components/assistant/AssistantWidget.tsx",
-          "operation": "modify",
-          "description": "Ensure the AssistantChatPanel Card component has a solid opaque background by adding bg-white class. Remove any backdrop-blur or transparency classes to maintain text readability when the widget overlay appears on top of page content."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Add a global CSS rule to enforce solid backgrounds on all dropdown menus, popovers, and dialog overlays. Target shadcn/ui component classes like .dropdown-content, .popover-content, and .dialog-content to apply background-color with full opacity. Override any default semi-transparent backgrounds in the component library."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
-      "acceptanceCriteria": [
-        "All critical admin features are functional and properly integrated",
-        "Admin dashboard displays financial overview correctly",
-        "Role assignment and access control management works as expected",
-        "Transaction history is accessible and displays properly"
+        "The Admin Center transitions from loading state to displaying the full dashboard once initialization completes",
+        "Error handling is in place for initialization failures",
+        "The user can access all admin functionality after successful initialization"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Review the existing admin dashboard implementation and ensure all tabs (Financial Overview, Payment Processors, Revenue Inflow, Fee Configuration, Transactions, Employee Payments, Transfers, User Role Management, Marketplace Roadmap, Access Links, Role Applications) are fully wired and functional. Verify that the access control initialization using useInitializeAccessControl hook is working correctly and displays appropriate error messages when initialization fails. Ensure error states show actionable retry buttons and clear error messages."
+          "description": "Review and fix the initialization logic that causes the Admin Center to hang on 'Connecting to backend...' indefinitely. Ensure the component properly handles the initializeAccessControl call, adds timeout and retry logic, implements proper error states for initialization failures, and transitions from loading to dashboard content once the authenticated principal is registered in the backend. Add console logging to track initialization flow and identify where the hang occurs."
         },
         {
-          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Review the financial overview cards displaying available funds, business credit account, and payroll savings. Ensure currency formatting from cents to USD is correct and all data from useGetAdminFinancialState hook is properly displayed. Add loading states and error handling if missing."
+          "description": "Review the useInitializeAccessControl hook to ensure it properly handles promise resolution, timeout scenarios, and error states. Add retry logic with exponential backoff if initialization fails, and ensure the mutation properly invalidates related queries after successful initialization. Verify that the hook returns appropriate loading and error states that the AdminCenterPage can consume."
         },
         {
-          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+          "path": "frontend/src/hooks/useActor.ts",
           "operation": "modify",
-          "description": "Review the transaction history table displaying all transactions via useGetAllTransactionHistory hook. Ensure filtering, currency formatting, date formatting, status badges, and refresh functionality work correctly. Add pagination or virtual scrolling if the transaction list can grow large."
+          "description": "Review the actor initialization logic to ensure the authenticated actor is properly created and available before the AdminCenterPage attempts to call initializeAccessControl. Verify that the actor is not in a perpetual loading state and that authentication state changes are properly reflected. Add safeguards to prevent initialization calls when the actor is not ready."
         },
         {
-          "path": "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "path": "frontend/src/components/admin/AdminConsoleLayout.tsx",
           "operation": "modify",
-          "description": "Review the role applications management panel. Ensure the approve/reject actions using useApproveRoleApplication and useRejectRoleApplication mutations work correctly with proper error handling and optimistic updates. Verify that the panel refreshes the pending applications list after actions complete."
+          "description": "Add loading state indicators and error handling UI to the AdminConsoleLayout component. Ensure that the layout can display appropriate feedback during initialization (loading spinner, progress messages) and gracefully handle initialization errors with user-friendly error messages and retry options."
         },
         {
-          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
+          "path": "frontend/src/pages/AdminDashboard.tsx",
           "operation": "modify",
-          "description": "Review the user role summary dashboard displaying counts by role (admins, users, guests) via useGetUserRoleSummary hook. Ensure loading and error states are handled properly and the summary updates when roles change."
+          "description": "Review the AdminDashboard component's initialization handling to ensure consistency with AdminCenterPage. If this component also handles access control initialization, apply the same timeout, retry, and error handling improvements. Ensure both admin pages have consistent behavior and don't duplicate initialization calls unnecessarily."
         }
       ]
     }

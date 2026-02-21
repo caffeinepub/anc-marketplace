@@ -282,6 +282,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
+    getOwnerEmail(): Promise<string>;
     getPendingRoleApplications(): Promise<Array<RoleApplication>>;
     getSellerEarningsSummary(timeFrame: TimeFrame): Promise<SellerEarningsSummary>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
@@ -526,6 +527,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getOnboarding();
             return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getOwnerEmail(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOwnerEmail();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOwnerEmail();
+            return result;
         }
     }
     async getPendingRoleApplications(): Promise<Array<RoleApplication>> {

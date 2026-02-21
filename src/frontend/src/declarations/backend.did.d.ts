@@ -180,6 +180,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
+  'getOwnerEmail' : ActorMethod<[], string>,
   'getPendingRoleApplications' : ActorMethod<[], Array<RoleApplication>>,
   'getSellerEarningsSummary' : ActorMethod<[TimeFrame], SellerEarningsSummary>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,

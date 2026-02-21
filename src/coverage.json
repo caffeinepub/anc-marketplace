@@ -1,62 +1,32 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-21T01:30:55.511Z",
+  "generatedAt": "2026-02-21T19:37:05.045Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 2,
+    "total": 2,
+    "implemented": 0,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+        "summary": "Diagnose and fix the backend access control initialization logic that is causing the Admin Center to hang on 'Connecting to backend...' indefinitely despite successfully detecting the authenticated principal (whlz5-24wky-cak5n-dcfue-ja2x5-...)",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/HomePage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/HomePage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/components/ProfileSetup.tsx",
-          "frontend/src/components/security/HumanCheckDialog.tsx",
-          "frontend/src/components/assistant/AssistantWidget.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/components/ProfileSetup.tsx",
-          "frontend/src/components/security/HumanCheckDialog.tsx",
-          "frontend/src/components/assistant/AssistantWidget.tsx",
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
+        "summary": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
         "status": "missing",
         "plannedFiles": [
           "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "frontend/src/components/admin/RoleApplicationsPanel.tsx",
-          "frontend/src/components/admin/UserRoleManagement.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/components/admin/AdminConsoleLayout.tsx",
+          "frontend/src/pages/AdminDashboard.tsx"
         ],
         "matchedFiles": []
       }
@@ -64,22 +34,9 @@
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/Layout.tsx",
-    "frontend/src/components/ProfileSetup.tsx",
-    "frontend/src/components/assistant/AssistantWidget.tsx",
-    "frontend/src/components/security/HumanCheckDialog.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/index.css",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/ProfileSetupPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

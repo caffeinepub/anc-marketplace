@@ -1,76 +1,36 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "ANC Marketplace - E-commerce platform with admin center, product listings, and user authentication. Currently fixing admin access control initialization and UI visibility issues.",
+  "summary": "ICP Admin Center project with backend access control initialization issues being diagnosed and fixed",
   "architectural_notes": [
-    "Admin access control uses Internet Identity principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe with email anc.electronics.n.more@gmail.com as Owner Admin",
-    "Existing admin features include admin dashboard, financial account with transactions, and role assignment access control"
+    "Admin Center frontend authenticates and detects principal ID but backend initialization hangs",
+    "Backend access control initialization logic needs fixing to complete connection handshake"
   ],
   "known_issues": [
-    "Admin Center showing 'Initialization Failed' error with 'Actor not available' message - access control not properly initialized in backend canister"
+    "Admin Center shows 'Initializing...' and 'Connecting to backend...' indefinitely - backend initialization not completing",
+    "Backend access control initialization hanging despite frontend successfully detecting authenticated principal"
   ],
   "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-change-hero-section-text-our-mission-is-your-success-and-explore-our-services-to-bold-white-color-for-visibility-against-the-dark-background",
-      "title": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-solid-backgrounds-to-all-popups-dropdown-menus-and-modal-overlays-throughout-the-application-to-ensure-text-readability-when-displayed-over-other-content",
-      "title": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    }
-  ],
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Initialize admin access control with two Internet Identity principals and email as Owner Admin",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Change hero section text ('Our mission is your success' and 'Explore Our Services') to bold white for visibility",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add solid backgrounds to all popups, dropdowns, and menus for readability",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Enhance existing admin code with any vital missing functionality",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+      "summary": "Diagnose and fix the backend access control initialization logic that is causing the Admin Center to hang on 'Connecting to backend...' indefinitely despite successfully detecting the authenticated principal (whlz5-24wky-cak5n-dcfue-ja2x5-...)",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-8",
-      "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
+      "id": "AR-2",
+      "summary": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
       "reqIds": [
-        "REQ-4"
+        "REQ-2"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "ANC Marketplace",
+  "projectName": "Fix Admin Center backend initialization hang",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

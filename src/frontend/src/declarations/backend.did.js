@@ -223,6 +223,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(SellerOnboardingProgress)],
       ['query'],
     ),
+  'getOwnerEmail' : IDL.Func([], [IDL.Text], ['query']),
   'getPendingRoleApplications' : IDL.Func(
       [],
       [IDL.Vec(RoleApplication)],
@@ -478,6 +479,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(SellerOnboardingProgress)],
         ['query'],
       ),
+    'getOwnerEmail' : IDL.Func([], [IDL.Text], ['query']),
     'getPendingRoleApplications' : IDL.Func(
         [],
         [IDL.Vec(RoleApplication)],

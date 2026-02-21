@@ -1,102 +1,60 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Center Access Control and Hero Section Text Visibility",
-  "projectName": "ANC Marketplace",
+  "title": "Fix Admin Center backend initialization hang",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+      "text": "Diagnose and fix the backend access control initialization logic that is causing the Admin Center to hang on 'Connecting to backend...' indefinitely despite successfully detecting the authenticated principal (whlz5-24wky-cak5n-dcfue-ja2x5-...)",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-recent-11",
+          "msg-recent-12",
+          "msg-recent-13"
         ],
         "quotes": [
-          "adding my 2 internet identities and my email as admin owners",
-          "e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe",
-          "anc.electronics.n.more@gmail.com"
+          "Ok this is what I am getting now and that is it",
+          "Diagnose and fix",
+          "Admin Center is stuck on 'Initializing...' and 'Connecting to backend...'"
         ]
       },
       "acceptanceCriteria": [
-        "Both Internet Identity principals are added as Owner Admin in backend access control",
-        "Email anc.electronics.n.more@gmail.com is registered as Owner Admin",
-        "Admin Center page loads successfully without 'Actor not available' error",
-        "Access control initialization succeeds on Admin Center page load"
+        "The backend initialization completes successfully without hanging",
+        "The Admin Center proceeds past the 'Connecting to backend...' spinner",
+        "The authenticated principal is properly registered in the backend access control system"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
+      "text": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-recent-11",
+          "msg-recent-12"
         ],
         "quotes": [
-          "The text I am referring to that needs to be a bold white to be visible is included in the picture",
-          "Our mission is your success",
-          "Explore Our Services"
+          "The frontend can now see your authenticated principal, but the backend is still having trouble completing the initialization"
         ]
       },
       "acceptanceCriteria": [
-        "Text 'Our mission is your success' displays in bold white on HomePage",
-        "Text 'Explore Our Services' displays in bold white on HomePage",
-        "Both text elements are clearly visible against the dark hero background",
-        "Font weight is bold (font-weight: 700 or font-bold class)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Ensure all pop ups, drop-down menus, options etc has solid backgrounds so everyone can read what it says when it is displayed on top of the current page"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All dropdown menus have solid opaque backgrounds",
-        "All modal dialogs have solid opaque backgrounds",
-        "All popup overlays have solid backgrounds with no transparency",
-        "Text remains readable when overlays appear on top of existing content"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Existing admin code already exists, if there is anything vital missing that will help it work better please add to the existing code"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All critical admin features are functional and properly integrated",
-        "Admin dashboard displays financial overview correctly",
-        "Role assignment and access control management works as expected",
-        "Transaction history is accessible and displays properly"
+        "The Admin Center transitions from loading state to displaying the full dashboard once initialization completes",
+        "Error handling is in place for initialization failures",
+        "The user can access all admin functionality after successful initialization"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the existing admin dashboard architecture",
-    "Preserve all existing admin functionality while fixing access control",
-    "Use only the two provided Internet Identity principals and email for Owner Admin setup",
-    "Only change the specific hero section text colors mentioned by the user",
-    "Do not change the 'ANC Marketplace' header text color"
+    "Do not change the single-actor backend architecture",
+    "Preserve the existing access control structure and role-based permissions",
+    "Maintain compatibility with the current Internet Identity authentication flow"
   ],
   "nonGoals": [
-    "Redesigning the entire admin interface",
-    "Adding new admin features beyond what currently exists",
-    "Changing color schemes or branding beyond the specific text mentioned",
-    "Modifying authentication flows or Internet Identity integration"
+    "Adding new admin features or dashboard sections",
+    "Modifying the authentication mechanism",
+    "Changing the UI design of the Admin Center",
+    "Adding additional access control roles"
   ],
   "imageRequirements": {
     "required": [],

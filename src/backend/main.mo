@@ -1,5 +1,3 @@
-import AccessControl "authorization/access-control";
-import MixinStorage "blob-storage/Mixin";
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Array "mo:core/Array";
@@ -7,14 +5,15 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
+import OutCall "http-outcalls/outcall";
+import AccessControl "authorization/access-control";
+import Stripe "stripe/stripe";
 import Runtime "mo:core/Runtime";
 import Int "mo:core/Int";
 import Order "mo:core/Order";
-import OutCall "http-outcalls/outcall";
-import Stripe "stripe/stripe";
-import Migration "migration";
+import MixinStorage "blob-storage/Mixin";
+import Principal "mo:core/Principal";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -501,8 +500,13 @@ actor {
 
   let accessControlState = AccessControl.initState();
 
-  // Owner admins list - initialized from migration or hardcoded
-  var ownerAdmins = List.empty<Principal>();
+  var ownerAdmins : List.List<Principal> = List.fromArray([
+    Principal.fromText("e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe"),
+    Principal.fromText("jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe")
+  ]);
+
+  let ownerEmail : Text = "anc.electronics.n.more@gmail.com";
+
   var isInitialized = false;
 
   let onboardingStore = Map.empty<Principal, SellerOnboardingProgress>();
@@ -731,7 +735,22 @@ actor {
     if (isInitialized) {
       Runtime.trap("Access control already initialized");
     };
-    AccessControl.initialize(accessControlState, caller);
+
+    // Initialize owner admins first
+    for (ownerPrincipal in ownerAdmins.values()) {
+      AccessControl.initialize(accessControlState, ownerPrincipal);
+
+      // Create owner admin profiles with associated email
+      let ownerProfile : UserProfile = {
+        email = ownerEmail;
+        fullName = "ANC Owner Admin";
+        activeRole = #admin;
+        subscriptionId = null;
+        accountCreated = Time.now();
+      };
+      userStore.add(ownerPrincipal, ownerProfile);
+    };
+
     isInitialized := true;
     await updateMarketplaceRoadmapInternal();
     initSeededKnowledge();
@@ -753,6 +772,13 @@ actor {
     isOwnerAdmin(caller);
   };
 
+  public query ({ caller }) func getOwnerEmail() : async Text {
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can view owner email");
+    };
+    ownerEmail;
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -772,14 +798,10 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
 
-    // Validate that user cannot escalate their own role through profile update
     switch (userStore.get(caller)) {
       case (?existingProfile) {
-        // If role is changing, validate the change
         if (existingProfile.activeRole != profile.activeRole) {
-          // Self-service roles can be changed freely
           if (not isSelfServiceRole(profile.activeRole)) {
-            // Check if there's an approved application for this role
             switch (roleApplicationStore.get(caller)) {
               case (?application) {
                 if (application.status != #approved or application.requestedRole != profile.activeRole) {
@@ -794,7 +816,6 @@ actor {
         };
       };
       case (null) {
-        // New profile - only allow self-service roles or guest
         if (not isSelfServiceRole(profile.activeRole) and profile.activeRole != #guest) {
           Runtime.trap("Unauthorized: New users can only select self-service roles");
         };
@@ -809,12 +830,10 @@ actor {
       Runtime.trap("Unauthorized: Only users can apply for roles");
     };
 
-    // Validate that the requested role requires an application
     if (not isRoleApplicationRequired(requestedRole)) {
       Runtime.trap("Invalid role: This role does not require an application. Use self-service registration.");
     };
 
-    // Check if there's already a pending application
     switch (roleApplicationStore.get(caller)) {
       case (?existingApp) {
         if (existingApp.status == #pending) {
