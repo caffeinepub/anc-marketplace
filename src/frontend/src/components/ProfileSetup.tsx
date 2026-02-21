@@ -1,25 +1,29 @@
 import { useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useSaveCallerUserProfile } from '../hooks/useQueries';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { AccessRole } from '../backend';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { UserRole } from '../backend';
 
 interface ProfileSetupProps {
-  onComplete?: () => void;
+  roleSelection?: UserRole;
 }
 
-export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
+export default function ProfileSetup({ roleSelection }: ProfileSetupProps) {
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { redirect?: string };
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const saveProfile = useSaveCallerUserProfile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!fullName.trim() || !email.trim()) {
-      toast.error('Please fill in all fields');
       return;
     }
 
@@ -27,54 +31,82 @@ export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
       await saveProfile.mutateAsync({
         fullName: fullName.trim(),
         email: email.trim(),
-        activeRole: AccessRole.guest,
-        accountCreated: BigInt(Date.now() * 1000000),
+        activeRole: roleSelection || UserRole.customer,
+        subscriptionId: undefined,
+        accountCreated: BigInt(Date.now() * 1_000_000),
       });
-      toast.success('Profile created successfully!');
-      if (onComplete) {
-        onComplete();
-      }
+
+      const redirectPath = search.redirect || (roleSelection ? getRoleRedirect(roleSelection) : '/');
+      navigate({ to: redirectPath as any });
     } catch (error) {
-      toast.error('Failed to create profile');
+      console.error('Failed to save profile:', error);
     }
   };
 
+  const getRoleRedirect = (role: UserRole): string => {
+    const roleRouteMap: Record<UserRole, string> = {
+      [UserRole.seller]: '/seller-dashboard',
+      [UserRole.customer]: '/customer-dashboard',
+      [UserRole.business]: '/business-dashboard',
+      [UserRole.marketer]: '/affiliate-dashboard',
+      [UserRole.employee]: '/employee-dashboard',
+      [UserRole.admin]: '/admin',
+      [UserRole.guest]: '/',
+    };
+    return roleRouteMap[role] || '/';
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to ANC Marketplace</CardTitle>
-          <CardDescription>Please complete your profile to continue</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={saveProfile.isPending}>
-              {saveProfile.isPending ? 'Creating Profile...' : 'Complete Setup'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Dialog open={true}>
+      <DialogContent className="sm:max-w-md bg-white border-2 border-menu-border shadow-lg">
+        <DialogHeader>
+          <DialogTitle>Complete Your Profile</DialogTitle>
+          <DialogDescription>
+            Please provide your information to continue.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input
+              id="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Enter your full name"
+              required
+              disabled={saveProfile.isPending}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              disabled={saveProfile.isPending}
+            />
+          </div>
+
+          {saveProfile.isError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to save profile. Please try again.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" className="w-full" disabled={saveProfile.isPending}>
+            {saveProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continue
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

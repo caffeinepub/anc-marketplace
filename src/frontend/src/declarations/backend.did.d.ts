@@ -10,12 +10,13 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export type AccessRole = { 'b2bMember' : null } |
-  { 'startUpMember' : null } |
-  { 'guest' : null };
 export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
+}
+export interface AdminFinancialState {
+  'creditAccount' : CreditAccount,
+  'availableFundsCents' : bigint,
 }
 export type AdminPageSection = { 'b2b' : null } |
   { 'marketplace' : null } |
@@ -32,6 +33,10 @@ export interface AdminPageSectionStatus {
   'details' : [] | [AdminPageStatusDetails],
 }
 export interface AdminPageStatusDetails { 'version' : string, 'notes' : string }
+export interface CreditAccount {
+  'creditLimitCents' : bigint,
+  'usedAmountCents' : bigint,
+}
 export interface MarketplaceRoadmap {
   'progressPercentage' : bigint,
   'name' : string,
@@ -39,6 +44,21 @@ export interface MarketplaceRoadmap {
   'lastUpdated' : bigint,
   'roadmapId' : string,
   'notes' : string,
+}
+export interface RoleApplication {
+  'status' : RoleApplicationStatus,
+  'applicant' : Principal,
+  'requestedRole' : UserRole,
+  'applicationDate' : bigint,
+  'reason' : string,
+}
+export type RoleApplicationStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
+export interface SellerEarningsSummary {
+  'totalOrders' : bigint,
+  'totalEarnings' : bigint,
+  'totalShippingCosts' : bigint,
 }
 export interface SellerOnboardingProgress {
   'isCompleted' : boolean,
@@ -68,6 +88,21 @@ export type StripeSessionStatus = {
     'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
   } |
   { 'failed' : { 'error' : string } };
+export type TimeFrame = { 'today' : null } |
+  { 'thisWeek' : null } |
+  { 'allTime' : null } |
+  { 'thisMonth' : null };
+export interface TransactionRecord {
+  'id' : string,
+  'status' : { 'successful' : null } |
+    { 'failed' : null },
+  'transactionType' : { 'creditFunding' : null } |
+    { 'deposit' : null },
+  'source' : string,
+  'date' : string,
+  'amountCents' : bigint,
+  'transactionId' : string,
+}
 export interface TransformationInput {
   'context' : Uint8Array,
   'response' : http_request_result,
@@ -82,16 +117,23 @@ export interface UserProfile {
   'fullName' : string,
   'email' : string,
   'subscriptionId' : [] | [string],
-  'activeRole' : AccessRole,
+  'activeRole' : UserRole,
 }
 export type UserRole = { 'admin' : null } |
-  { 'user' : null } |
-  { 'guest' : null };
+  { 'customer' : null } |
+  { 'seller' : null } |
+  { 'employee' : null } |
+  { 'marketer' : null } |
+  { 'guest' : null } |
+  { 'business' : null };
 export interface UserRoleSummary {
   'guestCount' : bigint,
   'adminCount' : bigint,
   'userCount' : bigint,
 }
+export type UserRole__1 = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -125,29 +167,37 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'approveRoleApplication' : ActorMethod<[Principal], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
+  'assignRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
+  'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
+  'getAllTransactionHistory' : ActorMethod<[], Array<TransactionRecord>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
-  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
+  'getPendingRoleApplications' : ActorMethod<[], Array<RoleApplication>>,
+  'getSellerEarningsSummary' : ActorMethod<[TimeFrame], SellerEarningsSummary>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getTransactionRecordById' : ActorMethod<[string], [] | [TransactionRecord]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerOwnerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'rejectRoleApplication' : ActorMethod<[Principal], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveOnboarding' : ActorMethod<[SellerOnboardingProgress], undefined>,
-  'setOwnerPrincipal' : ActorMethod<[], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
+  'submitRoleApplication' : ActorMethod<[UserRole, string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
-  'updateMarketplaceRoadmap' : ActorMethod<[], undefined>,
+  'updateAdminFinancialState' : ActorMethod<[AdminFinancialState], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

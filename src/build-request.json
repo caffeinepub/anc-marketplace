@@ -1,95 +1,102 @@
 {
   "kind": "build_request",
-  "title": "Seller onboarding step-by-step wizard structure (placeholders for verification + store profile)",
-  "projectName": "ANC Seller Onboarding",
-  "priority": "normal",
+  "title": "Fix Admin Center Access Control and Hero Section Text Visibility",
+  "projectName": "ANC Marketplace",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
-      "target": "frontend",
+      "text": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-recent"
         ],
         "quotes": [
-          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+          "adding my 2 internet identities and my email as admin owners",
+          "e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe",
+          "anc.electronics.n.more@gmail.com"
         ]
       },
       "acceptanceCriteria": [
-        "A new route exists for seller onboarding (e.g., /seller/onboarding) and renders a dedicated onboarding wizard page.",
-        "The wizard UI shows a clear multi-step progress component (stepper/progress bar) and allows Next/Back navigation between steps.",
-        "Each step has its own placeholder screen with a title and short description indicating it will be implemented later (in English).",
-        "The wizard can be exited safely (e.g., back to home/dashboard) without breaking navigation.",
-        "The implementation composes existing UI components from frontend/src/components/ui without modifying files in immutablePaths."
+        "Both Internet Identity principals are added as Owner Admin in backend access control",
+        "Email anc.electronics.n.more@gmail.com is registered as Owner Admin",
+        "Admin Center page loads successfully without 'Actor not available' error",
+        "Access control initialization succeeds on Admin Center page load"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
+      "text": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-recent"
         ],
         "quotes": [
-          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+          "The text I am referring to that needs to be a bold white to be visible is included in the picture",
+          "Our mission is your success",
+          "Explore Our Services"
         ]
       },
       "acceptanceCriteria": [
-        "If the user is not authenticated with Internet Identity, the onboarding wizard route renders a clear login-required screen with a call-to-action to log in.",
-        "If the user is authenticated but has no saved user profile, they are redirected to /profile-setup with redirect set to the onboarding route (following the existing pattern used by RequireRegisteredUser).",
-        "If the user is authenticated and has a profile, they can access the onboarding wizard page normally."
+        "Text 'Our mission is your success' displays in bold white on HomePage",
+        "Text 'Explore Our Services' displays in bold white on HomePage",
+        "Both text elements are clearly visible against the dark hero background",
+        "Font weight is bold (font-weight: 700 or font-bold class)"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
-      "target": "both",
+      "text": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-recent"
         ],
         "quotes": [
-          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+          "Ensure all pop ups, drop-down menus, options etc has solid backgrounds so everyone can read what it says when it is displayed on top of the current page"
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes query to fetch the caller’s seller onboarding state and an update method to save progress (at minimum: currentStep and updatedAt).",
-        "Frontend uses React Query to load onboarding state on wizard entry and resumes at the saved current step if present.",
-        "When the user clicks Next/Back (or marks a step complete), progress is saved and reflected after refresh.",
-        "If no onboarding state exists yet for the caller, the wizard starts at the first step without errors."
+        "All dropdown menus have solid opaque backgrounds",
+        "All modal dialogs have solid opaque backgrounds",
+        "All popup overlays have solid backgrounds with no transparency",
+        "Text remains readable when overlays appear on top of existing content"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
-      "target": "frontend",
+      "text": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-recent"
         ],
         "quotes": [
-          "Lets do number 3 then when your done with that let me know and then move on to number 2 then 1"
+          "Existing admin code already exists, if there is anything vital missing that will help it work better please add to the existing code"
         ]
       },
       "acceptanceCriteria": [
-        "The wizard shows an initial step that explains the onboarding process at a high level (English-only UI text).",
-        "The wizard includes placeholder steps for Business + Identity Verification and Store Profile, clearly labeled as coming next.",
-        "Additional steps (if included) are explicitly labeled as placeholders and do not attempt to collect real data yet.",
-        "Step ordering is consistent across the step list, the progress indicator, and navigation behavior."
+        "All critical admin features are functional and properly integrated",
+        "Admin dashboard displays financial overview correctly",
+        "Role assignment and access control management works as expected",
+        "Transaction history is accessible and displays properly"
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor with logic in backend/main.mo; only add backend/migration.mo if an upgrade-safe state migration is required.",
-    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any files under frontend/src/components/ui; compose them instead.",
-    "Use English for all user-facing text in the onboarding wizard."
+    "Do not modify the existing admin dashboard architecture",
+    "Preserve all existing admin functionality while fixing access control",
+    "Use only the two provided Internet Identity principals and email for Owner Admin setup",
+    "Only change the specific hero section text colors mentioned by the user",
+    "Do not change the 'ANC Marketplace' header text color"
   ],
   "nonGoals": [
-    "Do not implement the actual Business + Identity Verification data capture, document upload, or third-party verification integrations in this build (this is the next phase after the wizard structure).",
-    "Do not implement the Store Profile creation/editing forms (store name, business info fields, profile picture/logo upload, logo builder) in this build (this is the phase after verification per the user’s requested order).",
-    "Do not implement storefront template selection, product management, compliance document signing, or $10/month standalone website/app builder flows in this build."
+    "Redesigning the entire admin interface",
+    "Adding new admin features beyond what currently exists",
+    "Changing color schemes or branding beyond the specific text mentioned",
+    "Modifying authentication flows or Internet Identity integration"
   ],
   "imageRequirements": {
     "required": [],

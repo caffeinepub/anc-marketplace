@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@tanstack/react-router';
-import { Heart } from 'lucide-react';
+import { Heart, Shield, Users } from 'lucide-react';
 import { SiVisa, SiMastercard, SiAmericanexpress, SiDiscover } from 'react-icons/si';
 
 export default function Footer() {
@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="bg-muted/30 border-t border-border mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Legal Links */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Legal & Policies</h3>
@@ -64,6 +64,31 @@ export default function Footer() {
               <p className="mt-2">Administration: <a href="tel:903-993-7369" className="hover:text-primary transition-colors">903-993-7369</a></p>
               <p className="mt-3">5253 SE 38th St<br />Ocala, FL 34480</p>
             </div>
+          </div>
+
+          {/* Admin & Employee Access */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Access</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link 
+                  to="/admin" 
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <Shield className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span className="underline-offset-4 group-hover:underline">Admin Center</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/employee-dashboard" 
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <Users className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span className="underline-offset-4 group-hover:underline">Employee Section</span>
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Payment & Partners */}

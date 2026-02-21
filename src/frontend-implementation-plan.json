@@ -1,102 +1,96 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "ANC Seller Onboarding – Step-by-step wizard (route + guards + progress persistence)",
+  "title": "Fix Admin Center Access Control and Hero Section Text Visibility",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Add a dedicated /seller/onboarding route that renders a seller onboarding wizard framework with step navigation, progress indicator, per-step placeholder screens, and a safe exit path.",
-      "acceptanceCriteria": [
-        "A new route exists for seller onboarding (e.g., /seller/onboarding) and renders a dedicated onboarding wizard page.",
-        "The wizard UI shows a clear multi-step progress component (stepper/progress bar) and allows Next/Back navigation between steps.",
-        "Each step has its own placeholder screen with a title and short description indicating it will be implemented later (in English).",
-        "The wizard can be exited safely (e.g., back to home/dashboard) without breaking navigation.",
-        "The implementation composes existing UI components from frontend/src/components/ui without modifying files in immutablePaths."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/SellerOnboardingWizardPage.tsx",
-          "operation": "create",
-          "description": "Create the Seller Onboarding Wizard page UI shell: step list, progress indicator, per-step placeholder panel, Next/Back controls, and an Exit link (e.g., to '/'). Compose existing shadcn/ui components from frontend/src/components/ui for layout/controls. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-          "operation": "create",
-          "description": "Implement the wizard framework component (render step headers, placeholder content blocks, and navigation actions) used by SellerOnboardingWizardPage. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register a new TanStack Router route for '/seller/onboarding' and wire it to render SellerOnboardingWizardPage (wrapped with the appropriate access guard from REQ-2)."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Wire navigation entry to '/seller/onboarding' in the existing Sellers & Businesses menu (desktop + mobile), so users can access and also safely navigate away via standard app navigation."
-        }
-      ]
-    },
-    {
       "id": "REQ-2",
-      "summary": "Gate the seller onboarding wizard behind Internet Identity authentication and completed user profile; show login-required UI when logged out and redirect to /profile-setup when profile is missing (with redirect back).",
+      "summary": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
       "acceptanceCriteria": [
-        "If the user is not authenticated with Internet Identity, the onboarding wizard route renders a clear login-required screen with a call-to-action to log in.",
-        "If the user is authenticated but has no saved user profile, they are redirected to /profile-setup with redirect set to the onboarding route (following the existing pattern used by RequireRegisteredUser).",
-        "If the user is authenticated and has a profile, they can access the onboarding wizard page normally."
+        "Text 'Our mission is your success' displays in bold white on HomePage",
+        "Text 'Explore Our Services' displays in bold white on HomePage",
+        "Both text elements are clearly visible against the dark hero background",
+        "Font weight is bold (font-weight: 700 or font-bold class)"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
-          "operation": "create",
-          "description": "Create a route-guard component that (1) blocks unauthenticated users with a login-required screen and a Login CTA using useInternetIdentity(), and (2) redirects authenticated users without a profile to '/profile-setup' with 'redirect' set to the current path (matching the existing RequireRegisteredUser pattern). Compose existing shadcn/ui components from frontend/src/components/ui for the screen and CTA. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Wrap the '/seller/onboarding' route component with RequireAuthenticatedRegisteredUser so the wizard is not accessible without auth + completed profile."
+          "description": "Modify the hero section to apply bold white styling to the text 'Our mission is your success' and 'Explore Our Services'. Update the className attributes to include 'font-bold text-white' classes, ensuring both text elements have sufficient contrast against the dark hero background image (frontend/public/assets/generated/hero-business.dim_1200x600.jpg). Remove any existing color classes that may conflict with white text."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Persist and restore seller onboarding wizard progress via React Query using existing backend capabilities (getOnboarding/saveOnboarding) so refresh/return resumes the last saved step.",
+      "summary": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
       "acceptanceCriteria": [
-        "Frontend uses React Query to load onboarding state on wizard entry and resumes at the saved current step if present.",
-        "When the user clicks Next/Back (or marks a step complete), progress is saved and reflected after refresh.",
-        "If no onboarding state exists yet for the caller, the wizard starts at the first step without errors."
+        "All dropdown menus have solid opaque backgrounds",
+        "All modal dialogs have solid opaque backgrounds",
+        "All popup overlays have solid backgrounds with no transparency",
+        "Text remains readable when overlays appear on top of existing content"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useSellerOnboarding.ts",
-          "operation": "create",
-          "description": "Add React Query hooks for seller onboarding progress: a query that calls actor.getOnboarding() and a mutation that calls actor.saveOnboarding(...), with appropriate query keys and cache invalidation after saves."
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Update the mobile menu Sheet component and role-based dropdown menus (Customer, Sellers/Businesses, Account) to have solid opaque backgrounds. Add bg-white or bg-gray-900 classes with explicit opacity-100 to ensure no transparency. Remove any bg-opacity or backdrop-blur classes that create semi-transparent effects."
         },
         {
-          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+          "path": "frontend/src/components/ProfileSetup.tsx",
           "operation": "modify",
-          "description": "Integrate the onboarding progress hooks to (1) initialize wizard state from saved progress (or defaults when null), (2) save progress on Next/Back and when marking steps complete, and (3) resume the saved current step on reload. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
+          "description": "Ensure the modal dialog has a solid opaque background by adding bg-white class to the DialogContent component. Remove any transparency or blur effects that may reduce text readability when the modal appears over page content."
+        },
+        {
+          "path": "frontend/src/components/security/HumanCheckDialog.tsx",
+          "operation": "modify",
+          "description": "Update the DialogContent to have a solid opaque background by applying bg-white class and removing any transparency effects. Ensure the dialog overlay and content have sufficient opacity for text readability."
+        },
+        {
+          "path": "frontend/src/components/assistant/AssistantWidget.tsx",
+          "operation": "modify",
+          "description": "Ensure the AssistantChatPanel Card component has a solid opaque background by adding bg-white class. Remove any backdrop-blur or transparency classes to maintain text readability when the widget overlay appears on top of page content."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add a global CSS rule to enforce solid backgrounds on all dropdown menus, popovers, and dialog overlays. Target shadcn/ui component classes like .dropdown-content, .popover-content, and .dialog-content to apply background-color with full opacity. Override any default semi-transparent backgrounds in the component library."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Define initial onboarding steps and consistent ordering across the wizard step list, progress indicator, and navigation: Introduction, Business + Identity Verification (placeholder), Store Profile (placeholder), plus explicit future placeholder steps.",
+      "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
       "acceptanceCriteria": [
-        "The wizard shows an initial step that explains the onboarding process at a high level (English-only UI text).",
-        "The wizard includes placeholder steps for Business + Identity Verification and Store Profile, clearly labeled as coming next.",
-        "Additional steps (if included) are explicitly labeled as placeholders and do not attempt to collect real data yet.",
-        "Step ordering is consistent across the step list, the progress indicator, and navigation behavior."
+        "All critical admin features are functional and properly integrated",
+        "Admin dashboard displays financial overview correctly",
+        "Role assignment and access control management works as expected",
+        "Transaction history is accessible and displays properly"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/seller-onboarding/onboardingSteps.ts",
-          "operation": "create",
-          "description": "Define the ordered seller onboarding step configuration used by the wizard (titles, short English descriptions, and placeholder flags). Map the UI steps to the existing backend SellerOnboardingStep enum values while presenting the requested labels (Introduction, Business + Identity Verification, Store Profile) and additional clearly-marked placeholders for future expansion."
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
+          "operation": "modify",
+          "description": "Review the existing admin dashboard implementation and ensure all tabs (Financial Overview, Payment Processors, Revenue Inflow, Fee Configuration, Transactions, Employee Payments, Transfers, User Role Management, Marketplace Roadmap, Access Links, Role Applications) are fully wired and functional. Verify that the access control initialization using useInitializeAccessControl hook is working correctly and displays appropriate error messages when initialization fails. Ensure error states show actionable retry buttons and clear error messages."
         },
         {
-          "path": "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
+          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
           "operation": "modify",
-          "description": "Use the centralized onboardingSteps definition to render the step list, progress indicator, and navigation logic so ordering and labels remain consistent. Compose existing shadcn/ui components from frontend/src/components/ui. Verify the component's usage instructions before implementing."
+          "description": "Review the financial overview cards displaying available funds, business credit account, and payroll savings. Ensure currency formatting from cents to USD is correct and all data from useGetAdminFinancialState hook is properly displayed. Add loading states and error handling if missing."
+        },
+        {
+          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+          "operation": "modify",
+          "description": "Review the transaction history table displaying all transactions via useGetAllTransactionHistory hook. Ensure filtering, currency formatting, date formatting, status badges, and refresh functionality work correctly. Add pagination or virtual scrolling if the transaction list can grow large."
+        },
+        {
+          "path": "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "operation": "modify",
+          "description": "Review the role applications management panel. Ensure the approve/reject actions using useApproveRoleApplication and useRejectRoleApplication mutations work correctly with proper error handling and optimistic updates. Verify that the panel refreshes the pending applications list after actions complete."
+        },
+        {
+          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
+          "operation": "modify",
+          "description": "Review the user role summary dashboard displaying counts by role (admins, users, guests) via useGetUserRoleSummary hook. Ensure loading and error states are handled properly and the summary updates when roles change."
         }
       ]
     }

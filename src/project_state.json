@@ -1,44 +1,29 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project includes Step 1 Internet Identity login flow deployed (Version 41). Step 2 will implement seller onboarding in phases: first an onboarding step-by-step wizard structure, then business/identity verification, then store profile form.",
+  "summary": "ANC Marketplace - E-commerce platform with admin center, product listings, and user authentication. Currently fixing admin access control initialization and UI visibility issues.",
   "architectural_notes": [
-    "Seller onboarding implementation order: (1) wizard structure, then (2) business/identity verification, then (3) store profile form."
+    "Admin access control uses Internet Identity principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe with email anc.electronics.n.more@gmail.com as Owner Admin",
+    "Existing admin features include admin dashboard, financial account with transactions, and role assignment access control"
   ],
   "known_issues": [
-    "Draft app expired and required redeploy/rebuild to continue work."
+    "Admin Center showing 'Initialization Failed' error with 'Actor not available' message - access control not properly initialized in backend canister"
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-a-new-seller-onboarding-wizard-route-and-page-that-provides-a-step-by-step-wizard-framework-navigation-progress-indicator-step-list-with-placeholder-screens-for-each-onboarding-step-starting-with-the-wizard-structure-itself-no-full-business-verification-or-store-profile-forms-yet",
-      "title": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-require-authentication-and-completed-basic-user-profile-existing-profile-setup-flow-before-allowing-access-to-the-seller-onboarding-wizard-unauthenticated-users-should-be-prompted-to-log-in-and-authenticated-users-without-a-profile-should-be-redirected-to-profile-setup-with-a-redirect-back-to-the-onboarding-route",
-      "title": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
+      "id": "feature-change-hero-section-text-our-mission-is-your-success-and-explore-our-services-to-bold-white-color-for-visibility-against-the-dark-background",
+      "title": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-persist-seller-onboarding-wizard-progress-current-step-completed-steps-timestamps-so-that-refreshing-the-page-or-returning-later-restores-the-wizard-to-the-last-saved-step-implement-this-with-a-backend-api-for-the-caller-s-onboarding-state-and-a-react-query-hook-on-the-frontend",
-      "title": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+      "id": "feature-add-solid-backgrounds-to-all-popups-dropdown-menus-and-modal-overlays-throughout-the-application-to-ensure-text-readability-when-displayed-over-other-content",
+      "title": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
       "reqIds": [
         "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-define-the-initial-onboarding-steps-in-the-wizard-to-match-the-upcoming-implementation-order-1-wizard-introduction-overview-2-business-identity-verification-placeholder-3-store-profile-placeholder-plus-any-additional-placeholder-steps-needed-to-support-future-expansion-e-g-storefront-template-products-without-implementing-their-detailed-forms-yet",
-      "title": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
-      "reqIds": [
-        "REQ-4"
       ],
       "version": 1
     }
@@ -46,24 +31,46 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Implement seller onboarding step-by-step wizard structure (UI + step framework/placeholders)",
+      "summary": "Initialize admin access control with two Internet Identity principals and email as Owner Admin",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Add Business + Identity Verification step(s) to seller onboarding (business info + documents + identity verification)",
+      "summary": "Change hero section text ('Our mission is your success' and 'Explore Our Services') to bold white for visibility",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Add Store Profile creation/editing to seller onboarding (store name, basic profile info)",
+      "summary": "Add solid backgrounds to all popups, dropdowns, and menus for readability",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Enhance existing admin code with any vital missing functionality",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
+      "reqIds": [
+        "REQ-4"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "ANC Seller Onboarding",
+  "projectName": "ANC Marketplace",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

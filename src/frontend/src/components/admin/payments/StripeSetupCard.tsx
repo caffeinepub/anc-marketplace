@@ -103,7 +103,7 @@ export default function StripeSetupCard() {
               <Input
                 id="stripe-secret-key"
                 type="password"
-                placeholder="sk_test_..."
+                placeholder="sk_live_..."
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
               />

@@ -1,29 +1,21 @@
-import Map "mo:core/Map";
-import Principal "mo:core/Principal";
 import List "mo:core/List";
+import Principal "mo:core/Principal";
 
 module {
-  public type Actor = {
-    // The old type does not include policySignaturesByUser
-    // All other data is preserved automatically.
+  type OldActor = {
+    ownerPrincipal : ?Principal;
   };
 
-  public type PolicySignatureRecord = {
-    policyIdentifier : { #privacy; #shipping; #returns; #terms };
-    policyVersion : Text;
-    signerName : Text;
-    signature : Text;
-    timestamp : Int;
+  type NewActor = {
+    var ownerAdmins : List.List<Principal>;
+    var isInitialized : Bool;
   };
 
-  public type NewActor = {
-    policySignaturesByUser : Map.Map<Principal, List.List<PolicySignatureRecord>>;
-  };
-
-  public func run(old : Actor) : NewActor {
+  public func run(old : OldActor) : NewActor {
+    let ownerAdmins = List.empty<Principal>();
     {
-      old with
-      policySignaturesByUser = Map.empty<Principal, List.List<PolicySignatureRecord>>()
+      var ownerAdmins = ownerAdmins;
+      var isInitialized = false;
     };
   };
 };

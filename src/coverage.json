@@ -1,92 +1,85 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T06:01:55.340Z",
+  "generatedAt": "2026-02-21T01:30:55.511Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 4,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/SellerOnboardingWizardPage.tsx",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/Layout.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/SellerOnboardingWizardPage.tsx",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/Layout.tsx"
-        ]
+        "summary": "Initialize backend access control with two Owner Admin principals: e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe, plus email anc.electronics.n.more@gmail.com",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
+        "summary": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/HomePage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/HomePage.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+        "summary": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useSellerOnboarding.ts",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/ProfileSetup.tsx",
+          "frontend/src/components/security/HumanCheckDialog.tsx",
+          "frontend/src/components/assistant/AssistantWidget.tsx",
+          "frontend/src/index.css"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useSellerOnboarding.ts",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/ProfileSetup.tsx",
+          "frontend/src/components/security/HumanCheckDialog.tsx",
+          "frontend/src/components/assistant/AssistantWidget.tsx",
+          "frontend/src/index.css"
         ]
       },
       {
         "id": "REQ-4",
-        "summary": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
-        "status": "implemented",
+        "summary": "Review existing admin dashboard code (financial account with transactions, role assignment access control, admin dashboard functionality) and add any vital missing functionality to improve admin operations",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/components/seller-onboarding/onboardingSteps.ts",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
+          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+          "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "frontend/src/components/admin/UserRoleManagement.tsx"
         ],
-        "matchedFiles": [
-          "frontend/src/components/seller-onboarding/onboardingSteps.ts",
-          "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx"
-        ]
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
     "frontend/src/components/Layout.tsx",
-    "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
-    "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-    "frontend/src/components/seller-onboarding/onboardingSteps.ts",
-    "frontend/src/config.ts",
+    "frontend/src/components/ProfileSetup.tsx",
+    "frontend/src/components/assistant/AssistantWidget.tsx",
+    "frontend/src/components/security/HumanCheckDialog.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useSellerOnboarding.ts",
-    "frontend/src/pages/SellerOnboardingWizardPage.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/ProfileSetupPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

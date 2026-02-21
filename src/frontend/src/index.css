@@ -56,6 +56,14 @@
   body {
     background: white;
   }
+
+  /* Force solid backgrounds on all dialog and popover overlays */
+  [data-radix-popper-content-wrapper],
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"] {
+    background: white !important;
+  }
 }
 
 @layer components {

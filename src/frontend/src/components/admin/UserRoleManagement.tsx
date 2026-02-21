@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useGetUserRoleSummary, useAssignRole } from '../../hooks/useQueries';
+import React from 'react';
+import { useGetUserRoleSummary } from '../../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Users, Shield, UserCheck, AlertCircle } from 'lucide-react';

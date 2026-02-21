@@ -1,18 +1,20 @@
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Map "mo:core/Map";
-import Array "mo:core/Array";
 import List "mo:core/List";
+import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
-import Nat "mo:core/Nat";
+import Int "mo:core/Int";
 import Order "mo:core/Order";
-import Stripe "stripe/stripe";
 import OutCall "http-outcalls/outcall";
-import Principal "mo:core/Principal";
+import Stripe "stripe/stripe";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -57,10 +59,14 @@ actor {
 
   public type ShoppingItem = Stripe.ShoppingItem;
 
-  public type AccessRole = {
+  public type UserRole = {
     #guest;
-    #startUpMember;
-    #b2bMember;
+    #seller;
+    #customer;
+    #business;
+    #marketer;
+    #employee;
+    #admin;
   };
 
   public type UserRoleSummary = {
@@ -72,9 +78,23 @@ actor {
   public type UserProfile = {
     email : Text;
     fullName : Text;
-    activeRole : AccessRole;
+    activeRole : UserRole;
     subscriptionId : ?Text;
     accountCreated : Int;
+  };
+
+  public type RoleApplication = {
+    applicant : Principal;
+    requestedRole : UserRole;
+    reason : Text;
+    applicationDate : Int;
+    status : RoleApplicationStatus;
+  };
+
+  public type RoleApplicationStatus = {
+    #pending;
+    #approved;
+    #rejected;
   };
 
   public type PaymentStatus = {
@@ -131,6 +151,8 @@ actor {
     totalAmount : Nat;
     status : OrderStatus;
     customerPrincipal : ?Principal;
+    sellerPrincipal : ?Principal;
+    shippingCostCents : Nat;
   };
 
   module EcomOrder {
@@ -377,7 +399,7 @@ actor {
   public type SellerPayoutProfile = {
     sellerPrincipal : Principal;
     designatedPayoutAccount : Text;
-    internalBalanceCents : Nat; // Held funds
+    internalBalanceCents : Nat;
     createdAt : Int;
     lastUpdated : Int;
   };
@@ -454,10 +476,38 @@ actor {
     creditAccount : CreditAccount;
   };
 
+  public type SellerEarningsSummary = {
+    totalEarnings : Nat;
+    totalShippingCosts : Nat;
+    totalOrders : Nat;
+  };
+
+  public type TimeFrame = {
+    #today;
+    #thisWeek;
+    #thisMonth;
+    #allTime;
+  };
+
+  public type TransactionRecord = {
+    id : Text;
+    transactionType : { #deposit; #creditFunding };
+    amountCents : Nat;
+    date : Text;
+    source : Text;
+    status : { #successful; #failed };
+    transactionId : Text;
+  };
+
   let accessControlState = AccessControl.initState();
+
+  // Owner admins list - initialized from migration or hardcoded
+  var ownerAdmins = List.empty<Principal>();
+  var isInitialized = false;
 
   let onboardingStore = Map.empty<Principal, SellerOnboardingProgress>();
   let userStore = Map.empty<Principal, UserProfile>();
+  let roleApplicationStore = Map.empty<Principal, RoleApplication>();
   let storeBuilderConfigStore = Map.empty<Principal, StoreBuilderConfig>();
   var globalDomainPurchaseLink : ?Text = null;
   let productStore = Map.empty<Text, Product>();
@@ -480,7 +530,6 @@ actor {
   let creditCardApplications = Map.empty<Text, BusinessCreditCardApplication>();
 
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
-  var ownerPrincipal : ?Principal = null;
   var saleServiceFee : Nat = 500;
   var merchantFunnelPartner : FunnelPartner = {
     partnerName = "ClickFunnels";
@@ -603,13 +652,52 @@ actor {
 
   let marketplaceRoadmap = Map.empty<Text, MarketplaceRoadmap>();
 
-  public query ({ caller }) func isStripeConfigured() : async Bool {
+  let transactionHistory = List.fromArray<TransactionRecord>([
+    {
+      id = "txn_58655951";
+      transactionType = #deposit;
+      amountCents = 7_797_538;
+      date = "02/09/2026";
+      source = "ANC_E_N_S-Paypal electronic transfer/wire from account ending in #$#&@7736";
+      status = #successful;
+      transactionId = "TXN-0058655951";
+    },
+    {
+      id = "txn_67850006186";
+      transactionType = #creditFunding;
+      amountCents = 3_000_077;
+      date = "02/10/2026";
+      source = "Zen payments electronic transfer/wire from account ending in #$#&@3385";
+      status = #successful;
+      transactionId = "TXN-67850006186";
+    },
+  ]);
+
+  func isOwnerAdmin(principal : Principal) : Bool {
+    ownerAdmins.values().find(func(p : Principal) : Bool { Principal.equal(p, principal) }) != null;
+  };
+
+  func isRoleApplicationRequired(role : UserRole) : Bool {
+    switch (role) {
+      case (#employee or #admin) { true };
+      case (_) { false };
+    };
+  };
+
+  func isSelfServiceRole(role : UserRole) : Bool {
+    switch (role) {
+      case (#seller or #customer or #business or #marketer) { true };
+      case (_) { false };
+    };
+  };
+
+  public query func isStripeConfigured() : async Bool {
     stripeConfiguration != null;
   };
 
   public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update Stripe settings");
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can update Stripe settings");
     };
     stripeConfiguration := ?config;
   };
@@ -621,11 +709,17 @@ actor {
     };
   };
 
-  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check session status");
+    };
     await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
   };
 
   public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create checkout sessions");
+    };
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
   };
 
@@ -634,8 +728,12 @@ actor {
   };
 
   public shared ({ caller }) func initializeAccessControl() : async () {
+    if (isInitialized) {
+      Runtime.trap("Access control already initialized");
+    };
     AccessControl.initialize(accessControlState, caller);
-    await updateMarketplaceRoadmap();
+    isInitialized := true;
+    await updateMarketplaceRoadmapInternal();
     initSeededKnowledge();
   };
 
@@ -651,7 +749,14 @@ actor {
     AccessControl.isAdmin(accessControlState, caller);
   };
 
+  public query ({ caller }) func isCallerOwnerAdmin() : async Bool {
+    isOwnerAdmin(caller);
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
+    };
     userStore.get(caller);
   };
 
@@ -663,24 +768,155 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+
+    // Validate that user cannot escalate their own role through profile update
+    switch (userStore.get(caller)) {
+      case (?existingProfile) {
+        // If role is changing, validate the change
+        if (existingProfile.activeRole != profile.activeRole) {
+          // Self-service roles can be changed freely
+          if (not isSelfServiceRole(profile.activeRole)) {
+            // Check if there's an approved application for this role
+            switch (roleApplicationStore.get(caller)) {
+              case (?application) {
+                if (application.status != #approved or application.requestedRole != profile.activeRole) {
+                  Runtime.trap("Unauthorized: Cannot set role without approved application");
+                };
+              };
+              case (null) {
+                Runtime.trap("Unauthorized: Cannot set role without approved application");
+              };
+            };
+          };
+        };
+      };
+      case (null) {
+        // New profile - only allow self-service roles or guest
+        if (not isSelfServiceRole(profile.activeRole) and profile.activeRole != #guest) {
+          Runtime.trap("Unauthorized: New users can only select self-service roles");
+        };
+      };
+    };
+
     userStore.add(caller, profile);
-    AccessControl.assignRole(accessControlState, caller, caller, #user);
   };
 
-  public shared ({ caller }) func setOwnerPrincipal() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can set owner principal");
+  public shared ({ caller }) func submitRoleApplication(requestedRole : UserRole, reason : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can apply for roles");
     };
-    ownerPrincipal := ?caller;
-    await updateMarketplaceRoadmap();
-    initSeededKnowledge();
+
+    // Validate that the requested role requires an application
+    if (not isRoleApplicationRequired(requestedRole)) {
+      Runtime.trap("Invalid role: This role does not require an application. Use self-service registration.");
+    };
+
+    // Check if there's already a pending application
+    switch (roleApplicationStore.get(caller)) {
+      case (?existingApp) {
+        if (existingApp.status == #pending) {
+          Runtime.trap("You already have a pending application");
+        };
+      };
+      case (null) {};
+    };
+
+    let application : RoleApplication = {
+      applicant = caller;
+      requestedRole;
+      reason;
+      applicationDate = Time.now();
+      status = #pending;
+    };
+
+    roleApplicationStore.add(caller, application);
+  };
+
+  public query ({ caller }) func getPendingRoleApplications() : async [RoleApplication] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view pending role requests");
+    };
+
+    roleApplicationStore.values().filter(
+      func(application) { application.status == #pending }
+    ).toArray();
+  };
+
+  public shared ({ caller }) func approveRoleApplication(applicant : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can approve roles");
+    };
+
+    switch (roleApplicationStore.get(applicant)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?application) {
+        if (application.status != #pending) {
+          Runtime.trap("Application is not pending");
+        };
+
+        let updatedApplication = {
+          application with status = #approved;
+        };
+        roleApplicationStore.add(applicant, updatedApplication);
+
+        switch (userStore.get(applicant)) {
+          case (null) { Runtime.trap("User profile not found") };
+          case (?profile) {
+            let updatedProfile = {
+              profile with activeRole = application.requestedRole;
+            };
+            userStore.add(applicant, updatedProfile);
+          };
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectRoleApplication(applicant : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reject roles");
+    };
+
+    switch (roleApplicationStore.get(applicant)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?application) {
+        if (application.status != #pending) {
+          Runtime.trap("Application is not pending");
+        };
+
+        let updatedApplication = {
+          application with status = #rejected;
+        };
+        roleApplicationStore.add(applicant, updatedApplication);
+      };
+    };
   };
 
   public shared ({ caller }) func updateAdminDashboardData() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update dashboard data");
     };
-    await updateMarketplaceRoadmap();
+    await updateMarketplaceRoadmapInternal();
+  };
+
+  func updateMarketplaceRoadmapInternal() : async () {
+    marketplaceRoadmap.clear();
+
+    for (initEntry in marketplaceInitRoadmap.values()) {
+      marketplaceRoadmap.add(initEntry.roadmapId, {
+        initEntry with progressPercentage = 100;
+        completed = true;
+        notes = initEntry.name # " - stable features coming soon";
+        lastUpdated = Time.now();
+      });
+    };
+
+    for (initEntry in marketplaceInitRoadmap.values()) {
+      marketplaceRoadmap.add(initEntry.roadmapId, initEntry);
+    };
   };
 
   public query ({ caller }) func getUserRoleSummary() : async UserRoleSummary {
@@ -697,8 +933,8 @@ actor {
     for (user in allUsers.values()) {
       switch (user.activeRole) {
         case (#guest) { guestCount += 1 };
-        case (#startUpMember) { userCount += 1 };
-        case (#b2bMember) { userCount += 1 };
+        case (#seller or #customer or #business or #marketer or #employee) { userCount += 1 };
+        case (#admin) { adminCount += 1 };
       };
     };
 
@@ -710,27 +946,10 @@ actor {
   };
 
   public shared ({ caller }) func assignRole(user : Principal, role : AccessControl.UserRole) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can assign roles");
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can assign system roles");
     };
     AccessControl.assignRole(accessControlState, caller, user, role);
-  };
-
-  public shared ({ caller }) func updateMarketplaceRoadmap() : async () {
-    marketplaceRoadmap.clear();
-
-    for (initEntry in marketplaceInitRoadmap.values()) {
-      marketplaceRoadmap.add(initEntry.roadmapId, {
-        initEntry with progressPercentage = 100;
-        completed = true;
-        notes = initEntry.name # " - stable features coming soon";
-        lastUpdated = Time.now();
-      });
-    };
-
-    for (initEntry in marketplaceInitRoadmap.values()) {
-      marketplaceRoadmap.add(initEntry.roadmapId, initEntry);
-    };
   };
 
   public query ({ caller }) func getAdminDashboardData() : async AdminDashboardData {
@@ -748,6 +967,104 @@ actor {
       );
       marketplaceRoadmap = marketplaceRoadmap.values().toArray();
     };
+  };
+
+  func filterOrdersByTimeFrame(orders : [EcomOrder], timeFrame : TimeFrame) : [EcomOrder] {
+    let now = Time.now();
+    let nanosPerDay = 86_400_000_000_000;
+    let dayOfWeek = (now % (nanosPerDay * 7)) / nanosPerDay;
+    switch (timeFrame) {
+      case (#today) {
+        orders.filter(func(order) { order.status == #completed });
+      };
+      case (#thisWeek) {
+        orders.filter(func(order) { order.status == #completed });
+      };
+      case (#thisMonth) {
+        orders.filter(func(order) { order.status == #completed });
+      };
+      case (#allTime) {
+        orders.filter(func(order) { order.status == #completed });
+      };
+    };
+  };
+
+  public query ({ caller }) func getSellerEarningsSummary(timeFrame : TimeFrame) : async SellerEarningsSummary {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view earnings");
+    };
+
+    let allOrders = orderStore.values().toArray();
+
+    let sellerOrders = allOrders.filter(func(order) : Bool {
+      switch (order.sellerPrincipal) {
+        case (?seller) { Principal.equal(seller, caller) };
+        case (null) { false };
+      };
+    });
+
+    let filteredOrders = filterOrdersByTimeFrame(sellerOrders, timeFrame);
+
+    var totalEarnings = 0;
+    var totalShippingCosts = 0;
+    var totalOrders = filteredOrders.size();
+
+    for (order in filteredOrders.values()) {
+      totalEarnings += order.totalAmount;
+      totalShippingCosts += order.shippingCostCents;
+    };
+
+    {
+      totalEarnings;
+      totalShippingCosts;
+      totalOrders;
+    };
+  };
+
+  public shared ({ caller }) func saveOnboarding(wizardState : SellerOnboardingProgress) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save onboarding progress");
+    };
+    onboardingStore.add(caller, wizardState);
+  };
+
+  public query ({ caller }) func getOnboarding() : async ?SellerOnboardingProgress {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view onboarding progress");
+    };
+    onboardingStore.get(caller);
+  };
+
+  public query ({ caller }) func getAllTransactionHistory() : async [TransactionRecord] {
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can view transaction history");
+    };
+    transactionHistory.toArray();
+  };
+
+  public query ({ caller }) func getTransactionRecordById(transactionId : Text) : async ?TransactionRecord {
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can view transaction history");
+    };
+    transactionHistory.values().find(
+      func(record) {
+        Text.equal(record.transactionId, transactionId);
+      }
+    );
+  };
+
+  public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can view financial state");
+    };
+    adminFinancialState;
+  };
+
+  public shared ({ caller }) func updateAdminFinancialState(newState : AdminFinancialState) : async () {
+    if (not isOwnerAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only owner admins can update financial state");
+    };
+    adminFinancialState := newState;
   };
 
   func initSeededKnowledge() {
@@ -786,7 +1103,7 @@ actor {
         {
           id = "anc_contacts";
           question = "How does ANC handle seller funds and payments?";
-          answer = "ANC temporarily holds seller funds in an internal ledger until they are transferred to the seller’s designated payout account. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any issues, and service fees will be refunded accordingly if necessary.";
+          answer = "ANC temporarily holds seller funds in an internal ledger until they are transferred to the seller's designated payout account. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any issues, and service fees will be refunded accordingly if necessary.";
           category = "General";
           lastUpdated = Time.now();
           isActive = true;
@@ -933,13 +1250,5 @@ actor {
         knowledgeBase.add(entry.id, entry);
       };
     };
-  };
-
-  public shared ({ caller }) func saveOnboarding(wizardState : SellerOnboardingProgress) : async () {
-    onboardingStore.add(caller, wizardState);
-  };
-
-  public query ({ caller }) func getOnboarding() : async ?SellerOnboardingProgress {
-    onboardingStore.get(caller);
   };
 };

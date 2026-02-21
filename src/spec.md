@@ -1,13 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add a protected Seller Onboarding Wizard with step-by-step navigation and persisted progress so sellers can start onboarding now and resume later, using placeholder steps for upcoming features.
+**Goal:** Fix Admin Center access control initialization and improve text visibility across the application.
 
 **Planned changes:**
-- Add a new seller onboarding route/page (e.g., `/seller/onboarding`) that renders a multi-step wizard UI (step list + progress indicator/stepper + Next/Back + safe exit).
-- Define initial onboarding steps in order: (1) Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus optional clearly-labeled placeholder steps for future expansion.
-- Gate access to the onboarding route: show a login-required screen for unauthenticated users; redirect authenticated users without a completed basic profile to `/profile-setup` with a redirect back to onboarding.
-- Add backend support to persist and fetch the caller’s onboarding progress (at minimum `currentStep` and `updatedAt`).
-- Add a React Query hook to load onboarding state on entry and save progress on step navigation/completion, restoring the last step after refresh/return.
+- Initialize backend access control with two Owner Admin principals (e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe and jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe) and email (anc.electronics.n.more@gmail.com)
+- Change hero section text "Our mission is your success" and "Explore Our Services" to bold white for visibility against dark background
+- Add solid opaque backgrounds to all popups, dropdown menus, and modal overlays
+- Review and enhance existing admin dashboard functionality (financial accounts, role assignment, access control)
 
-**User-visible outcome:** Logged-in users with a completed basic profile can enter a new seller onboarding wizard, move between placeholder steps with clear progress, leave safely, and return later to resume where they left off.
+**User-visible outcome:** Admin Center loads successfully without errors, hero section text is clearly visible in bold white, all dropdown menus and popups have solid backgrounds for readability, and admin dashboard operates with improved functionality.

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard } from 'lucide-react';
 import StripeSetupCard from './StripeSetupCard';
+import OwnerStripeConnectCard from './OwnerStripeConnectCard';
 
 export default function PaymentProcessorsPanel() {
   return (
@@ -19,6 +20,7 @@ export default function PaymentProcessorsPanel() {
         <CardContent>
           <div className="space-y-4">
             <StripeSetupCard />
+            <OwnerStripeConnectCard />
           </div>
         </CardContent>
       </Card>

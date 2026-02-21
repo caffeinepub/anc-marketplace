@@ -20,14 +20,12 @@ export function useCreateCheckoutSession() {
 
       const result = await actor.createCheckoutSession(items, successUrl, cancelUrl);
 
-      // JSON parsing is critical for Stripe integration
       const session = JSON.parse(result) as CheckoutSession;
 
       if (!session?.url) {
         throw new Error('Stripe session missing url');
       }
 
-      // Redirect to Stripe checkout (full page redirect, not router navigation)
       window.location.href = session.url;
     },
   });

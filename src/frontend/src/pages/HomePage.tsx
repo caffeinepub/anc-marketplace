@@ -58,10 +58,10 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
           </div>
           <div className="container relative z-10 text-center">
-            <p className="text-2xl md:text-3xl text-muted-foreground mb-8 font-light">
+            <p className="text-2xl md:text-3xl text-white font-bold mb-8 drop-shadow-lg">
               Our mission is your success.
             </p>
-            <Button size="lg" onClick={() => navigate({ to: '/customer-faq' })} className="text-lg px-8">
+            <Button size="lg" onClick={() => navigate({ to: '/customer-faq' })} className="text-lg px-8 font-bold">
               Explore Our Services
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

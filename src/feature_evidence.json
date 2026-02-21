@@ -2,36 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-new-seller-onboarding-wizard-route-and-page-that-provides-a-step-by-step-wizard-framework-navigation-progress-indicator-step-list-with-placeholder-screens-for-each-onboarding-step-starting-with-the-wizard-structure-itself-no-full-business-verification-or-store-profile-forms-yet",
-      "featureTitle": "Add a new Seller Onboarding Wizard route and page that provides a step-by-step wizard framework (navigation, progress indicator, step list) with placeholder screens for each onboarding step, starting with the wizard structure itself (no full business verification or store profile forms yet).",
+      "featureId": "feature-change-hero-section-text-our-mission-is-your-success-and-explore-our-services-to-bold-white-color-for-visibility-against-the-dark-background",
+      "featureTitle": "Change hero section text 'Our mission is your success' and 'Explore Our Services' to bold white color for visibility against the dark background",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-        "frontend/src/pages/SellerOnboardingWizardPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-require-authentication-and-completed-basic-user-profile-existing-profile-setup-flow-before-allowing-access-to-the-seller-onboarding-wizard-unauthenticated-users-should-be-prompted-to-log-in-and-authenticated-users-without-a-profile-should-be-redirected-to-profile-setup-with-a-redirect-back-to-the-onboarding-route",
-      "featureTitle": "Require authentication and completed basic user profile (existing Profile Setup flow) before allowing access to the Seller Onboarding Wizard; unauthenticated users should be prompted to log in, and authenticated users without a profile should be redirected to /profile-setup with a redirect back to the onboarding route.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx"
+        "frontend/src/pages/HomePage.tsx"
       ],
       "components": [
         "authorization@3.0.0",
@@ -50,11 +24,14 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-persist-seller-onboarding-wizard-progress-current-step-completed-steps-timestamps-so-that-refreshing-the-page-or-returning-later-restores-the-wizard-to-the-last-saved-step-implement-this-with-a-backend-api-for-the-caller-s-onboarding-state-and-a-react-query-hook-on-the-frontend",
-      "featureTitle": "Persist seller onboarding wizard progress (current step, completed steps, timestamps) so that refreshing the page or returning later restores the wizard to the last saved step; implement this with a backend API for the caller’s onboarding state and a React Query hook on the frontend.",
+      "featureId": "feature-add-solid-backgrounds-to-all-popups-dropdown-menus-and-modal-overlays-throughout-the-application-to-ensure-text-readability-when-displayed-over-other-content",
+      "featureTitle": "Add solid backgrounds to all popups, dropdown menus, and modal overlays throughout the application to ensure text readability when displayed over other content",
       "files": [
-        "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-        "frontend/src/hooks/useSellerOnboarding.ts"
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/components/ProfileSetup.tsx",
+        "frontend/src/components/assistant/AssistantWidget.tsx",
+        "frontend/src/components/security/HumanCheckDialog.tsx",
+        "frontend/src/index.css"
       ],
       "components": [
         "authorization@3.0.0",
@@ -69,29 +46,6 @@
       ],
       "testIds": [
         "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-define-the-initial-onboarding-steps-in-the-wizard-to-match-the-upcoming-implementation-order-1-wizard-introduction-overview-2-business-identity-verification-placeholder-3-store-profile-placeholder-plus-any-additional-placeholder-steps-needed-to-support-future-expansion-e-g-storefront-template-products-without-implementing-their-detailed-forms-yet",
-      "featureTitle": "Define the initial onboarding steps in the wizard to match the upcoming implementation order: (1) Wizard Introduction/Overview, (2) Business + Identity Verification (placeholder), (3) Store Profile (placeholder), plus any additional placeholder steps needed to support future expansion (e.g., Storefront Template, Products) without implementing their detailed forms yet.",
-      "files": [
-        "frontend/src/components/seller-onboarding/SellerOnboardingWizard.tsx",
-        "frontend/src/components/seller-onboarding/onboardingSteps.ts"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }
