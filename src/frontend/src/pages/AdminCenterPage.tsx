@@ -19,6 +19,10 @@ import UserRoleManagement from '../components/admin/UserRoleManagement';
 import MarketplaceRoadmapAdmin from '../components/admin/MarketplaceRoadmapAdmin';
 import AdminAccessLinksPanel from '../components/admin/AdminAccessLinksPanel';
 import RoleApplicationsPanel from '../components/admin/RoleApplicationsPanel';
+import AllAccountsPanel from '../components/admin/accounts/AllAccountsPanel';
+import SalesReportsPanel from '../components/admin/analytics/SalesReportsPanel';
+import AdminMessagingPanel from '../components/admin/messaging/AdminMessagingPanel';
+import AdminDropdownMenu from '../components/admin/AdminDropdownMenu';
 
 export default function AdminCenterPage() {
   const { identity, isInitializing } = useInternetIdentity();
@@ -220,9 +224,17 @@ export default function AdminCenterPage() {
           </Alert>
         )}
 
+        {/* Admin Actions Dropdown Menu */}
+        <div className="flex justify-end">
+          <AdminDropdownMenu />
+        </div>
+
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-10 lg:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
+            <TabsTrigger value="sales">Sales</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="status">Status</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="fees">Fees</TabsTrigger>
@@ -269,6 +281,18 @@ export default function AdminCenterPage() {
                 <RoleApplicationsPanel />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="accounts" className="space-y-6">
+            <AllAccountsPanel />
+          </TabsContent>
+
+          <TabsContent value="sales" className="space-y-6">
+            <SalesReportsPanel />
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-6">
+            <AdminMessagingPanel />
           </TabsContent>
 
           <TabsContent value="status" className="space-y-6">

@@ -7,13 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole } from '../../backend';
+import { Principal } from '@icp-sdk/core/principal';
 
 export default function RoleApplicationsPanel() {
   const { data: applications, isLoading, error, refetch } = useGetPendingRoleApplications();
   const approveApplication = useApproveRoleApplication();
   const rejectApplication = useRejectRoleApplication();
 
-  const handleApprove = async (applicantPrincipal: string) => {
+  const handleApprove = async (applicantPrincipal: Principal) => {
     try {
       await approveApplication.mutateAsync(applicantPrincipal);
       toast.success('Application approved successfully');
@@ -24,7 +25,7 @@ export default function RoleApplicationsPanel() {
     }
   };
 
-  const handleReject = async (applicantPrincipal: string) => {
+  const handleReject = async (applicantPrincipal: Principal) => {
     try {
       await rejectApplication.mutateAsync(applicantPrincipal);
       toast.success('Application rejected');
@@ -160,7 +161,7 @@ export default function RoleApplicationsPanel() {
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => handleApprove(application.applicant.toString())}
+                      onClick={() => handleApprove(application.applicant)}
                       disabled={approveApplication.isPending || rejectApplication.isPending}
                     >
                       <CheckCircle className="h-4 w-4 mr-1" />
@@ -169,7 +170,7 @@ export default function RoleApplicationsPanel() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => handleReject(application.applicant.toString())}
+                      onClick={() => handleReject(application.applicant)}
                       disabled={approveApplication.isPending || rejectApplication.isPending}
                     >
                       <XCircle className="h-4 w-4 mr-1" />

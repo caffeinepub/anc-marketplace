@@ -1,34 +1,109 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-21T19:37:05.045Z",
+  "generatedAt": "2026-02-21T22:20:20.094Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 0,
+    "total": 6,
+    "implemented": 6,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Diagnose and fix the backend access control initialization logic that is causing the Admin Center to hang on 'Connecting to backend...' indefinitely despite successfully detecting the authenticated principal (whlz5-24wky-cak5n-dcfue-ja2x5-...)",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
-        "status": "missing",
+        "summary": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+        "status": "implemented",
         "plannedFiles": [
+          "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
+          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
           "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/components/admin/AdminConsoleLayout.tsx",
-          "frontend/src/pages/AdminDashboard.tsx"
+          "frontend/src/hooks/useQueries.ts"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
+          "frontend/src/components/admin/messaging/MessageComposer.tsx",
+          "frontend/src/components/admin/messaging/MessageThread.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
+          "frontend/src/components/admin/messaging/MessageComposer.tsx",
+          "frontend/src/components/admin/messaging/MessageThread.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/AdminDropdownMenu.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/AdminDropdownMenu.tsx",
+          "frontend/src/pages/AdminCenterPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useStripeCheckout.ts",
+          "frontend/src/components/admin/payments/StripeSetupCard.tsx",
+          "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
+          "frontend/src/pages/PaymentSuccess.tsx",
+          "frontend/src/pages/PaymentFailure.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ]
       }
     ]
   },
@@ -36,7 +111,22 @@
     "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/admin/AdminDropdownMenu.tsx",
+    "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+    "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
+    "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+    "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+    "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
+    "frontend/src/components/admin/messaging/MessageComposer.tsx",
+    "frontend/src/components/admin/messaging/MessageThread.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminCenterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

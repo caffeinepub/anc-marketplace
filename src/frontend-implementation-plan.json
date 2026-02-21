@@ -1,41 +1,199 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Center Backend Initialization Hang",
+  "title": "Fix Admin Center backend connection and implement comprehensive dashboard",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
+      "id": "REQ-1",
+      "summary": "Fix Admin Center backend connection issue preventing dashboard from loading past initialization screen",
       "acceptanceCriteria": [
-        "The Admin Center transitions from loading state to displaying the full dashboard once initialization completes",
-        "Error handling is in place for initialization failures",
-        "The user can access all admin functionality after successful initialization"
+        "Admin Center page completes initialization without hanging",
+        "Backend connection establishes successfully",
+        "Dashboard content displays after successful connection",
+        "No infinite loading state on Admin Center page"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Review and fix the initialization logic that causes the Admin Center to hang on 'Connecting to backend...' indefinitely. Ensure the component properly handles the initializeAccessControl call, adds timeout and retry logic, implements proper error states for initialization failures, and transitions from loading to dashboard content once the authenticated principal is registered in the backend. Add console logging to track initialization flow and identify where the hang occurs."
+          "description": "Fix the initialization logic and loading state handling to prevent infinite loading. Ensure proper error handling for backend connection failures and display appropriate error messages. Add timeout logic to detect connection failures and provide retry functionality. Improve the loading state UI to show progress and allow users to cancel/retry if connection takes too long."
         },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Review the useInitializeAccessControl hook to ensure it properly handles promise resolution, timeout scenarios, and error states. Add retry logic with exponential backoff if initialization fails, and ensure the mutation properly invalidates related queries after successful initialization. Verify that the hook returns appropriate loading and error states that the AdminCenterPage can consume."
+          "description": "Review and fix the admin-related query hooks (useGetAdminDashboardData, useInitializeAccessControl, useIsCallerAdmin) to ensure they properly handle loading states, errors, and don't cause infinite loading loops. Add proper retry logic and error boundaries for admin queries."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Display comprehensive account and transaction information in Admin Center dashboard",
+      "acceptanceCriteria": [
+        "All user accounts are listed with current balance totals",
+        "Complete transaction history is displayed for all accounts",
+        "Transaction details include date, type, amount, and status",
+        "Data refreshes to show current state"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
+          "operation": "create",
+          "description": "Create a comprehensive accounts panel that displays all user accounts with their current balances using the useGetAllUsers hook from useQueries.ts. Show account totals, user names, principals, and roles in a sortable table format with search/filter capabilities."
         },
         {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
           "operation": "modify",
-          "description": "Review the actor initialization logic to ensure the authenticated actor is properly created and available before the AdminCenterPage attempts to call initializeAccessControl. Verify that the actor is not in a perpetual loading state and that authentication state changes are properly reflected. Add safeguards to prevent initialization calls when the actor is not ready."
+          "description": "Enhance the existing transactions panel to display comprehensive transaction history for all accounts with filtering by user, transaction type, status, and date range. Add pagination for large transaction sets and export functionality. Ensure the panel shows all transaction details including date, type, amount, and status clearly."
         },
         {
-          "path": "frontend/src/components/admin/AdminConsoleLayout.tsx",
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Add loading state indicators and error handling UI to the AdminConsoleLayout component. Ensure that the layout can display appropriate feedback during initialization (loading spinner, progress messages) and gracefully handle initialization errors with user-friendly error messages and retry options."
+          "description": "Add a new 'Accounts' tab to the Admin Center that renders the AllAccountsPanel component. Wire the tab into the existing tab navigation structure alongside Financial Overview, Transactions, and other tabs."
         },
         {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Review the AdminDashboard component's initialization handling to ensure consistency with AdminCenterPage. If this component also handles access control initialization, apply the same timeout, retry, and error handling improvements. Ensure both admin pages have consistent behavior and don't duplicate initialization calls unnecessarily."
+          "description": "Ensure the useGetAllUsers and useGetAllTransactionHistory hooks are properly implemented with error handling and refresh capabilities. Add any missing query hooks needed for comprehensive account data display."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add comprehensive sales reports and analytics to Admin Center dashboard",
+      "acceptanceCriteria": [
+        "Sales reports display total revenue and sales count",
+        "Analytics show trends over time (daily, weekly, monthly)",
+        "Key metrics are clearly presented with visual indicators",
+        "Reports can be refreshed to show latest data"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "operation": "create",
+          "description": "Create a sales reports panel that displays comprehensive marketplace sales analytics using the useGetAdminCenterAnalytics hook. Show total revenue, sales count, average transaction amounts, success/failure ratios, and trends over different time periods (today, week, month, all time). Use chart components for visual data representation and include refresh functionality."
+        },
+        {
+          "path": "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+          "operation": "create",
+          "description": "Create a component that displays key sales metrics in card format including total revenue, total sales, average order value, successful/pending/failed transactions, and conversion metrics. Use visual indicators (colors, icons, trend arrows) to highlight important changes and performance indicators."
+        },
+        {
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
+          "operation": "modify",
+          "description": "Add a 'Sales Reports' tab to the Admin Center that renders the SalesReportsPanel and SalesMetricsCards components. Position it logically within the tab navigation structure, likely near the Financial Overview tab."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Verify the useGetAdminCenterAnalytics hook properly fetches and caches analytics data with refresh capabilities. Ensure it includes all necessary metrics for sales reporting and handles loading/error states appropriately."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Implement internal messaging system for admin communication with sellers and users",
+      "acceptanceCriteria": [
+        "Messaging interface is accessible from Admin Center",
+        "Admins can view messages from sellers and users",
+        "Admins can send messages to marketplace participants",
+        "Message history is preserved and displayed"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
+          "operation": "create",
+          "description": "Create an admin messaging interface that displays message threads with sellers and users. Include a message list showing sender, subject, timestamp, and read/unread status. Provide filtering by user type (seller, customer, business) and search functionality. Note: This UI will interact with backend messaging capabilities that manage message storage and retrieval."
+        },
+        {
+          "path": "frontend/src/components/admin/messaging/MessageComposer.tsx",
+          "operation": "create",
+          "description": "Create a message composition component allowing admins to compose and send messages to specific users. Include recipient selection (searchable dropdown of all users), subject line, message body (rich text editor), and send/draft/cancel actions. Validate required fields before submission."
+        },
+        {
+          "path": "frontend/src/components/admin/messaging/MessageThread.tsx",
+          "operation": "create",
+          "description": "Create a component that displays a conversation thread between admin and a specific user, showing message history in chronological order with timestamps, sender identification, and message content. Include reply functionality inline within the thread."
+        },
+        {
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
+          "operation": "modify",
+          "description": "Add a 'Messages' tab to the Admin Center that renders the AdminMessagingPanel component. Wire it into the tab navigation structure to provide easy access to the messaging system."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add query hooks for messaging functionality including useGetAdminMessages (fetch all admin messages), useSendAdminMessage (send message mutation), and useGetMessageThread (fetch specific conversation). Include proper error handling, loading states, and cache invalidation after sending messages."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Create comprehensive admin dropdown menu with essential management options",
+      "acceptanceCriteria": [
+        "Dropdown menu displays in Admin Center header or navigation",
+        "Menu includes all specified items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities",
+        "Menu structure is organized and easy to navigate",
+        "Menu items are placeholders that will be connected to pages later",
+        "Additional essential admin functions are included in the menu"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/AdminDropdownMenu.tsx",
+          "operation": "create",
+          "description": "Create a comprehensive admin dropdown menu component with organized sections for user management, employee management, marketplace oversight, and system settings. Include menu items: 'Assign Roles', 'Review Employees', 'Hire Employee', 'View Marketplace Activity', 'Review Seller Activities', 'Manage Applications', 'System Settings', 'Financial Reports', 'User Accounts', and 'Support Tools'. Use icon indicators for each item and organize them into logical groups with section headers. Items should be placeholders (buttons/links without navigation) that display a 'Coming Soon' toast when clicked."
+        },
+        {
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
+          "operation": "modify",
+          "description": "Integrate the AdminDropdownMenu component into the Admin Center page header, positioned prominently near the title or in a dedicated admin actions area. Ensure it's accessible on all Admin Center tabs and clearly labeled (e.g., 'Admin Actions' or 'Management')."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Consider adding the AdminDropdownMenu to the main navigation layout when the user has admin role, providing quick access to admin functions from anywhere in the application. This is in addition to the Admin Center integration."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Verify and ensure stable Stripe integration frontend connection",
+      "acceptanceCriteria": [
+        "Stripe configuration on backend is properly initialized",
+        "Frontend can successfully create Stripe checkout sessions",
+        "Payment flows complete without connection errors",
+        "Error handling is in place for Stripe integration failures",
+        "Stripe webhook handling (if applicable) functions correctly"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useStripeCheckout.ts",
+          "operation": "modify",
+          "description": "Review and enhance the Stripe checkout hook to ensure robust error handling, proper session validation, and stable connection to the backend createCheckoutSession function. Add retry logic for transient failures, validate the session URL before redirecting, and provide clear error messages when Stripe configuration is missing or checkout fails."
+        },
+        {
+          "path": "frontend/src/components/admin/payments/StripeSetupCard.tsx",
+          "operation": "modify",
+          "description": "Enhance the Stripe setup card to provide better feedback on configuration status, connection testing functionality, and validation of Stripe credentials. Add a 'Test Connection' button that verifies the Stripe configuration is working correctly. Display clear status indicators (connected/disconnected/error) with helpful troubleshooting messages."
+        },
+        {
+          "path": "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
+          "operation": "modify",
+          "description": "Improve the payment processing panel to handle Stripe connection errors gracefully, show loading states during checkout session creation, and provide clear error messages when Stripe is not properly configured. Add connection status indicators and ensure the panel checks Stripe configuration before allowing payment actions."
+        },
+        {
+          "path": "frontend/src/pages/PaymentSuccess.tsx",
+          "operation": "modify",
+          "description": "Enhance the payment success page to verify the payment session status with the backend using getStripeSessionStatus and display detailed confirmation information. Handle edge cases where the session might not be fully completed."
+        },
+        {
+          "path": "frontend/src/pages/PaymentFailure.tsx",
+          "operation": "modify",
+          "description": "Improve the payment failure page to display more detailed error information from Stripe, provide troubleshooting guidance, and offer clear retry options. Include a link back to Stripe configuration if the failure was due to setup issues."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Verify the useIsStripeConfigured, useSetStripeConfiguration, and useGetStripeSessionStatus hooks have proper error handling, loading states, and retry logic. Ensure these hooks correctly manage Stripe-related state and provide stable connections to backend functions."
         }
       ]
     }

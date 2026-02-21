@@ -1,60 +1,140 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Center backend initialization hang",
+  "title": "Fix Admin Center backend connection and implement comprehensive dashboard",
+  "projectName": "ANC Marketplace",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Diagnose and fix the backend access control initialization logic that is causing the Admin Center to hang on 'Connecting to backend...' indefinitely despite successfully detecting the authenticated principal (whlz5-24wky-cak5n-dcfue-ja2x5-...)",
-      "target": "backend",
+      "text": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-recent-11",
-          "msg-recent-12",
-          "msg-recent-13"
+          "msg-recent"
         ],
         "quotes": [
-          "Ok this is what I am getting now and that is it",
-          "Diagnose and fix",
-          "Admin Center is stuck on 'Initializing...' and 'Connecting to backend...'"
+          "Still doesn't completely load",
+          "stuck on 'Initializing...' and 'Connecting to backend...' screen"
         ]
       },
       "acceptanceCriteria": [
-        "The backend initialization completes successfully without hanging",
-        "The Admin Center proceeds past the 'Connecting to backend...' spinner",
-        "The authenticated principal is properly registered in the backend access control system"
+        "Admin Center page completes initialization without hanging",
+        "Backend connection establishes successfully",
+        "Dashboard content displays after successful connection",
+        "No infinite loading state on Admin Center page"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the frontend properly receives and handles the completion of backend access control initialization so the Admin Center can render the full dashboard interface",
-      "target": "frontend",
+      "text": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-recent-11",
-          "msg-recent-12"
+          "msg-recent"
         ],
         "quotes": [
-          "The frontend can now see your authenticated principal, but the backend is still having trouble completing the initialization"
+          "All available accounts and account totals available with transaction history (all information that is already there)"
         ]
       },
       "acceptanceCriteria": [
-        "The Admin Center transitions from loading state to displaying the full dashboard once initialization completes",
-        "Error handling is in place for initialization failures",
-        "The user can access all admin functionality after successful initialization"
+        "All user accounts are listed with current balance totals",
+        "Complete transaction history is displayed for all accounts",
+        "Transaction details include date, type, amount, and status",
+        "Data refreshes to show current state"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "Sales reports"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Sales reports display total revenue and sales count",
+        "Analytics show trends over time (daily, weekly, monthly)",
+        "Key metrics are clearly presented with visual indicators",
+        "Reports can be refreshed to show latest data"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "messaging system"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Messaging interface is accessible from Admin Center",
+        "Admins can view messages from sellers and users",
+        "Admins can send messages to marketplace participants",
+        "Message history is preserved and displayed"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "a drop-down for admins that includes menu options options an admin or owner needs to successfully manage and maintain the marketplace just put the items in the list don't worry about the pages right now",
+          "Assign roles, review employees, hire, view marketplace activity, review sellers activities"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Dropdown menu displays in Admin Center header or navigation",
+        "Menu includes all specified items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities",
+        "Menu structure is organized and easy to navigate",
+        "Menu items are placeholders that will be connected to pages later",
+        "Additional essential admin functions are included in the menu"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "make sure that the stripe connection is good on both front end and back end and the connection between front end and back end is stable"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Stripe configuration on backend is properly initialized",
+        "Frontend can successfully create Stripe checkout sessions",
+        "Payment flows complete without connection errors",
+        "Error handling is in place for Stripe integration failures",
+        "Stripe webhook handling (if applicable) functions correctly"
       ]
     }
   ],
   "constraints": [
-    "Do not change the single-actor backend architecture",
-    "Preserve the existing access control structure and role-based permissions",
-    "Maintain compatibility with the current Internet Identity authentication flow"
+    "Do not modify the existing backend single-actor architecture",
+    "Do not edit immutable frontend paths: useInternetIdentity hooks, useActor.ts, main.tsx, frontend/src/components/ui/*",
+    "Preserve existing Stripe integration configuration and payment processing logic",
+    "Maintain compatibility with existing user account and transaction data structures"
   ],
   "nonGoals": [
-    "Adding new admin features or dashboard sections",
-    "Modifying the authentication mechanism",
-    "Changing the UI design of the Admin Center",
-    "Adding additional access control roles"
+    "Building individual pages for admin menu items (will be implemented separately)",
+    "Changing the technology stack or framework",
+    "Implementing real-time chat functionality in the messaging system",
+    "Modifying existing seller or customer dashboard features",
+    "Adding new payment processors beyond Stripe"
   ],
   "imageRequirements": {
     "required": [],

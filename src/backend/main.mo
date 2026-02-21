@@ -8,8 +8,8 @@ import Iter "mo:core/Iter";
 import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
-import Runtime "mo:core/Runtime";
 import Int "mo:core/Int";
+import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
@@ -386,6 +386,17 @@ actor {
     marketplaceRoadmap : [MarketplaceRoadmap];
   };
 
+  public type AdminCenterAnalytics = {
+    totalTransactions : Nat;
+    totalRevenueCents : Nat;
+    successfulPayments : Nat;
+    failedPayments : Nat;
+    pendingPayments : Nat;
+    averageTransactionAmountCents : Float;
+    failedToSuccessRatio : Float;
+    attemptsPerSuccessfulTransaction : Float;
+  };
+
   public type AssistantCategory = {
     #general;
     #ecommerce;
@@ -695,7 +706,10 @@ actor {
     };
   };
 
-  public query func isStripeConfigured() : async Bool {
+  public query ({ caller }) func isStripeConfigured() : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can check Stripe configuration status");
+    };
     stripeConfiguration != null;
   };
 
@@ -988,6 +1002,121 @@ actor {
     };
   };
 
+  public query ({ caller }) func getAllUsers() : async [UserWithRole] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
+    };
+
+    userStore.entries().map(
+      func((principal, profile) : (Principal, UserProfile)) : UserWithRole {
+        {
+          principal;
+          profile;
+          systemRole = AccessControl.getUserRole(accessControlState, principal);
+        };
+      }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getAllOrders() : async [EcomOrder] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all orders");
+    };
+    orderStore.values().toArray();
+  };
+
+  public query ({ caller }) func getSellerOrders() : async [EcomOrder] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view orders");
+    };
+
+    orderStore.values().filter(
+      func(order) : Bool {
+        switch (order.sellerPrincipal) {
+          case (?seller) { Principal.equal(seller, caller) };
+          case (null) { false };
+        };
+      }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getCustomerOrders() : async [EcomOrder] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view orders");
+    };
+
+    orderStore.values().filter(
+      func(order) : Bool {
+        switch (order.customerPrincipal) {
+          case (?customer) { Principal.equal(customer, caller) };
+          case (null) { false };
+        };
+      }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getAdminCenterAnalytics() : async AdminCenterAnalytics {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view analytics");
+    };
+
+    let allOrders = orderStore.values().toArray();
+    var totalRevenueCents = 0;
+    var successfulPayments = 0;
+    var failedPayments = 0;
+    var pendingPayments = 0;
+
+    for (order in allOrders.values()) {
+      switch (order.status) {
+        case (#completed) {
+          successfulPayments += 1;
+          totalRevenueCents += order.totalAmount;
+        };
+        case (#cancelled) {
+          failedPayments += 1;
+        };
+        case (#pending or #inProgress) {
+          pendingPayments += 1;
+        };
+      };
+    };
+
+    let totalTransactions = allOrders.size();
+    let successfulPaymentsFloat = successfulPayments.toFloat();
+    let totalRevenueCentsFloat = totalRevenueCents.toFloat();
+    let failedPaymentsFloat = failedPayments.toFloat();
+    let totalTransactionsFloat = totalTransactions.toFloat();
+
+    let averageTransactionAmountCents = if (successfulPayments > 0) {
+      totalRevenueCentsFloat / successfulPaymentsFloat;
+    } else {
+      0.0;
+    };
+
+    let failedToSuccessRatio = if (successfulPayments > 0) {
+      failedPaymentsFloat / successfulPaymentsFloat;
+    } else {
+      0.0;
+    };
+
+    let attemptsPerSuccessfulTransaction = if (successfulPayments > 0) {
+      totalTransactionsFloat / successfulPaymentsFloat;
+    } else {
+      0.0;
+    };
+
+    {
+      totalTransactions;
+      totalRevenueCents;
+      successfulPayments;
+      failedPayments;
+      pendingPayments;
+      averageTransactionAmountCents;
+      failedToSuccessRatio;
+      attemptsPerSuccessfulTransaction;
+    };
+  };
+
   func filterOrdersByTimeFrame(orders : [EcomOrder], timeFrame : TimeFrame) : [EcomOrder] {
     let now = Time.now();
     let nanosPerDay = 86_400_000_000_000;
@@ -1084,6 +1213,129 @@ actor {
       Runtime.trap("Unauthorized: Only owner admins can update financial state");
     };
     adminFinancialState := newState;
+  };
+
+  public query ({ caller }) func getSellerPayoutProfile() : async ?SellerPayoutProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view payout profiles");
+    };
+    sellerPayoutProfiles.get(caller);
+  };
+
+  public shared ({ caller }) func updateSellerPayoutProfile(profile : SellerPayoutProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can update payout profiles");
+    };
+    if (not Principal.equal(profile.sellerPrincipal, caller)) {
+      Runtime.trap("Unauthorized: Can only update your own payout profile");
+    };
+    sellerPayoutProfiles.add(caller, profile);
+  };
+
+  public query ({ caller }) func getAllSellerPayoutProfiles() : async [SellerPayoutProfile] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all payout profiles");
+    };
+    sellerPayoutProfiles.values().toArray();
+  };
+
+  public shared ({ caller }) func createPayoutTransfer(amountCents : Nat) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create payout transfers");
+    };
+
+    switch (sellerPayoutProfiles.get(caller)) {
+      case (null) { Runtime.trap("Payout profile not found. Please set up your payout account first.") };
+      case (?profile) {
+        if (profile.internalBalanceCents < amountCents) {
+          Runtime.trap("Insufficient balance for payout");
+        };
+
+        let transferId = "payout_" # Time.now().toText();
+        let transfer : SellerPayoutTransferRecord = {
+          id = transferId;
+          sellerPrincipal = caller;
+          amountCents;
+          payoutAccount = profile.designatedPayoutAccount;
+          status = #pending;
+          createdAt = Time.now();
+          processedAt = null;
+          errorMessage = null;
+        };
+
+        sellerPayoutTransfers.add(transferId, transfer);
+
+        let updatedProfile = {
+          profile with internalBalanceCents = profile.internalBalanceCents - amountCents;
+        };
+        sellerPayoutProfiles.add(caller, updatedProfile);
+
+        transferId;
+      };
+    };
+  };
+
+  public query ({ caller }) func getSellerPayoutTransfers() : async [SellerPayoutTransferRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view payout transfers");
+    };
+
+    sellerPayoutTransfers.values().filter(
+      func(transfer) : Bool {
+        Principal.equal(transfer.sellerPrincipal, caller);
+      }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getAllPayoutTransfers() : async [SellerPayoutTransferRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all payout transfers");
+    };
+    sellerPayoutTransfers.values().toArray();
+  };
+
+  public shared ({ caller }) func processPayoutTransfer(transferId : Text, success : Bool, errorMessage : ?Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can process payout transfers");
+    };
+
+    switch (sellerPayoutTransfers.get(transferId)) {
+      case (null) { Runtime.trap("Transfer not found") };
+      case (?transfer) {
+        let updatedTransfer = {
+          transfer with
+          status = if (success) { #processed } else { #failed };
+          processedAt = ?Time.now();
+          errorMessage;
+        };
+        sellerPayoutTransfers.add(transferId, updatedTransfer);
+      };
+    };
+  };
+
+  public query ({ caller }) func getKnowledgeBase() : async [AssistantKnowledgeEntry] {
+    knowledgeBase.values().filter(func(entry) { entry.isActive }).toArray();
+  };
+
+  public shared ({ caller }) func addKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add knowledge entries");
+    };
+    knowledgeBase.add(entry.id, entry);
+  };
+
+  public shared ({ caller }) func updateKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update knowledge entries");
+    };
+    knowledgeBase.add(entry.id, entry);
+  };
+
+  public shared ({ caller }) func deleteKnowledgeEntry(entryId : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete knowledge entries");
+    };
+    knowledgeBase.remove(entryId);
   };
 
   func initSeededKnowledge() {

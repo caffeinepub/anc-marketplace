@@ -16,6 +16,16 @@ export interface TransformationOutput {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface SellerPayoutTransferRecord {
+    id: string;
+    status: PayoutTransferStatus;
+    sellerPrincipal: Principal;
+    createdAt: bigint;
+    errorMessage?: string;
+    amountCents: bigint;
+    processedAt?: bigint;
+    payoutAccount: string;
+}
 export interface AdminPageSectionStatus {
     status: Variant_completed_comingSoon_inProgress;
     section: AdminPageSection;
@@ -27,6 +37,13 @@ export interface SellerOnboardingProgress {
     timestamps: Array<[SellerOnboardingStep, bigint]>;
     currentStep: SellerOnboardingStep;
     completedSteps: Array<SellerOnboardingStep>;
+}
+export interface SellerPayoutProfile {
+    sellerPrincipal: Principal;
+    createdAt: bigint;
+    lastUpdated: bigint;
+    designatedPayoutAccount: string;
+    internalBalanceCents: bigint;
 }
 export interface TransformationInput {
     context: Uint8Array;
@@ -40,10 +57,6 @@ export interface SellerEarningsSummary {
 export interface AdminDashboardData {
     adminSections: Array<AdminPageSectionStatus>;
     marketplaceRoadmap: Array<MarketplaceRoadmap>;
-}
-export interface AdminPageStatusDetails {
-    version: string;
-    notes: string;
 }
 export type StripeSessionStatus = {
     __kind__: "completed";
@@ -66,6 +79,15 @@ export interface UserRoleSummary {
     adminCount: bigint;
     userCount: bigint;
 }
+export interface AdminPageStatusDetails {
+    version: string;
+    notes: string;
+}
+export interface UserWithRole {
+    principal: Principal;
+    profile: UserProfile;
+    systemRole: UserRole__1;
+}
 export interface MarketplaceRoadmap {
     progressPercentage: bigint;
     name: string;
@@ -73,6 +95,25 @@ export interface MarketplaceRoadmap {
     lastUpdated: bigint;
     roadmapId: string;
     notes: string;
+}
+export interface EcomOrder {
+    status: OrderStatus;
+    sellerPrincipal?: Principal;
+    shippingCostCents: bigint;
+    customerPrincipal?: Principal;
+    orderId: string;
+    totalAmount: bigint;
+    products: Array<string>;
+}
+export interface AdminCenterAnalytics {
+    pendingPayments: bigint;
+    averageTransactionAmountCents: number;
+    failedToSuccessRatio: number;
+    failedPayments: bigint;
+    successfulPayments: bigint;
+    attemptsPerSuccessfulTransaction: number;
+    totalTransactions: bigint;
+    totalRevenueCents: bigint;
 }
 export interface http_header {
     value: string;
@@ -98,6 +139,16 @@ export interface RoleApplication {
     requestedRole: UserRole;
     applicationDate: bigint;
     reason: string;
+}
+export interface AssistantKnowledgeEntry {
+    id: string;
+    question: string;
+    isBusinessOps: boolean;
+    usageCount: bigint;
+    lastUpdated: bigint;
+    answer: string;
+    isActive: boolean;
+    category: string;
 }
 export interface ShoppingItem {
     productName: string;
@@ -125,6 +176,17 @@ export enum AdminPageSection {
     businessDetails = "businessDetails",
     affiliate = "affiliate",
     funding = "funding"
+}
+export enum OrderStatus {
+    cancelled = "cancelled",
+    pending = "pending",
+    completed = "completed",
+    inProgress = "inProgress"
+}
+export enum PayoutTransferStatus {
+    pending = "pending",
+    processed = "processed",
+    failed = "failed"
 }
 export enum RoleApplicationStatus {
     pending = "pending",
@@ -173,19 +235,32 @@ export enum Variant_successful_failed {
     failed = "failed"
 }
 export interface backendInterface {
+    addKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
     approveRoleApplication(applicant: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     assignRole(user: Principal, role: UserRole__1): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    createPayoutTransfer(amountCents: bigint): Promise<string>;
+    deleteKnowledgeEntry(entryId: string): Promise<void>;
+    getAdminCenterAnalytics(): Promise<AdminCenterAnalytics>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getAdminFinancialState(): Promise<AdminFinancialState>;
+    getAllOrders(): Promise<Array<EcomOrder>>;
+    getAllPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
+    getAllSellerPayoutProfiles(): Promise<Array<SellerPayoutProfile>>;
     getAllTransactionHistory(): Promise<Array<TransactionRecord>>;
+    getAllUsers(): Promise<Array<UserWithRole>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
+    getCustomerOrders(): Promise<Array<EcomOrder>>;
+    getKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
     getOwnerEmail(): Promise<string>;
     getPendingRoleApplications(): Promise<Array<RoleApplication>>;
     getSellerEarningsSummary(timeFrame: TimeFrame): Promise<SellerEarningsSummary>;
+    getSellerOrders(): Promise<Array<EcomOrder>>;
+    getSellerPayoutProfile(): Promise<SellerPayoutProfile | null>;
+    getSellerPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getTransactionRecordById(transactionId: string): Promise<TransactionRecord | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
@@ -194,6 +269,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     isCallerOwnerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    processPayoutTransfer(transferId: string, success: boolean, errorMessage: string | null): Promise<void>;
     rejectRoleApplication(applicant: Principal): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveOnboarding(wizardState: SellerOnboardingProgress): Promise<void>;
@@ -202,4 +278,6 @@ export interface backendInterface {
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAdminDashboardData(): Promise<void>;
     updateAdminFinancialState(newState: AdminFinancialState): Promise<void>;
+    updateKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
+    updateSellerPayoutProfile(profile: SellerPayoutProfile): Promise<void>;
 }

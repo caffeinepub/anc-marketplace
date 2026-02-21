@@ -10,6 +10,16 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AdminCenterAnalytics {
+  'pendingPayments' : bigint,
+  'averageTransactionAmountCents' : number,
+  'failedToSuccessRatio' : number,
+  'failedPayments' : bigint,
+  'successfulPayments' : bigint,
+  'attemptsPerSuccessfulTransaction' : number,
+  'totalTransactions' : bigint,
+  'totalRevenueCents' : bigint,
+}
 export interface AdminDashboardData {
   'adminSections' : Array<AdminPageSectionStatus>,
   'marketplaceRoadmap' : Array<MarketplaceRoadmap>,
@@ -33,9 +43,28 @@ export interface AdminPageSectionStatus {
   'details' : [] | [AdminPageStatusDetails],
 }
 export interface AdminPageStatusDetails { 'version' : string, 'notes' : string }
+export interface AssistantKnowledgeEntry {
+  'id' : string,
+  'question' : string,
+  'isBusinessOps' : boolean,
+  'usageCount' : bigint,
+  'lastUpdated' : bigint,
+  'answer' : string,
+  'isActive' : boolean,
+  'category' : string,
+}
 export interface CreditAccount {
   'creditLimitCents' : bigint,
   'usedAmountCents' : bigint,
+}
+export interface EcomOrder {
+  'status' : OrderStatus,
+  'sellerPrincipal' : [] | [Principal],
+  'shippingCostCents' : bigint,
+  'customerPrincipal' : [] | [Principal],
+  'orderId' : string,
+  'totalAmount' : bigint,
+  'products' : Array<string>,
 }
 export interface MarketplaceRoadmap {
   'progressPercentage' : bigint,
@@ -45,6 +74,13 @@ export interface MarketplaceRoadmap {
   'roadmapId' : string,
   'notes' : string,
 }
+export type OrderStatus = { 'cancelled' : null } |
+  { 'pending' : null } |
+  { 'completed' : null } |
+  { 'inProgress' : null };
+export type PayoutTransferStatus = { 'pending' : null } |
+  { 'processed' : null } |
+  { 'failed' : null };
 export interface RoleApplication {
   'status' : RoleApplicationStatus,
   'applicant' : Principal,
@@ -73,6 +109,23 @@ export type SellerOnboardingStep = { 'marketing' : null } |
   { 'storeSetup' : null } |
   { 'websiteIntegration' : null } |
   { 'companyDetails' : null };
+export interface SellerPayoutProfile {
+  'sellerPrincipal' : Principal,
+  'createdAt' : bigint,
+  'lastUpdated' : bigint,
+  'designatedPayoutAccount' : string,
+  'internalBalanceCents' : bigint,
+}
+export interface SellerPayoutTransferRecord {
+  'id' : string,
+  'status' : PayoutTransferStatus,
+  'sellerPrincipal' : Principal,
+  'createdAt' : bigint,
+  'errorMessage' : [] | [string],
+  'amountCents' : bigint,
+  'processedAt' : [] | [bigint],
+  'payoutAccount' : string,
+}
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
@@ -134,6 +187,11 @@ export interface UserRoleSummary {
 export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface UserWithRole {
+  'principal' : Principal,
+  'profile' : UserProfile,
+  'systemRole' : UserRole__1,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -167,6 +225,7 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
+  'addKnowledgeEntry' : ActorMethod<[AssistantKnowledgeEntry], undefined>,
   'approveRoleApplication' : ActorMethod<[Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'assignRole' : ActorMethod<[Principal, UserRole__1], undefined>,
@@ -174,15 +233,30 @@ export interface _SERVICE {
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'createPayoutTransfer' : ActorMethod<[bigint], string>,
+  'deleteKnowledgeEntry' : ActorMethod<[string], undefined>,
+  'getAdminCenterAnalytics' : ActorMethod<[], AdminCenterAnalytics>,
   'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
+  'getAllOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getAllPayoutTransfers' : ActorMethod<[], Array<SellerPayoutTransferRecord>>,
+  'getAllSellerPayoutProfiles' : ActorMethod<[], Array<SellerPayoutProfile>>,
   'getAllTransactionHistory' : ActorMethod<[], Array<TransactionRecord>>,
+  'getAllUsers' : ActorMethod<[], Array<UserWithRole>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
+  'getCustomerOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
   'getOwnerEmail' : ActorMethod<[], string>,
   'getPendingRoleApplications' : ActorMethod<[], Array<RoleApplication>>,
   'getSellerEarningsSummary' : ActorMethod<[TimeFrame], SellerEarningsSummary>,
+  'getSellerOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getSellerPayoutProfile' : ActorMethod<[], [] | [SellerPayoutProfile]>,
+  'getSellerPayoutTransfers' : ActorMethod<
+    [],
+    Array<SellerPayoutTransferRecord>
+  >,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getTransactionRecordById' : ActorMethod<[string], [] | [TransactionRecord]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
@@ -191,6 +265,10 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerOwnerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'processPayoutTransfer' : ActorMethod<
+    [string, boolean, [] | [string]],
+    undefined
+  >,
   'rejectRoleApplication' : ActorMethod<[Principal], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveOnboarding' : ActorMethod<[SellerOnboardingProgress], undefined>,
@@ -199,6 +277,8 @@ export interface _SERVICE {
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAdminDashboardData' : ActorMethod<[], undefined>,
   'updateAdminFinancialState' : ActorMethod<[AdminFinancialState], undefined>,
+  'updateKnowledgeEntry' : ActorMethod<[AssistantKnowledgeEntry], undefined>,
+  'updateSellerPayoutProfile' : ActorMethod<[SellerPayoutProfile], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

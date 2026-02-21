@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile, StripeConfiguration, SellerOnboardingProgress, AdminDashboardData, TransactionRecord, SellerEarningsSummary, TimeFrame, UserRoleSummary, RoleApplication, UserRole } from '../backend';
+import type { UserProfile, StripeConfiguration, SellerOnboardingProgress, AdminDashboardData, TransactionRecord, SellerEarningsSummary, TimeFrame, UserRoleSummary, RoleApplication, UserRole, UserWithRole, AdminCenterAnalytics } from '../backend';
 import { Principal } from '@icp-sdk/core/principal';
 
 export interface AdminFinancialState {
@@ -113,7 +113,7 @@ export function useSubmitRoleApplication() {
       return actor.submitRoleApplication(requestedRole, reason);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRoleApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
     },
   });
 }
@@ -122,7 +122,7 @@ export function useGetPendingRoleApplications() {
   const { actor, isFetching } = useActor();
 
   return useQuery<RoleApplication[]>({
-    queryKey: ['pendingRoleApplications'],
+    queryKey: ['roleApplications'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getPendingRoleApplications();
@@ -136,14 +136,13 @@ export function useApproveRoleApplication() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (applicantPrincipal: string) => {
+    mutationFn: async (applicant: Principal) => {
       if (!actor) throw new Error('Actor not available');
-      const principal = Principal.fromText(applicantPrincipal);
-      return actor.approveRoleApplication(principal);
+      return actor.approveRoleApplication(applicant);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRoleApplications'] });
-      queryClient.invalidateQueries({ queryKey: ['userRoleSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
   });
 }
@@ -153,13 +152,12 @@ export function useRejectRoleApplication() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (applicantPrincipal: string) => {
+    mutationFn: async (applicant: Principal) => {
       if (!actor) throw new Error('Actor not available');
-      const principal = Principal.fromText(applicantPrincipal);
-      return actor.rejectRoleApplication(principal);
+      return actor.rejectRoleApplication(applicant);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRoleApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
     },
   });
 }
@@ -177,24 +175,31 @@ export function useGetUserRoleSummary() {
   });
 }
 
-export function useGetAdminFinancialState() {
+export function useGetAdminDashboardData() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<AdminFinancialState>({
-    queryKey: ['adminFinancialState'],
+  return useQuery<AdminDashboardData>({
+    queryKey: ['adminDashboardData'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // Mock data since backend doesn't have this endpoint yet
-      return {
-        availableFundsCents: BigInt(702598),
-        creditAccount: {
-          creditLimitCents: BigInt(1000000),
-          usedAmountCents: BigInt(0),
-        },
-        payrollSavingsCents: BigInt(0),
-      };
+      return actor.getAdminDashboardData();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUpdateAdminDashboardData() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateAdminDashboardData();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
+    },
   });
 }
 
@@ -254,35 +259,6 @@ export function useGetOnboarding() {
   });
 }
 
-export function useGetAdminDashboardData() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<AdminDashboardData>({
-    queryKey: ['adminDashboardData'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getAdminDashboardData();
-    },
-    enabled: !!actor && !isFetching,
-    retry: 1,
-  });
-}
-
-export function useUpdateAdminDashboardData() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.updateAdminDashboardData();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
-    },
-  });
-}
-
 export function useGetAllTransactionHistory() {
   const { actor, isFetching } = useActor();
 
@@ -296,6 +272,23 @@ export function useGetAllTransactionHistory() {
   });
 }
 
+export function useGetAdminFinancialState() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<AdminFinancialState>({
+    queryKey: ['adminFinancialState'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      const state = await actor.getAdminFinancialState();
+      return {
+        ...state,
+        payrollSavingsCents: BigInt(0),
+      };
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export function useGetSellerEarningsSummary(timeFrame: TimeFrame) {
   const { actor, isFetching } = useActor();
 
@@ -304,6 +297,32 @@ export function useGetSellerEarningsSummary(timeFrame: TimeFrame) {
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       return actor.getSellerEarningsSummary(timeFrame);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllUsers() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<UserWithRole[]>({
+    queryKey: ['allUsers'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAdminCenterAnalytics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<AdminCenterAnalytics>({
+    queryKey: ['adminCenterAnalytics'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getAdminCenterAnalytics();
     },
     enabled: !!actor && !isFetching,
   });

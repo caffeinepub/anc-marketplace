@@ -1,4 +1,148 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-fix-the-admin-center-backend-connection-issue-where-the-page-is-stuck-on-initializing-and-connecting-to-backend-indefinitely-ensure-the-backend-access-control-initialization-completes-successfully-and-the-admin-center-dashboard-loads-properly",
+      "featureTitle": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminCenterPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-display-all-available-user-accounts-with-account-totals-and-complete-transaction-history-in-the-admin-center-dashboard-show-account-balances-transaction-dates-types-amounts-and-statuses-for-all-marketplace-accounts",
+      "featureTitle": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+      "files": [
+        "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminCenterPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-comprehensive-sales-reports-and-analytics-to-the-admin-center-dashboard-showing-marketplace-sales-overview-revenue-trends-and-key-performance-metrics",
+      "featureTitle": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+      "files": [
+        "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+        "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminCenterPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-an-internal-messaging-system-in-the-admin-center-that-allows-admins-to-communicate-with-sellers-and-users-within-the-marketplace-platform",
+      "featureTitle": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
+      "files": [
+        "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
+        "frontend/src/components/admin/messaging/MessageComposer.tsx",
+        "frontend/src/components/admin/messaging/MessageThread.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminCenterPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-comprehensive-admin-dropdown-menu-in-the-admin-center-with-the-following-menu-items-assign-roles-review-employees-hire-view-marketplace-activity-review-sellers-activities-and-other-essential-admin-management-options-only-create-the-menu-structure-and-items-page-implementations-will-be-built-separately-later",
+      "featureTitle": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+      "files": [
+        "frontend/src/components/admin/AdminDropdownMenu.tsx",
+        "frontend/src/pages/AdminCenterPage.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-verify-and-ensure-stable-stripe-integration-on-both-frontend-and-backend-confirm-that-stripe-checkout-sessions-are-created-successfully-payment-processing-works-correctly-and-the-connection-between-frontend-payment-flows-and-backend-stripe-configuration-is-reliable",
+      "featureTitle": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    }
+  ]
 }
