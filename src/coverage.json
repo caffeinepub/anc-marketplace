@@ -1,108 +1,89 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-21T22:20:20.094Z",
+  "generatedAt": "2026-02-22T00:24:24.279Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 6,
-    "implemented": 6,
+    "implemented": 5,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+        "summary": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/hooks/useActor.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminCenterPage.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+        "summary": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
-          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
           "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
           "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+        "summary": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
-          "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
           "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
-          "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminCenterPage.tsx"
         ]
       },
       {
         "id": "REQ-4",
-        "summary": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
-        "status": "implemented",
+        "summary": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
-          "frontend/src/components/admin/messaging/MessageComposer.tsx",
-          "frontend/src/components/admin/messaging/MessageThread.tsx",
-          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
-        "matchedFiles": [
-          "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
-          "frontend/src/components/admin/messaging/MessageComposer.tsx",
-          "frontend/src/components/admin/messaging/MessageThread.tsx",
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
+        "matchedFiles": []
       },
       {
         "id": "REQ-5",
-        "summary": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+        "summary": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/AdminDropdownMenu.tsx",
           "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/components/admin/AdminDropdownMenu.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/AdminDropdownMenu.tsx",
           "frontend/src/pages/AdminCenterPage.tsx"
         ]
       },
       {
         "id": "REQ-6",
-        "summary": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+        "summary": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useStripeCheckout.ts",
-          "frontend/src/components/admin/payments/StripeSetupCard.tsx",
-          "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
-          "frontend/src/pages/PaymentSuccess.tsx",
-          "frontend/src/pages/PaymentFailure.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminCenterPage.tsx"
         ]
       }
     ]
@@ -113,19 +94,7 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/admin/AdminDropdownMenu.tsx",
-    "frontend/src/components/admin/RoleApplicationsPanel.tsx",
-    "frontend/src/components/admin/accounts/AllAccountsPanel.tsx",
-    "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
-    "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
-    "frontend/src/components/admin/messaging/AdminMessagingPanel.tsx",
-    "frontend/src/components/admin/messaging/MessageComposer.tsx",
-    "frontend/src/components/admin/messaging/MessageThread.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
     "frontend/src/pages/AdminCenterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

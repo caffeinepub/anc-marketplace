@@ -1,140 +1,131 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Center backend connection and implement comprehensive dashboard",
+  "title": "Fix Admin Center Backend Connection and Authentication Flow",
   "projectName": "ANC Marketplace",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+      "text": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "Still doesn't completely load",
-          "stuck on 'Initializing...' and 'Connecting to backend...' screen"
+          "It loaded successfully before the security was added",
+          "The Admin Center is stuck on 'Initializing...' with a loading spinner saying 'Connecting to backend...'"
         ]
       },
       "acceptanceCriteria": [
-        "Admin Center page completes initialization without hanging",
-        "Backend connection establishes successfully",
-        "Dashboard content displays after successful connection",
-        "No infinite loading state on Admin Center page"
+        "Admin Center page successfully connects to backend canister after Internet Identity authentication",
+        "Loading spinner disappears and dashboard content displays",
+        "No 'Initializing...' or 'Connecting to backend...' messages remain visible after successful authentication"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+      "text": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "All available accounts and account totals available with transaction history (all information that is already there)"
+          "Including account totals that were deposited"
         ]
       },
       "acceptanceCriteria": [
-        "All user accounts are listed with current balance totals",
-        "Complete transaction history is displayed for all accounts",
-        "Transaction details include date, type, amount, and status",
-        "Data refreshes to show current state"
+        "Dashboard displays aggregate account totals from all registered users",
+        "Total deposited amounts are calculated and displayed correctly",
+        "Currency formatting is applied consistently (USD format)"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+      "text": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "Sales reports"
+          "how they were deposited"
         ]
       },
       "acceptanceCriteria": [
-        "Sales reports display total revenue and sales count",
-        "Analytics show trends over time (daily, weekly, monthly)",
-        "Key metrics are clearly presented with visual indicators",
-        "Reports can be refreshed to show latest data"
+        "Dashboard shows breakdown of deposit methods used by customers",
+        "Payment method categories are clearly labeled",
+        "Percentages or counts are displayed for each deposit method"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
+      "text": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "messaging system"
+          "the transaction history record"
         ]
       },
       "acceptanceCriteria": [
-        "Messaging interface is accessible from Admin Center",
-        "Admins can view messages from sellers and users",
-        "Admins can send messages to marketplace participants",
-        "Message history is preserved and displayed"
+        "Complete transaction history is visible in the Admin Center",
+        "Transaction records include dates, amounts, status, and user information",
+        "Transaction data loads successfully after authentication is complete"
       ]
     },
     {
       "id": "REQ-5",
-      "text": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+      "text": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "a drop-down for admins that includes menu options options an admin or owner needs to successfully manage and maintain the marketplace just put the items in the list don't worry about the pages right now",
-          "Assign roles, review employees, hire, view marketplace activity, review sellers activities"
+          "what all the dashboard is supposed to display on opening"
         ]
       },
       "acceptanceCriteria": [
-        "Dropdown menu displays in Admin Center header or navigation",
-        "Menu includes all specified items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities",
-        "Menu structure is organized and easy to navigate",
-        "Menu items are placeholders that will be connected to pages later",
-        "Additional essential admin functions are included in the menu"
+        "All dashboard menu options are visible and functional",
+        "Navigation between dashboard sections works correctly",
+        "Menu structure matches the pre-authentication implementation"
       ]
     },
     {
       "id": "REQ-6",
-      "text": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+      "text": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-recent"
         ],
         "quotes": [
-          "make sure that the stripe connection is good on both front end and back end and the connection between front end and back end is stable"
+          "The authentication implementation is blocking the Admin Center from loading",
+          "The authentication layer is blocking the connection between the frontend and backend canister"
         ]
       },
       "acceptanceCriteria": [
-        "Stripe configuration on backend is properly initialized",
-        "Frontend can successfully create Stripe checkout sessions",
-        "Payment flows complete without connection errors",
-        "Error handling is in place for Stripe integration failures",
-        "Stripe webhook handling (if applicable) functions correctly"
+        "Authenticated users can successfully establish backend actor connection",
+        "Admin role verification completes without blocking dashboard load",
+        "Actor initialization errors are handled gracefully with user-friendly messages"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the existing backend single-actor architecture",
-    "Do not edit immutable frontend paths: useInternetIdentity hooks, useActor.ts, main.tsx, frontend/src/components/ui/*",
-    "Preserve existing Stripe integration configuration and payment processing logic",
-    "Maintain compatibility with existing user account and transaction data structures"
+    "Do not modify the Internet Identity authentication hook implementation (frontend/src/hooks/useInternetIdentity.ts)",
+    "Preserve existing admin dashboard tab structure and components",
+    "Maintain single-actor backend architecture in backend/main.mo",
+    "Do not change the useActor hook interface"
   ],
   "nonGoals": [
-    "Building individual pages for admin menu items (will be implemented separately)",
-    "Changing the technology stack or framework",
-    "Implementing real-time chat functionality in the messaging system",
-    "Modifying existing seller or customer dashboard features",
-    "Adding new payment processors beyond Stripe"
+    "Adding new authentication providers beyond Internet Identity",
+    "Redesigning the Admin Center UI layout or styling",
+    "Implementing real-time data updates or WebSocket connections",
+    "Adding new admin features beyond restoring existing functionality"
   ],
   "imageRequirements": {
     "required": [],

@@ -26,7 +26,7 @@ import AdminDropdownMenu from '../components/admin/AdminDropdownMenu';
 
 export default function AdminCenterPage() {
   const { identity, isInitializing } = useInternetIdentity();
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
   const { data: userProfile, isLoading: profileLoading } = useGetCallerUserProfile();
   const { data: dashboardData, isLoading: dataLoading, error: dataError, refetch: refetchData } = useGetAdminDashboardData();
   const { data: financialState, isLoading: financialLoading } = useGetAdminFinancialState();
@@ -101,8 +101,8 @@ export default function AdminCenterPage() {
     );
   }
 
-  // Show loading while actor is being created or access control is initializing
-  if (!actor || (initializeAccessControl.isPending && !initializationComplete)) {
+  // Show loading while actor is being created
+  if (!actor || actorFetching) {
     return (
       <AdminConsoleLayout
         title="Admin Center"
@@ -111,10 +111,27 @@ export default function AdminCenterPage() {
         <div className="flex flex-col items-center justify-center py-12 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            {!actor ? 'Connecting to backend...' : 'Setting up admin permissions...'}
+            Connecting to backend...
           </p>
           <p className="text-xs text-muted-foreground font-mono">
             Principal: {identity?.getPrincipal().toString().slice(0, 30)}...
+          </p>
+        </div>
+      </AdminConsoleLayout>
+    );
+  }
+
+  // Show loading while access control is initializing
+  if (initializeAccessControl.isPending && !initializationComplete) {
+    return (
+      <AdminConsoleLayout
+        title="Admin Center"
+        subtitle="Setting up permissions..."
+      >
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Initializing admin access...
           </p>
         </div>
       </AdminConsoleLayout>

@@ -1,14 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Fix Admin Center backend connection issue and implement comprehensive dashboard with accounts, transactions, sales reports, messaging, admin management menu, and stable Stripe integration.
+**Goal:** Fix the Admin Center backend connection issue that prevents the dashboard from loading after Internet Identity authentication was added.
 
 **Planned changes:**
-- Fix Admin Center initialization and backend connection to eliminate infinite loading state
-- Display all user accounts with balances and complete transaction history
-- Add sales reports and analytics showing revenue trends and key metrics
-- Implement internal messaging system for admin-to-seller/user communication
-- Create comprehensive admin dropdown menu with role management, employee review, hiring, marketplace activity monitoring, and seller activity review options (menu structure only, pages to be built later)
-- Verify and stabilize Stripe integration on both frontend and backend, ensuring reliable payment processing
+- Diagnose and fix the backend actor initialization blocking issue in the Admin Center page
+- Ensure authenticated admin users can successfully establish backend connection after Internet Identity login
+- Restore display of account totals showing aggregate deposited amounts across all user accounts
+- Restore display of deposit methods breakdown showing payment method analysis
+- Restore display of complete transaction history records with all transaction details
+- Restore all dashboard menu options and navigation controls that were functional before authentication
 
-**User-visible outcome:** Admin Center loads successfully with a fully functional dashboard displaying account information, transaction history, sales analytics, and messaging capabilities. Admins can access all management functions through a comprehensive dropdown menu and process payments reliably through Stripe.
+**User-visible outcome:** After logging in with Internet Identity, admin users will see the Admin Center dashboard load successfully with account totals, deposit method breakdowns, transaction history, and all menu options visible without getting stuck on "Initializing..." or "Connecting to backend..." messages.

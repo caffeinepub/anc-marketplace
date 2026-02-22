@@ -1,61 +1,52 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "ANC Marketplace - an established marketplace platform with Stripe integration, user accounts, transaction history, and sales reporting. Currently fixing Admin Center backend connection issues and implementing comprehensive admin dashboard with account management, financial reporting, messaging system, and employee/seller oversight capabilities.",
+  "summary": "ANC Marketplace application with Admin Center dashboard that displays account totals, deposit methods, transaction history, and menu options. Recently added Internet Identity authentication is blocking backend connection.",
   "architectural_notes": [
-    "Admin Center requires stable backend connection for initialization",
-    "Stripe integration used for payment processing on both frontend and backend",
-    "Admin Center includes comprehensive dashboard with accounts, transactions, sales reports, and messaging",
-    "Menu-driven admin interface with role-based access and employee management"
+    "Internet Identity authentication integrated but blocking Admin Center backend connection",
+    "Admin Center dashboard components: account totals, deposit methods, transaction history, menu options"
   ],
   "known_issues": [
-    "Admin Center stuck on 'Initializing...' and 'Connecting to backend...' screen - connection not completing"
+    "Admin Center stuck on 'Initializing...' and 'Connecting to backend...' after security was added",
+    "Authentication layer preventing frontend-backend canister connection"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-admin-center-backend-connection-issue-where-the-page-is-stuck-on-initializing-and-connecting-to-backend-indefinitely-ensure-the-backend-access-control-initialization-completes-successfully-and-the-admin-center-dashboard-loads-properly",
-      "title": "Fix the Admin Center backend connection issue where the page is stuck on 'Initializing...' and 'Connecting to backend...' indefinitely. Ensure the backend access control initialization completes successfully and the Admin Center dashboard loads properly.",
+      "id": "feature-fix-the-admin-center-page-backend-connection-that-is-stuck-on-initializing-and-connecting-to-backend-after-internet-identity-authentication-was-added",
+      "title": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-display-all-available-user-accounts-with-account-totals-and-complete-transaction-history-in-the-admin-center-dashboard-show-account-balances-transaction-dates-types-amounts-and-statuses-for-all-marketplace-accounts",
-      "title": "Display all available user accounts with account totals and complete transaction history in the Admin Center dashboard. Show account balances, transaction dates, types, amounts, and statuses for all marketplace accounts.",
+      "id": "feature-restore-admin-center-dashboard-display-of-account-totals-showing-the-total-amounts-deposited-across-all-user-accounts",
+      "title": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-comprehensive-sales-reports-and-analytics-to-the-admin-center-dashboard-showing-marketplace-sales-overview-revenue-trends-and-key-performance-metrics",
-      "title": "Add comprehensive sales reports and analytics to the Admin Center dashboard showing marketplace sales overview, revenue trends, and key performance metrics.",
+      "id": "feature-restore-admin-center-dashboard-display-of-deposit-methods-breakdown-showing-how-funds-were-deposited-payment-method-analysis",
+      "title": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-implement-an-internal-messaging-system-in-the-admin-center-that-allows-admins-to-communicate-with-sellers-and-users-within-the-marketplace-platform",
-      "title": "Implement an internal messaging system in the Admin Center that allows admins to communicate with sellers and users within the marketplace platform.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-comprehensive-admin-dropdown-menu-in-the-admin-center-with-the-following-menu-items-assign-roles-review-employees-hire-view-marketplace-activity-review-sellers-activities-and-other-essential-admin-management-options-only-create-the-menu-structure-and-items-page-implementations-will-be-built-separately-later",
-      "title": "Create a comprehensive admin dropdown menu in the Admin Center with the following menu items: Assign roles, Review employees, Hire, View marketplace activity, Review sellers activities, and other essential admin management options. Only create the menu structure and items; page implementations will be built separately later.",
+      "id": "feature-restore-admin-center-dashboard-menu-options-and-navigation-controls-that-were-working-before-authentication-was-added",
+      "title": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
       "reqIds": [
         "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-verify-and-ensure-stable-stripe-integration-on-both-frontend-and-backend-confirm-that-stripe-checkout-sessions-are-created-successfully-payment-processing-works-correctly-and-the-connection-between-frontend-payment-flows-and-backend-stripe-configuration-is-reliable",
-      "title": "Verify and ensure stable Stripe integration on both frontend and backend. Confirm that Stripe checkout sessions are created successfully, payment processing works correctly, and the connection between frontend payment flows and backend Stripe configuration is reliable.",
+      "id": "feature-ensure-the-internet-identity-authentication-flow-properly-initializes-the-backend-actor-connection-for-authenticated-admin-users-accessing-the-admin-center",
+      "title": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
       "reqIds": [
         "REQ-6"
       ],
@@ -64,39 +55,11 @@
   ],
   "new_feature_requests": [
     {
-      "id": "AR-1",
-      "summary": "Fix Admin Center backend connection and loading issue",
-      "reqIds": [],
-      "status": "in_progress"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Display all accounts, account totals, and transaction history in Admin Center",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add sales reports and analytics to Admin Center dashboard",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
       "id": "AR-4",
-      "summary": "Implement messaging system in Admin Center",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Create admin dropdown menu with management options (assign roles, review employees, hire, view marketplace activity, review sellers activities)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Verify Stripe integration stability on frontend and backend",
-      "reqIds": [],
+      "summary": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
+      "reqIds": [
+        "REQ-4"
+      ],
       "status": "pending"
     }
   ],
