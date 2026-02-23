@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-admin-center-page-backend-connection-that-is-stuck-on-initializing-and-connecting-to-backend-after-internet-identity-authentication-was-added",
-      "featureTitle": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
+      "featureId": "feature-remove-internet-identity-authentication-checks-from-admincenterpage-tsx-that-are-blocking-access-to-the-admin-center-interface",
+      "featureTitle": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
       "files": [
         "frontend/src/pages/AdminCenterPage.tsx"
       ],
@@ -24,31 +24,8 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-restore-admin-center-dashboard-display-of-account-totals-showing-the-total-amounts-deposited-across-all-user-accounts",
-      "featureTitle": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
-      "files": [
-        "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-        "frontend/src/pages/AdminCenterPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-restore-admin-center-dashboard-display-of-deposit-methods-breakdown-showing-how-funds-were-deposited-payment-method-analysis",
-      "featureTitle": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
+      "featureId": "feature-preserve-all-existing-admin-center-functionality-including-role-settings-deposits-financial-data-transaction-history-and-user-management-features",
+      "featureTitle": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
       "files": [
         "frontend/src/pages/AdminCenterPage.tsx"
       ],
@@ -65,50 +42,6 @@
       ],
       "testIds": [
         "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-restore-admin-center-dashboard-menu-options-and-navigation-controls-that-were-working-before-authentication-was-added",
-      "featureTitle": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
-      "files": [
-        "frontend/src/pages/AdminCenterPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-internet-identity-authentication-flow-properly-initializes-the-backend-actor-connection-for-authenticated-admin-users-accessing-the-admin-center",
-      "featureTitle": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
-      "files": [
-        "frontend/src/pages/AdminCenterPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
       ],
       "confidence": "high"
     }

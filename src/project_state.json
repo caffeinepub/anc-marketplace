@@ -1,64 +1,47 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "ANC Marketplace application with Admin Center dashboard that displays account totals, deposit methods, transaction history, and menu options. Recently added Internet Identity authentication is blocking backend connection.",
+  "summary": "ANC Marketplace project with Admin Center that needs authentication guards removed to restore access to role settings and existing data",
   "architectural_notes": [
-    "Internet Identity authentication integrated but blocking Admin Center backend connection",
-    "Admin Center dashboard components: account totals, deposit methods, transaction history, menu options"
+    "Admin Center has existing role settings system for owner/admin assignment",
+    "Internet Identity authentication guards implemented in both frontend and backend",
+    "Existing deposits and connections must be preserved during security removal"
   ],
   "known_issues": [
-    "Admin Center stuck on 'Initializing...' and 'Connecting to backend...' after security was added",
-    "Authentication layer preventing frontend-backend canister connection"
+    "Admin Center stuck on 'Connecting to backend...' due to authentication guards blocking access",
+    "User principal ID: 2x2kc-7zyj2-widrm-locjk-ulwdv-... cannot access Admin Center"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-admin-center-page-backend-connection-that-is-stuck-on-initializing-and-connecting-to-backend-after-internet-identity-authentication-was-added",
-      "title": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
+      "id": "feature-remove-internet-identity-authentication-checks-from-admincenterpage-tsx-that-are-blocking-access-to-the-admin-center-interface",
+      "title": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-restore-admin-center-dashboard-display-of-account-totals-showing-the-total-amounts-deposited-across-all-user-accounts",
-      "title": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-restore-admin-center-dashboard-display-of-deposit-methods-breakdown-showing-how-funds-were-deposited-payment-method-analysis",
-      "title": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
+      "id": "feature-preserve-all-existing-admin-center-functionality-including-role-settings-deposits-financial-data-transaction-history-and-user-management-features",
+      "title": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
       "reqIds": [
         "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-restore-admin-center-dashboard-menu-options-and-navigation-controls-that-were-working-before-authentication-was-added",
-      "title": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-internet-identity-authentication-flow-properly-initializes-the-backend-actor-connection-for-authenticated-admin-users-accessing-the-admin-center",
-      "title": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
-      "reqIds": [
-        "REQ-6"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
-      "id": "AR-4",
-      "summary": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
+      "id": "AR-1",
+      "summary": "Remove Internet Identity authentication guards blocking Admin Center access (frontend and backend)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
       "reqIds": [
-        "REQ-4"
+        "REQ-2"
       ],
       "status": "pending"
     }

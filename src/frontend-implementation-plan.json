@@ -1,156 +1,38 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Center Backend Connection and Authentication Flow",
+  "title": "Remove authentication guards blocking Admin Center access",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix Admin Center backend connection stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication",
+      "summary": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
       "acceptanceCriteria": [
-        "Admin Center page successfully connects to backend canister after Internet Identity authentication",
-        "Loading spinner disappears and dashboard content displays",
-        "No 'Initializing...' or 'Connecting to backend...' messages remain visible after successful authentication"
+        "AdminCenterPage loads without authentication guards",
+        "User can access Admin Center interface immediately without being blocked",
+        "No 'Connecting to backend...' loading state caused by authentication checks"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Fix the actor initialization and loading state logic. Ensure that the page properly waits for both authentication (identity) and actor initialization before attempting to fetch admin data. Add error boundary handling for actor connection failures. Update loading conditions to check both actorFetching and isCallerAdminLoading states. Remove any duplicate or conflicting loading states that may block the UI from progressing past 'Initializing...'."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Review and fix the useIsCallerAdmin hook to ensure it properly handles the authenticated actor state. Verify that the query is enabled only when the actor is available and not fetching. Add retry logic with exponential backoff for transient connection failures. Ensure proper error propagation to the UI layer."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Verify that the actor creation logic properly handles authenticated identity from Internet Identity. Ensure that the actor is created with the correct identity delegation and that the isFetching state correctly reflects the actor initialization status. Add debug logging for actor creation lifecycle to help diagnose connection issues."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Restore Admin Center dashboard display of account totals showing aggregate deposited amounts across all user accounts",
-      "acceptanceCriteria": [
-        "Dashboard displays aggregate account totals from all registered users",
-        "Total deposited amounts are calculated and displayed correctly",
-        "Currency formatting is applied consistently (USD format)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
-          "operation": "modify",
-          "description": "Add a new section to display account totals by fetching data from getAllUsers and aggregating account balances. Use existing currency formatting utilities to display totals in USD format. Position this section prominently in the Financial Overview tab."
-        },
-        {
-          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-          "operation": "modify",
-          "description": "Add a new card component to display total deposited amounts across all accounts. Calculate aggregate totals from the user data and format as currency. Include appropriate icons and styling consistent with existing financial cards."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Verify that useGetAllUsers hook properly fetches all user account data including balance information needed for aggregation. Ensure the query is cached appropriately and invalidated when financial state changes."
+          "description": "Remove authentication guards and checks that are blocking access to the Admin Center. Remove any useInternetIdentity hooks, isAuthenticated checks, or RequireAuthenticatedRegisteredUser wrapper components that prevent immediate page access. Remove the 'Connecting to backend...' loading state caused by waiting for authentication. Allow the page to render the full Admin Center interface immediately without authentication requirements."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Restore Admin Center dashboard display of deposit methods breakdown showing payment method analysis",
+      "summary": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
       "acceptanceCriteria": [
-        "Dashboard shows breakdown of deposit methods used by customers",
-        "Payment method categories are clearly labeled",
-        "Percentages or counts are displayed for each deposit method"
+        "All existing deposit records remain intact",
+        "Transaction history data is preserved",
+        "Role settings interface remains functional",
+        "User can assign themselves as owner/admin once access is restored"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Add a deposit methods breakdown section that analyzes transaction history to categorize deposits by payment method (credit card, debit card, etc.). Display this as a chart or table in the Sales Reports tab."
-        },
-        {
-          "path": "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
-          "operation": "modify",
-          "description": "Extend the sales reports panel to include a deposit methods breakdown widget. Parse transaction data to extract payment method information and calculate percentages. Display using cards or a simple bar chart visualization."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure useGetAllTransactionHistory hook fetches complete transaction data including payment method information needed for the breakdown analysis."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Restore Admin Center dashboard display of complete transaction history with all transaction details",
-      "acceptanceCriteria": [
-        "Complete transaction history is visible in the Admin Center",
-        "Transaction records include dates, amounts, status, and user information",
-        "Transaction data loads successfully after authentication is complete"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "operation": "modify",
-          "description": "Verify that the transaction panel properly fetches and displays all transaction records after authentication completes. Ensure the loading state is tied to both actor availability and the transactions query loading state. Fix any logic that might prevent the table from rendering after data is fetched. Confirm that date formatting, currency formatting, and status badges display correctly for all transaction types."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Review useGetAllTransactionHistory hook to ensure it properly waits for actor initialization before fetching. Add error handling for authorization failures that may occur if admin verification fails."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication",
-      "acceptanceCriteria": [
-        "All dashboard menu options are visible and functional",
-        "Navigation between dashboard sections works correctly",
-        "Menu structure matches the pre-authentication implementation"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
-          "operation": "modify",
-          "description": "Ensure all tab navigation and menu options are rendered and functional once authentication completes. Verify that tabs for Financial Overview, Payment Processors, Fee Configuration, Transactions, Employee Payments, User Role Management, Marketplace Roadmap, Access Links, Role Applications, Accounts, Sales Reports, and Messaging are all present and clickable. Remove any conditional rendering logic that might hide tabs based on incorrect loading states."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminDropdownMenu.tsx",
-          "operation": "modify",
-          "description": "Verify that the admin dropdown menu displays all options and is not blocked by authentication loading states. Ensure menu items are functional and not showing 'Coming Soon' toasts for features that should be available."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Ensure Internet Identity authentication flow properly initializes backend actor connection for authenticated admin users",
-      "acceptanceCriteria": [
-        "Authenticated users can successfully establish backend actor connection",
-        "Admin role verification completes without blocking dashboard load",
-        "Actor initialization errors are handled gracefully with user-friendly messages"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
-          "operation": "modify",
-          "description": "Add comprehensive error handling for actor initialization failures. Display user-friendly error messages when the backend connection fails, with actionable guidance (e.g., 'retry', 'check authentication status'). Ensure that admin role verification happens after actor is ready but does not block the entire dashboard from rendering if verification is slow."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Enhance error handling and logging in the actor initialization flow. Ensure that errors during authenticated actor creation are surfaced properly to consuming components. Add timeout handling for slow backend responses."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update useIsCallerAdmin and related admin verification hooks to include proper error states and retry logic. Ensure that transient network errors do not permanently block admin access. Add graceful degradation so that admin UI can render even if some non-critical queries fail."
-        },
-        {
-          "path": "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx",
-          "operation": "modify",
-          "description": "Review the authentication guard to ensure it properly handles the transition from unauthenticated to authenticated states without introducing race conditions or blocking states that could leave the Admin Center stuck on 'Initializing...'. Ensure profile loading does not interfere with actor initialization."
+          "description": "Verify that all existing tabs and functionality remain intact after removing authentication guards: Financial Overview, Payment Processors, Fee Configuration, Transactions, Employee Payments, User Roles, Messaging, Sales Reports, and Role Applications tabs. Ensure all data fetching hooks (useGetAdminFinancialState, useGetAllTransactionHistory, useGetUserRoleSummary, etc.) continue to work. Do not modify the tab structure, panel components, or data display logic - only remove authentication barriers."
         }
       ]
     }

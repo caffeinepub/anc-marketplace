@@ -1,131 +1,77 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Center Backend Connection and Authentication Flow",
+  "title": "Remove authentication guards blocking Admin Center access",
   "projectName": "ANC Marketplace",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
-      "target": "both",
+      "text": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-final"
         ],
         "quotes": [
-          "It loaded successfully before the security was added",
-          "The Admin Center is stuck on 'Initializing...' with a loading spinner saying 'Connecting to backend...'"
+          "I would like you to remove the security from the admin center so I can access it"
         ]
       },
       "acceptanceCriteria": [
-        "Admin Center page successfully connects to backend canister after Internet Identity authentication",
-        "Loading spinner disappears and dashboard content displays",
-        "No 'Initializing...' or 'Connecting to backend...' messages remain visible after successful authentication"
+        "AdminCenterPage loads without authentication guards",
+        "User can access Admin Center interface immediately without being blocked",
+        "No 'Connecting to backend...' loading state caused by authentication checks"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
-      "target": "both",
+      "text": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-final"
         ],
         "quotes": [
-          "Including account totals that were deposited"
+          "The security is using Internet Identity authentication",
+          "The blocking is happening in both frontend and backend"
         ]
       },
       "acceptanceCriteria": [
-        "Dashboard displays aggregate account totals from all registered users",
-        "Total deposited amounts are calculated and displayed correctly",
-        "Currency formatting is applied consistently (USD format)"
+        "Backend functions for admin operations do not perform principal verification",
+        "Backend functions for admin data retrieval do not check caller authorization",
+        "Admin Center can successfully fetch data from backend without authentication errors"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
+      "text": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-final"
         ],
         "quotes": [
-          "how they were deposited"
+          "I don't want you to rebuild the whole admin center from scratch because that will erase my deposits and my connections",
+          "everything is there I just can't get to it"
         ]
       },
       "acceptanceCriteria": [
-        "Dashboard shows breakdown of deposit methods used by customers",
-        "Payment method categories are clearly labeled",
-        "Percentages or counts are displayed for each deposit method"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "the transaction history record"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Complete transaction history is visible in the Admin Center",
-        "Transaction records include dates, amounts, status, and user information",
-        "Transaction data loads successfully after authentication is complete"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "what all the dashboard is supposed to display on opening"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All dashboard menu options are visible and functional",
-        "Navigation between dashboard sections works correctly",
-        "Menu structure matches the pre-authentication implementation"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "The authentication implementation is blocking the Admin Center from loading",
-          "The authentication layer is blocking the connection between the frontend and backend canister"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Authenticated users can successfully establish backend actor connection",
-        "Admin role verification completes without blocking dashboard load",
-        "Actor initialization errors are handled gracefully with user-friendly messages"
+        "All existing deposit records remain intact",
+        "Transaction history data is preserved",
+        "Role settings interface remains functional",
+        "User can assign themselves as owner/admin once access is restored"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the Internet Identity authentication hook implementation (frontend/src/hooks/useInternetIdentity.ts)",
-    "Preserve existing admin dashboard tab structure and components",
-    "Maintain single-actor backend architecture in backend/main.mo",
-    "Do not change the useActor hook interface"
+    "Do not rebuild or replace the Admin Center component - only remove authentication guards",
+    "Do not modify or delete any existing financial data, deposits, or transaction records",
+    "Preserve all existing role management and settings functionality"
   ],
   "nonGoals": [
-    "Adding new authentication providers beyond Internet Identity",
-    "Redesigning the Admin Center UI layout or styling",
-    "Implementing real-time data updates or WebSocket connections",
-    "Adding new admin features beyond restoring existing functionality"
+    "Adding new Admin Center features or functionality",
+    "Implementing alternative security mechanisms",
+    "Modifying the role assignment system",
+    "Changing the Admin Center UI or layout"
   ],
   "imageRequirements": {
     "required": [],

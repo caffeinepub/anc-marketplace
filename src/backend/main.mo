@@ -9,10 +9,10 @@ import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
 import Int "mo:core/Int";
-import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
 
 actor {
   include MixinStorage();
@@ -750,11 +750,9 @@ actor {
       Runtime.trap("Access control already initialized");
     };
 
-    // Initialize owner admins first
     for (ownerPrincipal in ownerAdmins.values()) {
       AccessControl.initialize(accessControlState, ownerPrincipal);
 
-      // Create owner admin profiles with associated email
       let ownerProfile : UserProfile = {
         email = ownerEmail;
         fullName = "ANC Owner Admin";
@@ -1523,4 +1521,3 @@ actor {
     };
   };
 };
-

@@ -1,23 +1,21 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-22T00:24:24.279Z",
+  "generatedAt": "2026-02-23T05:35:54.481Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 5,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the Admin Center page backend connection that is stuck on 'Initializing...' and 'Connecting to backend...' after Internet Identity authentication was added",
+        "summary": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/hooks/useActor.ts"
+          "frontend/src/pages/AdminCenterPage.tsx"
         ],
         "matchedFiles": [
           "frontend/src/pages/AdminCenterPage.tsx"
@@ -25,62 +23,17 @@
       },
       {
         "id": "REQ-2",
-        "summary": "Restore Admin Center dashboard display of account totals showing the total amounts deposited across all user accounts",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Restore Admin Center dashboard display of deposit methods breakdown showing how funds were deposited (payment method analysis)",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Restore Admin Center dashboard display of complete transaction history records with all transaction details",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
+        "summary": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-5",
-        "summary": "Restore Admin Center dashboard menu options and navigation controls that were working before authentication was added",
+        "id": "REQ-3",
+        "summary": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/components/admin/AdminDropdownMenu.tsx"
-        ],
-        "matchedFiles": [
           "frontend/src/pages/AdminCenterPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Ensure the Internet Identity authentication flow properly initializes the backend actor connection for authenticated admin users accessing the Admin Center",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/auth/RequireAuthenticatedRegisteredUser.tsx"
         ],
         "matchedFiles": [
           "frontend/src/pages/AdminCenterPage.tsx"
@@ -94,7 +47,6 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
     "frontend/src/pages/AdminCenterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
