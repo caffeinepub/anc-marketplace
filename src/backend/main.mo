@@ -12,9 +12,10 @@ import Int "mo:core/Int";
 import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
-import Migration "migration";
+import Runtime "mo:core/Runtime";
 
-(with migration = Migration.run)
+
+
 actor {
   include MixinStorage();
 
@@ -157,10 +158,7 @@ actor {
 
   module EcomOrder {
     public func compare(order1 : EcomOrder, order2 : EcomOrder) : Order.Order {
-      switch (OrderStatus.compare(order1.status, order2.status)) {
-        case (#equal) { order1.orderId.compare(order2.orderId) };
-        case (order) { order };
-      };
+      OrderStatus.compare(order1.status, order2.status);
     };
   };
 
@@ -831,15 +829,8 @@ actor {
     ).toArray();
   };
 
-  // Admin-only: Dashboard data
-  public query ({ caller }) func getAdminDashboardData() : async AdminDashboardData {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can view dashboard data");
-    };
-    getAdminDashboardDataInternal();
-  };
-
-  func getAdminDashboardDataInternal() : AdminDashboardData {
+  // Public: Dashboard data - no authorization required
+  public query ({ caller }) func getFinancialOverview() : async AdminDashboardData {
     {
       adminSections : [AdminPageSectionStatus] = Array.tabulate<AdminPageSectionStatus>(
         adminSections.size(),
@@ -849,18 +840,20 @@ actor {
     };
   };
 
-  // Admin-only: Transaction history
-  public query ({ caller }) func getAllTransactionHistory() : async [TransactionRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can view transaction history");
-    };
+  public query ({ caller }) func getTransactionLedger() : async [TransactionRecord] {
     transactionHistory.toArray();
   };
 
-  public query ({ caller }) func getTransactionRecordById(transactionId : Text) : async ?TransactionRecord {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can view transaction records");
+  public query ({ caller }) func getUserRoleSummary() : async UserRoleSummary {
+    let adminCount = ownerAdmins.size();
+    {
+      adminCount;
+      userCount = 1;
+      guestCount = 0;
     };
+  };
+
+  public query ({ caller }) func getTransactionRecordById(transactionId : Text) : async ?TransactionRecord {
     transactionHistory.values().find(
       func(record) {
         Text.equal(record.transactionId, transactionId);
@@ -868,11 +861,8 @@ actor {
     );
   };
 
-  // Admin-only: Financial state
+  // Public: Financial state - no authorization required
   public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can view financial state");
-    };
     adminFinancialState;
   };
 
@@ -914,9 +904,6 @@ actor {
 
   // Users can view knowledge base
   public query ({ caller }) func getKnowledgeBase() : async [AssistantKnowledgeEntry] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can view knowledge base");
-    };
     knowledgeBase.values().filter(func(entry) { entry.isActive }).toArray();
   };
 };

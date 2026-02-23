@@ -26,9 +26,10 @@ import AdminDropdownMenu from '../components/admin/AdminDropdownMenu';
 export default function AdminCenterPage() {
   const { actor, isFetching: actorFetching } = useActor();
   const { data: dashboardData, isLoading: dataLoading, error: dataError, refetch: refetchData } = useGetAdminDashboardData();
-  const { data: financialState, isLoading: financialLoading, error: financialError } = useGetAdminFinancialState();
+  const { data: financialState, isLoading: financialLoading, error: financialError, refetch: refetchFinancial } = useGetAdminFinancialState();
 
   const [actorTimeout, setActorTimeout] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
 
   // Timeout mechanism for actor creation - if it takes more than 15 seconds
   React.useEffect(() => {
@@ -45,6 +46,26 @@ export default function AdminCenterPage() {
       setActorTimeout(false);
     }
   }, [actor, actorFetching, actorTimeout]);
+
+  // Auto-retry on error (up to 3 times)
+  React.useEffect(() => {
+    if ((dataError || financialError) && retryCount < 3) {
+      const errorMessage = ((dataError || financialError) as any)?.message || '';
+      
+      // Only auto-retry on authorization errors
+      if (errorMessage.includes('Unauthorized') || errorMessage.includes('Only admins')) {
+        console.log(`[AdminCenterPage] Auto-retrying after authorization error (attempt ${retryCount + 1}/3)`);
+        
+        const retryTimeout = setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          refetchData();
+          refetchFinancial();
+        }, 2000); // Wait 2 seconds before retry
+
+        return () => clearTimeout(retryTimeout);
+      }
+    }
+  }, [dataError, financialError, retryCount, refetchData, refetchFinancial]);
 
   // Actor creation timeout
   if (actorTimeout) {
@@ -65,6 +86,7 @@ export default function AdminCenterPage() {
                 onClick={() => {
                   console.log('[AdminCenterPage] Retry after actor timeout');
                   setActorTimeout(false);
+                  setRetryCount(0);
                   window.location.reload();
                 }}
               >
@@ -125,6 +147,11 @@ export default function AdminCenterPage() {
           <AlertTitle>Failed to Load Dashboard Data</AlertTitle>
           <AlertDescription className="space-y-4">
             <p>Unable to load admin dashboard data from the backend.</p>
+            {retryCount > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Auto-retry attempt {retryCount} of 3...
+              </p>
+            )}
             <div className="mt-2 p-3 bg-destructive/10 rounded text-sm">
               <p className="font-semibold mb-1">Error Details:</p>
               <p className="font-mono text-xs break-all">{errorMessage}</p>
@@ -134,8 +161,10 @@ export default function AdminCenterPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  console.log('[AdminCenterPage] Retry data loading');
+                  console.log('[AdminCenterPage] Manual retry data loading');
+                  setRetryCount(0);
                   refetchData();
+                  refetchFinancial();
                 }}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -144,7 +173,10 @@ export default function AdminCenterPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setRetryCount(0);
+                  window.location.reload();
+                }}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Page
@@ -155,7 +187,8 @@ export default function AdminCenterPage() {
               <ul className="list-disc list-inside mt-1 space-y-1">
                 <li>Click Retry to attempt loading again</li>
                 <li>Refresh the page to restart the connection</li>
-                <li>Check if you have the required admin permissions</li>
+                <li>Clear your browser cache and try again</li>
+                <li>The backend may be updating - wait a moment and retry</li>
                 <li>Contact support if the issue persists</li>
               </ul>
             </div>
@@ -195,7 +228,10 @@ export default function AdminCenterPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setRetryCount(0);
+                  window.location.reload();
+                }}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Page
@@ -210,25 +246,28 @@ export default function AdminCenterPage() {
   return (
     <AdminConsoleLayout
       title="Admin Center"
-      subtitle="Manage your business operations and settings"
+      subtitle="Comprehensive business management and financial oversight"
     >
       <div className="space-y-6">
-        {/* Admin Actions Dropdown Menu */}
+        {/* Admin Dropdown Menu */}
         <div className="flex justify-end">
           <AdminDropdownMenu />
         </div>
 
+        {/* Financial Overview Cards */}
+        <FinancialOverviewCards financialState={financialState} />
+
+        {/* Tabbed Interface */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="financial">Financial</TabsTrigger>
-            <TabsTrigger value="processors">Processors</TabsTrigger>
+            <TabsTrigger value="status">Status</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="fees">Fees</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="employees">Employees</TabsTrigger>
             <TabsTrigger value="transfers">Transfers</TabsTrigger>
-            <TabsTrigger value="roles">Roles</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -236,69 +275,22 @@ export default function AdminCenterPage() {
               <CardHeader>
                 <CardTitle>Admin Dashboard Overview</CardTitle>
                 <CardDescription>
-                  Quick access to key admin functions and system status
+                  Quick access to key administrative functions and system status
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <AdminAccessLinksPanel />
-                <MarketplaceRoadmapAdmin />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage user roles and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
                 <UserRoleManagement />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Role Applications</CardTitle>
-                <CardDescription>
-                  Review and manage pending role applications
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
                 <RoleApplicationsPanel />
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>All User Accounts</CardTitle>
-                <CardDescription>
-                  View and manage all registered user accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AllAccountsPanel />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Messaging</CardTitle>
-                <CardDescription>
-                  Send messages and announcements to users
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AdminMessagingPanel />
-              </CardContent>
-            </Card>
           </TabsContent>
 
-          <TabsContent value="financial" className="space-y-6">
-            <FinancialOverviewCards financialState={financialState} />
+          <TabsContent value="status" className="space-y-6">
+            <MarketplaceRoadmapAdmin />
           </TabsContent>
 
-          <TabsContent value="processors" className="space-y-6">
+          <TabsContent value="payments" className="space-y-6">
             <PaymentProcessorsPanel />
             <AdminRevenueInflowPanel />
           </TabsContent>
@@ -309,6 +301,7 @@ export default function AdminCenterPage() {
 
           <TabsContent value="transactions" className="space-y-6">
             <AdminTransactionsPanel />
+            <SalesReportsPanel />
           </TabsContent>
 
           <TabsContent value="employees" className="space-y-6">
@@ -319,46 +312,9 @@ export default function AdminCenterPage() {
             <TransfersStubPanel />
           </TabsContent>
 
-          <TabsContent value="roles" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Role Management</CardTitle>
-                <CardDescription>
-                  Manage user roles and permissions across the platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserRoleManagement />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Role Applications</CardTitle>
-                <CardDescription>
-                  Review and manage pending role applications
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RoleApplicationsPanel />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>All User Accounts</CardTitle>
-                <CardDescription>
-                  View and manage all registered user accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AllAccountsPanel />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-6">
-            <SalesReportsPanel />
+          <TabsContent value="accounts" className="space-y-6">
+            <AllAccountsPanel />
+            <AdminMessagingPanel />
           </TabsContent>
         </Tabs>
       </div>

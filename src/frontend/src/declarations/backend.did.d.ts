@@ -150,6 +150,11 @@ export type UserRole = { 'admin' : null } |
   { 'marketer' : null } |
   { 'guest' : null } |
   { 'business' : null };
+export interface UserRoleSummary {
+  'guestCount' : bigint,
+  'adminCount' : bigint,
+  'userCount' : bigint,
+}
 export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -196,16 +201,15 @@ export interface _SERVICE {
     [Array<ShoppingItem>, string, string],
     string
   >,
-  'getAdminDashboardData' : ActorMethod<[], AdminDashboardData>,
   'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
   'getAllOrders' : ActorMethod<[], Array<EcomOrder>>,
   'getAllPayoutTransfers' : ActorMethod<[], Array<SellerPayoutTransferRecord>>,
   'getAllSellerPayoutProfiles' : ActorMethod<[], Array<SellerPayoutProfile>>,
-  'getAllTransactionHistory' : ActorMethod<[], Array<TransactionRecord>>,
   'getAllUsers' : ActorMethod<[], Array<UserWithRole>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCustomerOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getFinancialOverview' : ActorMethod<[], AdminDashboardData>,
   'getKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
   'getSellerOrders' : ActorMethod<[], Array<EcomOrder>>,
@@ -215,8 +219,10 @@ export interface _SERVICE {
     Array<SellerPayoutTransferRecord>
   >,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getTransactionLedger' : ActorMethod<[], Array<TransactionRecord>>,
   'getTransactionRecordById' : ActorMethod<[string], [] | [TransactionRecord]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,

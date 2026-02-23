@@ -2,11 +2,32 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-all-internet-identity-authentication-checks-and-guards-that-prevent-access-to-the-admin-center-page-in-the-frontend",
-      "featureTitle": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
+      "featureId": "feature-update-the-available-balance-display-in-the-owner-withdrawals-interface-from-10-000-00-to-72-025-00",
+      "featureTitle": "Update the Available Balance display in the Owner Withdrawals interface from $10,000.00 to $72,025.00",
       "files": [
-        "frontend/src/components/admin/RoleApplicationsPanel.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-keep-the-10-000-credit-line-separate-and-clearly-displayed-as-spending-credit-not-withdrawable-funds",
+      "featureTitle": "Keep the $10,000 credit line separate and clearly displayed as spending credit (not withdrawable funds)",
+      "files": [
+        "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
       ],
       "components": [
         "authorization@3.0.0",

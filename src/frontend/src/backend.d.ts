@@ -73,6 +73,11 @@ export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
 }
+export interface UserRoleSummary {
+    guestCount: bigint;
+    adminCount: bigint;
+    userCount: bigint;
+}
 export interface UserWithRole {
     principal: Principal;
     profile: UserProfile;
@@ -199,24 +204,25 @@ export enum Variant_successful_failed {
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
-    getAdminDashboardData(): Promise<AdminDashboardData>;
     getAdminFinancialState(): Promise<AdminFinancialState>;
     getAllOrders(): Promise<Array<EcomOrder>>;
     getAllPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getAllSellerPayoutProfiles(): Promise<Array<SellerPayoutProfile>>;
-    getAllTransactionHistory(): Promise<Array<TransactionRecord>>;
     getAllUsers(): Promise<Array<UserWithRole>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCustomerOrders(): Promise<Array<EcomOrder>>;
+    getFinancialOverview(): Promise<AdminDashboardData>;
     getKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
     getSellerOrders(): Promise<Array<EcomOrder>>;
     getSellerPayoutProfile(): Promise<SellerPayoutProfile | null>;
     getSellerPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getTransactionLedger(): Promise<Array<TransactionRecord>>;
     getTransactionRecordById(transactionId: string): Promise<TransactionRecord | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;

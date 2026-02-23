@@ -155,17 +155,20 @@ export function useRejectRoleApplication() {
 }
 
 export function useGetUserRoleSummary() {
+  const { actor, isFetching } = useActor();
+
   return useQuery<UserRoleSummary>({
     queryKey: ['userRoleSummary'],
     queryFn: async () => {
-      console.warn('[useGetUserRoleSummary] Backend method not implemented');
+      if (!actor) throw new Error('Actor not available');
+      const summary = await actor.getUserRoleSummary();
       return {
-        adminCount: BigInt(0),
-        userCount: BigInt(0),
-        guestCount: BigInt(0),
+        adminCount: summary.adminCount,
+        userCount: summary.userCount,
+        guestCount: summary.guestCount,
       };
     },
-    enabled: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -176,7 +179,7 @@ export function useGetAdminDashboardData() {
     queryKey: ['adminDashboardData'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getAdminDashboardData();
+      return actor.getFinancialOverview();
     },
     enabled: !!actor && !isFetching,
   });
@@ -258,7 +261,7 @@ export function useGetAllTransactionHistory() {
     queryKey: ['allTransactionHistory'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllTransactionHistory();
+      return actor.getTransactionLedger();
     },
     enabled: !!actor && !isFetching,
   });

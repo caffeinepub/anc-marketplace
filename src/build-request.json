@@ -1,125 +1,74 @@
 {
   "kind": "build_request",
-  "title": "Revert to Version 63 and Remove Admin Center Authentication Guards",
+  "title": "Update Available Balance display to $72,025.00",
   "projectName": "ANC Marketplace",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
-      "target": "both",
+      "text": "Update the Available Balance display in the Owner Withdrawals interface from $10,000.00 to $72,025.00",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-latest"
         ],
         "quotes": [
-          "Yes 63",
-          "Revert to version 62",
-          "revert to Version 63 (your last working version)"
+          "Update the interface to correctly display $72,025 as available balance"
         ]
       },
       "acceptanceCriteria": [
-        "Application runs without 'application error' message",
-        "Admin Center shows 'Connecting to backend...' status as it did in Version 63",
-        "All user data (deposits, transaction history, connections, balances) remains intact"
+        "The Available Balance card displays $72,025.00 instead of $10,000.00",
+        "The update is reflected in the FinancialOverviewCards component",
+        "All currency formatting remains consistent (USD with commas and decimal points)"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
+      "text": "Keep the $10,000 credit line separate and clearly displayed as spending credit (not withdrawable funds)",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-latest"
         ],
         "quotes": [
-          "create a targeted rebuild that removes only the authentication checks blocking your Admin Center access",
-          "Remove authentication guards specifically for Admin Center"
+          "keep the $10,000 credit line seperate"
         ]
       },
       "acceptanceCriteria": [
-        "Admin Center page (AdminCenterPage.tsx) loads without requiring authentication",
-        "Admin Center page renders all tabs and panels without authentication barriers",
-        "No RequireAuthenticatedRegisteredUser or similar auth guards wrap the Admin Center route"
+        "The credit line continues to display as '$0.00 used of $10,000.00 limit'",
+        "The credit line is visually distinct from the Available Balance",
+        "No changes are made to the credit line calculation or display logic"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Remove backend authentication and authorization checks that prevent access to Admin Center data and operations",
-      "target": "backend",
+      "text": "Preserve all existing UI elements in the Owner Withdrawals interface including the Payroll Savings card, withdrawal form, navigation tabs, and all other interface components",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "removes ONLY the authentication checks blocking your Admin Center access",
-          "Remove frontend and backend authentication guards specifically for Admin Center access"
+          "msg-latest"
         ]
       },
       "acceptanceCriteria": [
-        "Backend methods used by Admin Center (analytics, transactions, role management, financial data) are accessible without authentication",
-        "Admin Center can retrieve user roles, transaction history, deposits, and financial data",
-        "All Admin Center backend operations complete successfully without authentication errors"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Preserve all existing role-based permissions infrastructure and data models so security can be re-enabled after the owner assigns themselves admin/owner role",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Preserve the role-based permissions system so you can secure the Admin Center after assigning yourself as owner/admin",
-          "keeping all other security infrastructure intact"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Role data structures (UserRole, RoleApplication, etc.) remain unchanged",
-        "Role assignment methods remain functional",
-        "User role query methods continue to work",
-        "All Maps and storage for roles, applications, and permissions are preserved"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Ensure all existing user data, financial records, transaction history, deposits, connections, and balances remain completely intact and accessible after the changes",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Your data (deposits, transaction history, connections, balances) will remain completely intact",
-          "Keep all your data safe (deposits, transactions, connections, balances)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All transaction records are preserved",
-        "All deposit records remain accessible",
-        "User profile data is unchanged",
-        "Financial balances and credit accounts remain accurate",
-        "No data loss or corruption occurs during version revert or rebuild"
+        "The Payroll Savings card remains unchanged showing $0.00",
+        "The Owner Withdrawals form (Amount, Currency, Reason fields) remains intact",
+        "All navigation tabs (Overview, Status, Payments, Fees, Transactions, Employees, Transfers, Accounts) remain functional",
+        "The pending backend integration alert message is preserved"
       ]
     }
   ],
   "constraints": [
-    "Do not modify or remove any data storage Maps (users, transactions, deposits, roles, etc.)",
-    "Do not change the role-based permissions data model or role assignment functionality",
-    "Do not modify any financial calculation or transaction processing logic",
-    "Remove authentication guards ONLY for Admin Center access, not for other protected features",
-    "Maintain single-actor architecture in backend/main.mo"
+    "Do not implement Stripe payout functionality in this build",
+    "Do not modify the TransfersStubPanel component beyond the balance display update",
+    "Do not change any backend Motoko code",
+    "Preserve the existing pending integration warning message"
   ],
   "nonGoals": [
-    "Adding new Admin Center features or functionality",
-    "Redesigning the role-based permissions system",
-    "Modifying authentication for non-Admin Center pages",
-    "Implementing new security measures or access controls",
-    "Changing the UI design or layout of Admin Center",
-    "Adding migration logic (Version 63 already exists with stable state)",
-    "Modifying Stripe integration or payment processing",
-    "Changing transaction or deposit handling logic"
+    "Implementing real Stripe payout processing",
+    "Adding transaction recording functionality",
+    "Re-integrating Stripe API keys",
+    "Modifying the withdrawal form validation or submission logic",
+    "Changing the backend balance storage or calculation"
   ],
   "imageRequirements": {
     "required": [],

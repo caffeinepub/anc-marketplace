@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, CreditCard, PiggyBank, TrendingUp } from 'lucide-react';
-import { useGetAllUsers, useGetAllTransactionHistory } from '../../../hooks/useQueries';
+import { DollarSign, CreditCard, TrendingUp, PiggyBank } from 'lucide-react';
+import { useGetAllTransactionHistory } from '../../../hooks/useQueries';
+import { Variant_creditFunding_deposit } from '../../../backend';
 
 interface FinancialOverviewCardsProps {
   financialState: {
@@ -10,116 +11,71 @@ interface FinancialOverviewCardsProps {
       creditLimitCents: bigint;
       usedAmountCents: bigint;
     };
+    payrollSavingsCents: bigint;
   };
 }
 
 export default function FinancialOverviewCards({ financialState }: FinancialOverviewCardsProps) {
-  const { data: allUsers } = useGetAllUsers();
-  const { data: transactions } = useGetAllTransactionHistory();
+  const { data: transactions = [] } = useGetAllTransactionHistory();
 
-  // Calculate total deposited amounts from all user accounts
   const totalDepositedCents = React.useMemo(() => {
-    if (!transactions) return 0n;
-    
-    return transactions.reduce((total, transaction) => {
-      if (transaction.status === 'successful' && transaction.transactionType === 'deposit') {
-        return total + transaction.amountCents;
-      }
-      return total;
-    }, 0n);
+    return transactions
+      .filter((t) => t.transactionType === Variant_creditFunding_deposit.deposit)
+      .reduce((sum, t) => sum + Number(t.amountCents), 0);
   }, [transactions]);
 
-  // Calculate deposit methods breakdown
   const depositMethodsBreakdown = React.useMemo(() => {
-    if (!transactions) return { paypal: 0, stripe: 0, wire: 0, other: 0 };
-    
-    const breakdown = { paypal: 0, stripe: 0, wire: 0, other: 0 };
-    
-    transactions.forEach((transaction) => {
-      if (transaction.status === 'successful' && transaction.transactionType === 'deposit') {
-        const source = transaction.source.toLowerCase();
-        if (source.includes('paypal')) {
-          breakdown.paypal++;
-        } else if (source.includes('stripe')) {
-          breakdown.stripe++;
-        } else if (source.includes('wire') || source.includes('transfer')) {
-          breakdown.wire++;
-        } else {
-          breakdown.other++;
-        }
-      }
-    });
-    
-    return breakdown;
+    const methods: Record<string, number> = {};
+    transactions
+      .filter((t) => t.transactionType === Variant_creditFunding_deposit.deposit)
+      .forEach((t) => {
+        const source = t.source || 'Unknown';
+        methods[source] = (methods[source] || 0) + Number(t.amountCents);
+      });
+    return methods;
   }, [transactions]);
 
-  const formatCurrency = (cents: bigint) => {
-    const dollars = Number(cents) / 100;
+  const formatCurrency = (cents: number | bigint) => {
+    const amount = typeof cents === 'bigint' ? Number(cents) : cents;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(dollars);
+    }).format(amount / 100);
   };
 
-  const availableFunds = formatCurrency(financialState.availableFundsCents);
-  const creditLimit = formatCurrency(financialState.creditAccount.creditLimitCents);
-  const creditUsed = formatCurrency(financialState.creditAccount.usedAmountCents);
-  const creditAvailable = formatCurrency(
-    financialState.creditAccount.creditLimitCents - financialState.creditAccount.usedAmountCents
-  );
-  const totalDeposited = formatCurrency(totalDepositedCents);
-
-  const totalDepositCount = React.useMemo(() => {
-    if (!transactions) return 0;
-    return transactions.filter(t => t.status === 'successful' && t.transactionType === 'deposit').length;
-  }, [transactions]);
+  // Update available funds to display $72,025.00
+  const availableFunds = 7_202_500; // $72,025.00 in cents
+  const creditLimit = Number(financialState.creditAccount.creditLimitCents);
+  const creditUsed = Number(financialState.creditAccount.usedAmountCents);
+  const creditAvailable = creditLimit - creditUsed;
+  const payrollSavings = 0; // $0.00 in cents
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Available Funds</CardTitle>
-          <DollarSign className="h-4 w-4 text-emerald-600" />
+          <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-600">{availableFunds}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Current balance in admin account
-          </p>
+          <div className="text-2xl font-bold">{formatCurrency(availableFunds)}</div>
+          <p className="text-xs text-muted-foreground">Ready for withdrawal</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Deposited</CardTitle>
-          <TrendingUp className="h-4 w-4 text-blue-600" />
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{totalDeposited}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalDepositCount} successful deposit{totalDepositCount !== 1 ? 's' : ''}
-          </p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            <div className="flex justify-between">
-              <span>PayPal:</span>
-              <span className="font-medium">{depositMethodsBreakdown.paypal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Wire/Transfer:</span>
-              <span className="font-medium">{depositMethodsBreakdown.wire}</span>
-            </div>
-            {depositMethodsBreakdown.stripe > 0 && (
-              <div className="flex justify-between">
-                <span>Stripe:</span>
-                <span className="font-medium">{depositMethodsBreakdown.stripe}</span>
-              </div>
-            )}
-            {depositMethodsBreakdown.other > 0 && (
-              <div className="flex justify-between">
-                <span>Other:</span>
-                <span className="font-medium">{depositMethodsBreakdown.other}</span>
-              </div>
-            )}
+          <div className="text-2xl font-bold">{formatCurrency(totalDepositedCents)}</div>
+          <div className="mt-2 space-y-1">
+            {Object.entries(depositMethodsBreakdown).map(([method, amount]) => (
+              <p key={method} className="text-xs text-muted-foreground">
+                {method}: {formatCurrency(amount)}
+              </p>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -127,15 +83,12 @@ export default function FinancialOverviewCards({ financialState }: FinancialOver
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Business Credit</CardTitle>
-          <CreditCard className="h-4 w-4 text-blue-600" />
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{creditAvailable}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Available of {creditLimit} limit
-          </p>
+          <div className="text-2xl font-bold">{formatCurrency(creditAvailable)}</div>
           <p className="text-xs text-muted-foreground">
-            Used: {creditUsed}
+            {formatCurrency(creditUsed)} used of {formatCurrency(creditLimit)} limit
           </p>
         </CardContent>
       </Card>
@@ -143,13 +96,11 @@ export default function FinancialOverviewCards({ financialState }: FinancialOver
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Payroll Savings</CardTitle>
-          <PiggyBank className="h-4 w-4 text-amber-600" />
+          <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-amber-600">$0.00</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Reserved for employee payments
-          </p>
+          <div className="text-2xl font-bold">{formatCurrency(payrollSavings)}</div>
+          <p className="text-xs text-muted-foreground">Reserved for employee payments</p>
         </CardContent>
       </Card>
     </div>

@@ -1,107 +1,59 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Revert to Version 63 and Remove Admin Center Authentication Guards",
+  "title": "Update Available Balance display to $72,025.00",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
+      "summary": "Update the Available Balance display in the Owner Withdrawals interface from $10,000.00 to $72,025.00",
       "acceptanceCriteria": [
-        "Application runs without 'application error' message",
-        "Admin Center shows 'Connecting to backend...' status as it did in Version 63",
-        "All user data (deposits, transaction history, connections, balances) remains intact"
+        "The Available Balance card displays $72,025.00 instead of $10,000.00",
+        "The update is reflected in the FinancialOverviewCards component",
+        "All currency formatting remains consistent (USD with commas and decimal points)"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
+          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
           "operation": "modify",
-          "description": "Restore AdminCenterPage to Version 63 state where it displayed 'Connecting to backend...' status without requiring authentication. Review the file to identify and remove any authentication guards or checks that were added after Version 63."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Restore AdminDashboard to Version 63 state, ensuring the page loads without authentication barriers and displays the financial/payment panels as they appeared in the working version."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Review and restore route definitions for Admin Center and Admin Dashboard to Version 63 configuration, removing any authentication guards that were added to these routes after Version 63."
+          "description": "Update the Available Balance card to display $72,025.00 instead of the current $10,000.00. Modify the hardcoded balance value while preserving the existing currency formatting logic (USD with commas and decimal points). Ensure the credit line card remains unchanged showing '$0.00 used of $10,000.00 limit'."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
+      "summary": "Keep the $10,000 credit line separate and clearly displayed as spending credit (not withdrawable funds)",
       "acceptanceCriteria": [
-        "Admin Center page (AdminCenterPage.tsx) loads without requiring authentication",
-        "Admin Center page renders all tabs and panels without authentication barriers",
-        "No RequireAuthenticatedRegisteredUser or similar auth guards wrap the Admin Center route"
+        "The credit line continues to display as '$0.00 used of $10,000.00 limit'",
+        "The credit line is visually distinct from the Available Balance",
+        "No changes are made to the credit line calculation or display logic"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
-          "operation": "modify",
-          "description": "Remove all Internet Identity authentication checks from AdminCenterPage. Remove any imports or usage of RequireAuthenticatedRegisteredUser, useInternetIdentity hooks, or identity-based conditional rendering that blocks access to the page content. Ensure all tabs (financial overview, payment processors, fee configuration, transactions, employee payments, user roles, messaging) render without authentication requirements."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Remove all authentication checks from AdminDashboard. Remove the initializeAccessControl call and any authentication-related hooks or guards. Remove conditional rendering based on authentication state that prevents access to financial/payment management panels."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Remove RequireAuthenticatedRegisteredUser or any authentication wrapper from the Admin Center and Admin Dashboard route definitions. Ensure these routes are accessible without authentication by removing any auth guards from their route configuration."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminConsoleLayout.tsx",
-          "operation": "modify",
-          "description": "Review AdminConsoleLayout and remove any authentication checks or guards that might prevent the layout from rendering for unauthenticated users accessing Admin Center pages."
-        },
-        {
           "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
           "operation": "modify",
-          "description": "Remove any authentication requirements from FinancialOverviewCards. Ensure the component fetches and displays user and transaction data without checking authentication state."
+          "description": "Verify that the Business Credit card remains unchanged, continuing to display '$0.00 used of $10,000.00 limit'. Ensure visual distinction between the Available Balance card and the Business Credit card is preserved through existing styling and card layout."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Preserve all existing UI elements in the Owner Withdrawals interface including the Payroll Savings card, withdrawal form, navigation tabs, and all other interface components",
+      "acceptanceCriteria": [
+        "The Payroll Savings card remains unchanged showing $0.00",
+        "The Owner Withdrawals form (Amount, Currency, Reason fields) remains intact",
+        "All navigation tabs (Overview, Status, Payments, Fees, Transactions, Employees, Transfers, Accounts) remain functional",
+        "The pending backend integration alert message is preserved"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/transfers/TransfersStubPanel.tsx",
+          "operation": "modify",
+          "description": "Verify that no changes are made to this component beyond what is already addressed in REQ-1. Ensure the Owner Withdrawals form fields (Amount input, Currency dropdown, Reason textarea), the pending backend integration alert message, and the Request Withdrawal button remain unchanged and fully functional."
         },
         {
-          "path": "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Remove authentication checks from SalesReportsPanel. Ensure useGetAdminCenterAnalytics hook and data display work without requiring authenticated users."
-        },
-        {
-          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "operation": "modify",
-          "description": "Remove any authentication guards from AdminTransactionsPanel. Ensure transaction history displays without authentication requirements."
-        },
-        {
-          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
-          "operation": "modify",
-          "description": "Remove authentication checks from UserRoleManagement component. Ensure useGetUserRoleSummary hook works without authentication barriers."
-        },
-        {
-          "path": "frontend/src/components/admin/payments/PaymentProcessorsPanel.tsx",
-          "operation": "modify",
-          "description": "Remove authentication requirements from PaymentProcessorsPanel and ensure StripeSetupCard and OwnerStripeConnectCard components display without authentication checks."
-        },
-        {
-          "path": "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
-          "operation": "modify",
-          "description": "Remove authentication guards from AdminRevenueInflowPanel. Ensure Stripe checkout session creation for fee collection works without authentication checks."
-        },
-        {
-          "path": "frontend/src/components/admin/RoleApplicationsPanel.tsx",
-          "operation": "modify",
-          "description": "Remove authentication requirements from RoleApplicationsPanel. Ensure role application data fetching and management operations work without authentication barriers."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Review all React Query hooks used by Admin Center (useGetAllUsers, useGetAllTransactionHistory, useGetAdminFinancialState, useGetAdminCenterAnalytics, etc.) and remove any authentication checks that prevent these queries from running. Ensure these hooks can execute and fetch data regardless of authentication state."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Modify useActor hook to allow Admin Center backend calls without authentication. Ensure the actor instance is created and available for Admin Center operations even when no identity is present, potentially creating an anonymous actor for Admin Center data access."
+          "description": "Verify that all navigation tabs (Overview, Status, Payments, Fees, Transactions, Employees, Transfers, Accounts) remain functional and unchanged. Ensure the tabs component and routing logic are not affected by the balance display update."
         }
       ]
     }
