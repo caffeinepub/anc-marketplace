@@ -12,8 +12,9 @@ import Int "mo:core/Int";
 import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -688,84 +689,9 @@ actor {
     },
   ]);
 
-  func isOwnerAdmin(principal : Principal) : Bool {
-    ownerAdmins.values().find(func(p : Principal) : Bool { Principal.equal(p, principal) }) != null;
-  };
-
-  func isRoleApplicationRequired(role : UserRole) : Bool {
-    switch (role) {
-      case (#employee or #admin) { true };
-      case (_) { false };
-    };
-  };
-
-  func isSelfServiceRole(role : UserRole) : Bool {
-    switch (role) {
-      case (#seller or #customer or #business or #marketer) { true };
-      case (_) { false };
-    };
-  };
-
-  public query ({ caller }) func isStripeConfigured() : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can check Stripe configuration status");
-    };
-    stripeConfiguration != null;
-  };
-
-  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can update Stripe settings");
-    };
-    stripeConfiguration := ?config;
-  };
-
-  func getStripeConfiguration() : Stripe.StripeConfiguration {
-    switch (stripeConfiguration) {
-      case (null) { Runtime.trap("Stripe needs to be first configured") };
-      case (?value) { value };
-    };
-  };
-
-  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can check session status");
-    };
-    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
-  };
-
-  public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create checkout sessions");
-    };
-    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
-  };
-
-  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
-  };
-
+  // Required AccessControl functions
   public shared ({ caller }) func initializeAccessControl() : async () {
-    if (isInitialized) {
-      Runtime.trap("Access control already initialized");
-    };
-
-    for (ownerPrincipal in ownerAdmins.values()) {
-      AccessControl.initialize(accessControlState, ownerPrincipal);
-
-      let ownerProfile : UserProfile = {
-        email = ownerEmail;
-        fullName = "ANC Owner Admin";
-        activeRole = #admin;
-        subscriptionId = null;
-        accountCreated = Time.now();
-      };
-      userStore.add(ownerPrincipal, ownerProfile);
-    };
-
-    isInitialized := true;
-    await updateMarketplaceRoadmapInternal();
-    initSeededKnowledge();
+    AccessControl.initialize(accessControlState, caller);
   };
 
   public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
@@ -780,19 +706,50 @@ actor {
     AccessControl.isAdmin(accessControlState, caller);
   };
 
-  public query ({ caller }) func isCallerOwnerAdmin() : async Bool {
-    isOwnerAdmin(caller);
-  };
-
-  public query ({ caller }) func getOwnerEmail() : async Text {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can view owner email");
+  // Stripe configuration - Admin only
+  public query ({ caller }) func isStripeConfigured() : async Bool {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can check Stripe configuration");
     };
-    ownerEmail;
+    stripeConfiguration != null;
   };
 
+  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can configure Stripe");
+    };
+    stripeConfiguration := ?config;
+  };
+
+  func getStripeConfiguration() : Stripe.StripeConfiguration {
+    switch (stripeConfiguration) {
+      case (null) { Runtime.trap("Stripe needs to be first configured") };
+      case (?value) { value };
+    };
+  };
+
+  // Stripe session - Users only
+  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can check session status");
+    };
+    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
+  };
+
+  public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can create checkout sessions");
+    };
+    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+  };
+
+  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  // User profile functions
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can view profiles");
     };
     userStore.get(caller);
@@ -806,186 +763,78 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-
-    switch (userStore.get(caller)) {
-      case (?existingProfile) {
-        if (existingProfile.activeRole != profile.activeRole) {
-          if (not isSelfServiceRole(profile.activeRole)) {
-            switch (roleApplicationStore.get(caller)) {
-              case (?application) {
-                if (application.status != #approved or application.requestedRole != profile.activeRole) {
-                  Runtime.trap("Unauthorized: Cannot set role without approved application");
-                };
-              };
-              case (null) {
-                Runtime.trap("Unauthorized: Cannot set role without approved application");
-              };
-            };
-          };
-        };
-      };
-      case (null) {
-        if (not isSelfServiceRole(profile.activeRole) and profile.activeRole != #guest) {
-          Runtime.trap("Unauthorized: New users can only select self-service roles");
-        };
-      };
-    };
-
     userStore.add(caller, profile);
   };
 
-  public shared ({ caller }) func submitRoleApplication(requestedRole : UserRole, reason : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can apply for roles");
+  // Onboarding - Users only
+  public query ({ caller }) func getOnboarding() : async ?SellerOnboardingProgress {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view onboarding");
     };
-
-    if (not isRoleApplicationRequired(requestedRole)) {
-      Runtime.trap("Invalid role: This role does not require an application. Use self-service registration.");
-    };
-
-    switch (roleApplicationStore.get(caller)) {
-      case (?existingApp) {
-        if (existingApp.status == #pending) {
-          Runtime.trap("You already have a pending application");
-        };
-      };
-      case (null) {};
-    };
-
-    let application : RoleApplication = {
-      applicant = caller;
-      requestedRole;
-      reason;
-      applicationDate = Time.now();
-      status = #pending;
-    };
-
-    roleApplicationStore.add(caller, application);
+    onboardingStore.get(caller);
   };
 
-  public query ({ caller }) func getPendingRoleApplications() : async [RoleApplication] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view pending role requests");
+  // Admin-only: View all users
+  public query ({ caller }) func getAllUsers() : async [UserWithRole] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
     };
-
-    roleApplicationStore.values().filter(
-      func(application) { application.status == #pending }
+    userStore.entries().map(
+      func((principal, profile) : (Principal, UserProfile)) : UserWithRole {
+        {
+          principal;
+          profile;
+          systemRole = AccessControl.getUserRole(accessControlState, principal);
+        };
+      }
     ).toArray();
   };
 
-  public shared ({ caller }) func approveRoleApplication(applicant : Principal) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can approve roles");
+  // Admin-only: View all orders
+  public query ({ caller }) func getAllOrders() : async [EcomOrder] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view all orders");
     };
+    orderStore.values().toArray();
+  };
 
-    switch (roleApplicationStore.get(applicant)) {
-      case (null) { Runtime.trap("Application not found") };
-      case (?application) {
-        if (application.status != #pending) {
-          Runtime.trap("Application is not pending");
+  // Users can view their own seller orders
+  public query ({ caller }) func getSellerOrders() : async [EcomOrder] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view seller orders");
+    };
+    orderStore.values().filter(
+      func(order) : Bool {
+        switch (order.sellerPrincipal) {
+          case (?seller) { Principal.equal(seller, caller) };
+          case (null) { false };
         };
+      }
+    ).toArray();
+  };
 
-        let updatedApplication = {
-          application with status = #approved;
+  // Users can view their own customer orders
+  public query ({ caller }) func getCustomerOrders() : async [EcomOrder] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view customer orders");
+    };
+    orderStore.values().filter(
+      func(order) : Bool {
+        switch (order.customerPrincipal) {
+          case (?customer) { Principal.equal(customer, caller) };
+          case (null) { false };
         };
-        roleApplicationStore.add(applicant, updatedApplication);
-
-        switch (userStore.get(applicant)) {
-          case (null) { Runtime.trap("User profile not found") };
-          case (?profile) {
-            let updatedProfile = {
-              profile with activeRole = application.requestedRole;
-            };
-            userStore.add(applicant, updatedProfile);
-          };
-        };
-      };
-    };
+      }
+    ).toArray();
   };
 
-  public shared ({ caller }) func rejectRoleApplication(applicant : Principal) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can reject roles");
-    };
-
-    switch (roleApplicationStore.get(applicant)) {
-      case (null) { Runtime.trap("Application not found") };
-      case (?application) {
-        if (application.status != #pending) {
-          Runtime.trap("Application is not pending");
-        };
-
-        let updatedApplication = {
-          application with status = #rejected;
-        };
-        roleApplicationStore.add(applicant, updatedApplication);
-      };
-    };
-  };
-
-  public shared ({ caller }) func updateAdminDashboardData() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update dashboard data");
-    };
-    await updateMarketplaceRoadmapInternal();
-  };
-
-  func updateMarketplaceRoadmapInternal() : async () {
-    marketplaceRoadmap.clear();
-
-    for (initEntry in marketplaceInitRoadmap.values()) {
-      marketplaceRoadmap.add(initEntry.roadmapId, {
-        initEntry with progressPercentage = 100;
-        completed = true;
-        notes = initEntry.name # " - stable features coming soon";
-        lastUpdated = Time.now();
-      });
-    };
-
-    for (initEntry in marketplaceInitRoadmap.values()) {
-      marketplaceRoadmap.add(initEntry.roadmapId, initEntry);
-    };
-  };
-
-  public query ({ caller }) func getUserRoleSummary() : async UserRoleSummary {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view user roles");
-    };
-
-    var adminCount = 0;
-    var userCount = 0;
-    var guestCount = 0;
-
-    let allUsers = userStore.values().toArray();
-
-    for (user in allUsers.values()) {
-      switch (user.activeRole) {
-        case (#guest) { guestCount += 1 };
-        case (#seller or #customer or #business or #marketer or #employee) { userCount += 1 };
-        case (#admin) { adminCount += 1 };
-      };
-    };
-
-    {
-      adminCount;
-      userCount;
-      guestCount;
-    };
-  };
-
-  public shared ({ caller }) func assignRole(user : Principal, role : AccessControl.UserRole) : async () {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can assign system roles");
-    };
-    AccessControl.assignRole(accessControlState, caller, user, role);
-  };
-
+  // Admin-only: Dashboard data
   public query ({ caller }) func getAdminDashboardData() : async AdminDashboardData {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access dashboard data");
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view dashboard data");
     };
     getAdminDashboardDataInternal();
   };
@@ -1000,197 +849,17 @@ actor {
     };
   };
 
-  public query ({ caller }) func getAllUsers() : async [UserWithRole] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
-
-    userStore.entries().map(
-      func((principal, profile) : (Principal, UserProfile)) : UserWithRole {
-        {
-          principal;
-          profile;
-          systemRole = AccessControl.getUserRole(accessControlState, principal);
-        };
-      }
-    ).toArray();
-  };
-
-  public query ({ caller }) func getAllOrders() : async [EcomOrder] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view all orders");
-    };
-    orderStore.values().toArray();
-  };
-
-  public query ({ caller }) func getSellerOrders() : async [EcomOrder] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view orders");
-    };
-
-    orderStore.values().filter(
-      func(order) : Bool {
-        switch (order.sellerPrincipal) {
-          case (?seller) { Principal.equal(seller, caller) };
-          case (null) { false };
-        };
-      }
-    ).toArray();
-  };
-
-  public query ({ caller }) func getCustomerOrders() : async [EcomOrder] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view orders");
-    };
-
-    orderStore.values().filter(
-      func(order) : Bool {
-        switch (order.customerPrincipal) {
-          case (?customer) { Principal.equal(customer, caller) };
-          case (null) { false };
-        };
-      }
-    ).toArray();
-  };
-
-  public query ({ caller }) func getAdminCenterAnalytics() : async AdminCenterAnalytics {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view analytics");
-    };
-
-    let allOrders = orderStore.values().toArray();
-    var totalRevenueCents = 0;
-    var successfulPayments = 0;
-    var failedPayments = 0;
-    var pendingPayments = 0;
-
-    for (order in allOrders.values()) {
-      switch (order.status) {
-        case (#completed) {
-          successfulPayments += 1;
-          totalRevenueCents += order.totalAmount;
-        };
-        case (#cancelled) {
-          failedPayments += 1;
-        };
-        case (#pending or #inProgress) {
-          pendingPayments += 1;
-        };
-      };
-    };
-
-    let totalTransactions = allOrders.size();
-    let successfulPaymentsFloat = successfulPayments.toFloat();
-    let totalRevenueCentsFloat = totalRevenueCents.toFloat();
-    let failedPaymentsFloat = failedPayments.toFloat();
-    let totalTransactionsFloat = totalTransactions.toFloat();
-
-    let averageTransactionAmountCents = if (successfulPayments > 0) {
-      totalRevenueCentsFloat / successfulPaymentsFloat;
-    } else {
-      0.0;
-    };
-
-    let failedToSuccessRatio = if (successfulPayments > 0) {
-      failedPaymentsFloat / successfulPaymentsFloat;
-    } else {
-      0.0;
-    };
-
-    let attemptsPerSuccessfulTransaction = if (successfulPayments > 0) {
-      totalTransactionsFloat / successfulPaymentsFloat;
-    } else {
-      0.0;
-    };
-
-    {
-      totalTransactions;
-      totalRevenueCents;
-      successfulPayments;
-      failedPayments;
-      pendingPayments;
-      averageTransactionAmountCents;
-      failedToSuccessRatio;
-      attemptsPerSuccessfulTransaction;
-    };
-  };
-
-  func filterOrdersByTimeFrame(orders : [EcomOrder], timeFrame : TimeFrame) : [EcomOrder] {
-    let now = Time.now();
-    let nanosPerDay = 86_400_000_000_000;
-    let dayOfWeek = (now % (nanosPerDay * 7)) / nanosPerDay;
-    switch (timeFrame) {
-      case (#today) {
-        orders.filter(func(order) { order.status == #completed });
-      };
-      case (#thisWeek) {
-        orders.filter(func(order) { order.status == #completed });
-      };
-      case (#thisMonth) {
-        orders.filter(func(order) { order.status == #completed });
-      };
-      case (#allTime) {
-        orders.filter(func(order) { order.status == #completed });
-      };
-    };
-  };
-
-  public query ({ caller }) func getSellerEarningsSummary(timeFrame : TimeFrame) : async SellerEarningsSummary {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view earnings");
-    };
-
-    let allOrders = orderStore.values().toArray();
-
-    let sellerOrders = allOrders.filter(func(order) : Bool {
-      switch (order.sellerPrincipal) {
-        case (?seller) { Principal.equal(seller, caller) };
-        case (null) { false };
-      };
-    });
-
-    let filteredOrders = filterOrdersByTimeFrame(sellerOrders, timeFrame);
-
-    var totalEarnings = 0;
-    var totalShippingCosts = 0;
-    var totalOrders = filteredOrders.size();
-
-    for (order in filteredOrders.values()) {
-      totalEarnings += order.totalAmount;
-      totalShippingCosts += order.shippingCostCents;
-    };
-
-    {
-      totalEarnings;
-      totalShippingCosts;
-      totalOrders;
-    };
-  };
-
-  public shared ({ caller }) func saveOnboarding(wizardState : SellerOnboardingProgress) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save onboarding progress");
-    };
-    onboardingStore.add(caller, wizardState);
-  };
-
-  public query ({ caller }) func getOnboarding() : async ?SellerOnboardingProgress {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view onboarding progress");
-    };
-    onboardingStore.get(caller);
-  };
-
+  // Admin-only: Transaction history
   public query ({ caller }) func getAllTransactionHistory() : async [TransactionRecord] {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can view transaction history");
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view transaction history");
     };
     transactionHistory.toArray();
   };
 
   public query ({ caller }) func getTransactionRecordById(transactionId : Text) : async ?TransactionRecord {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can view transaction history");
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view transaction records");
     };
     transactionHistory.values().find(
       func(record) {
@@ -1199,85 +868,35 @@ actor {
     );
   };
 
+  // Admin-only: Financial state
   public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can view financial state");
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view financial state");
     };
     adminFinancialState;
   };
 
-  public shared ({ caller }) func updateAdminFinancialState(newState : AdminFinancialState) : async () {
-    if (not isOwnerAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only owner admins can update financial state");
-    };
-    adminFinancialState := newState;
-  };
-
+  // Users can view their own payout profile
   public query ({ caller }) func getSellerPayoutProfile() : async ?SellerPayoutProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can view payout profiles");
     };
     sellerPayoutProfiles.get(caller);
   };
 
-  public shared ({ caller }) func updateSellerPayoutProfile(profile : SellerPayoutProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can update payout profiles");
-    };
-    if (not Principal.equal(profile.sellerPrincipal, caller)) {
-      Runtime.trap("Unauthorized: Can only update your own payout profile");
-    };
-    sellerPayoutProfiles.add(caller, profile);
-  };
-
+  // Admin-only: View all payout profiles
   public query ({ caller }) func getAllSellerPayoutProfiles() : async [SellerPayoutProfile] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
       Runtime.trap("Unauthorized: Only admins can view all payout profiles");
     };
     sellerPayoutProfiles.values().toArray();
   };
 
-  public shared ({ caller }) func createPayoutTransfer(amountCents : Nat) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create payout transfers");
-    };
-
-    switch (sellerPayoutProfiles.get(caller)) {
-      case (null) { Runtime.trap("Payout profile not found. Please set up your payout account first.") };
-      case (?profile) {
-        if (profile.internalBalanceCents < amountCents) {
-          Runtime.trap("Insufficient balance for payout");
-        };
-
-        let transferId = "payout_" # Time.now().toText();
-        let transfer : SellerPayoutTransferRecord = {
-          id = transferId;
-          sellerPrincipal = caller;
-          amountCents;
-          payoutAccount = profile.designatedPayoutAccount;
-          status = #pending;
-          createdAt = Time.now();
-          processedAt = null;
-          errorMessage = null;
-        };
-
-        sellerPayoutTransfers.add(transferId, transfer);
-
-        let updatedProfile = {
-          profile with internalBalanceCents = profile.internalBalanceCents - amountCents;
-        };
-        sellerPayoutProfiles.add(caller, updatedProfile);
-
-        transferId;
-      };
-    };
-  };
-
+  // Users can view their own transfers
   public query ({ caller }) func getSellerPayoutTransfers() : async [SellerPayoutTransferRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can view payout transfers");
     };
-
     sellerPayoutTransfers.values().filter(
       func(transfer) : Bool {
         Principal.equal(transfer.sellerPrincipal, caller);
@@ -1285,239 +904,19 @@ actor {
     ).toArray();
   };
 
+  // Admin-only: View all transfers
   public query ({ caller }) func getAllPayoutTransfers() : async [SellerPayoutTransferRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
       Runtime.trap("Unauthorized: Only admins can view all payout transfers");
     };
     sellerPayoutTransfers.values().toArray();
   };
 
-  public shared ({ caller }) func processPayoutTransfer(transferId : Text, success : Bool, errorMessage : ?Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can process payout transfers");
-    };
-
-    switch (sellerPayoutTransfers.get(transferId)) {
-      case (null) { Runtime.trap("Transfer not found") };
-      case (?transfer) {
-        let updatedTransfer = {
-          transfer with
-          status = if (success) { #processed } else { #failed };
-          processedAt = ?Time.now();
-          errorMessage;
-        };
-        sellerPayoutTransfers.add(transferId, updatedTransfer);
-      };
-    };
-  };
-
+  // Users can view knowledge base
   public query ({ caller }) func getKnowledgeBase() : async [AssistantKnowledgeEntry] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view knowledge base");
+    };
     knowledgeBase.values().filter(func(entry) { entry.isActive }).toArray();
-  };
-
-  public shared ({ caller }) func addKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can add knowledge entries");
-    };
-    knowledgeBase.add(entry.id, entry);
-  };
-
-  public shared ({ caller }) func updateKnowledgeEntry(entry : AssistantKnowledgeEntry) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update knowledge entries");
-    };
-    knowledgeBase.add(entry.id, entry);
-  };
-
-  public shared ({ caller }) func deleteKnowledgeEntry(entryId : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete knowledge entries");
-    };
-    knowledgeBase.remove(entryId);
-  };
-
-  func initSeededKnowledge() {
-    if (knowledgeBase.isEmpty()) {
-      let generalEntries = [
-        {
-          id = "anc_general_info";
-          question = "What is ANC Marketplace?";
-          answer = "ANC Marketplace is a digital transformation platform offering a suite of business solutions including e-commerce, startup assistance, B2B services, and educational content for entrepreneurs and businesses. ANC was established in Texas and now operates in both Texas and Georgia. ANC Electronics N Services is a store within ANC Marketplace, specializing in business and industrial products leveraging dropshipping for nationwide distribution.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-        {
-          id = "anc_veteran_support";
-          question = "Does ANC support veterans?";
-          answer = "Yes, ANC is veteran-owned and actively supports veterans through specialized programs, discounts, and educational initiatives tailored to their entrepreneurial needs.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-        {
-          id = "anc_women_family_owned";
-          question = "Is ANC women or family owned?";
-          answer = "ANC is a family-run business with significant female leadership and active support for women entrepreneurs through dedicated resources and support programs.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-        {
-          id = "anc_contacts";
-          question = "How does ANC handle seller funds and payments?";
-          answer = "ANC temporarily holds seller funds in an internal ledger until they are transferred to the seller's designated payout account. Copyright for all products remains with the sellers and service providers. All digital and physical products are sold and delivered by independent merchants. Customers should contact the merchant for product-related guarantees and returns. ANC can be contacted at ancelectronicsnservices@gmail.com regarding any issues, and service fees will be refunded accordingly if necessary.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-        {
-          id = "anc_pci_compliance";
-          question = "Is ANC PCI DSS compliant?";
-          answer = "ANC is committed to maintaining compliance with the PCI Data Security Standard (PCI DSS) for secure payment processing. All transactions are handled through trusted third-party payment providers, and no sensitive payment data is stored on ANC servers.";
-          category = "General";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-      ];
-
-      let ecommerceEntries = [
-        {
-          id = "anc_ecommerce";
-          question = "What ecommerce services does ANC offer?";
-          answer = "ANC offers a suite of ecommerce solutions including store builder templates, product catalog management, payment processing, and dropshipping partnerships with third-party suppliers.";
-          category = "Ecommerce";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-        {
-          id = "anc_marketplace_pricing";
-          question = "What is ANC's marketplace pricing model?";
-          answer = "Store access and service access are free; the charge is a $5 service fee per sale. There is no monthly bill unless the user converts their online store/service profile into a standalone website or app, which costs $10/month.";
-          category = "Ecommerce";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-      ];
-
-      let marketingEntries = [
-        {
-          id = "anc_marketing_platforms";
-          question = "What marketing platforms does ANC support?";
-          answer = "ANC supports the integration of store and advertising platforms using advanced digital products, such as AI video services and training, as a core part of the business. This enables companies to run their entire business and brand on the Internet Computer blockchain.";
-          category = "Marketing";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-      ];
-
-      let startupEntries = [
-        {
-          id = "anc_apprentice_program";
-          question = "What is the ANC Apprentice Program Center?";
-          answer = "The ANC Apprentice Program Center provides a comprehensive startup assistance program including educational content, virtual meetings, activities, and business credit building resources. It serves as a dedicated learning and development hub for entrepreneurs.";
-          category = "Startup Program";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = false;
-        },
-      ];
-
-      let businessOpsEntries = [
-        {
-          id = "funnel_guidance";
-          question = "How do I set up a marketing funnel using the platform?";
-          answer = "Follow these steps: (1) Sign up with ClickFunnels using our partner link; (2) Choose a funnel template aligned with your goals; (3) Customize the funnel within the ClickFunnels dashboard; (4) Integrate the funnel with your ANC storefront or offer links in the dashboard. Our business consultants are available for personalized guidance - contact us to schedule a session.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-        {
-          id = "business_reports_guidance";
-          question = "What's the app's current capability for generating business reports?";
-          answer = "The app doesn't currently generate reports. Reports should be handled as an export through Stripe and/or ClickFunnels, with integration on the product and admin dashboard roadmap moving forward.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-        {
-          id = "employee_onboarding_guidance";
-          question = "Can the app support employee and seller onboarding?";
-          answer = "Onboarding is available only as a business consultancy service through our company. Contact us to schedule a session for personalized onboarding assistance.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-        {
-          id = "external_advertising_guidance";
-          question = "Does the app support external advertising?";
-          answer = "The app does not support advertising directly. However, your business can be promoted in-app. Contact us to discuss advertising opportunities within our app.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-        {
-          id = "business_ops_consulting";
-          question = "What support does ANC offer for business operations?";
-          answer = "ANC provides business consulting services covering strategy, marketing, financial planning, and operations optimization. Our expert consultants offer both individual and group consulting packages tailored to your specific needs. Contact us to schedule an introductory meeting and discuss how we can help you achieve your business goals.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-        {
-          id = "feature_request_process";
-          question = "What is the process for requesting new features or submitting feedback?";
-          answer = "We encourage users to submit feature requests and feedback through the app's contact form or by emailing ancelectronicsnservices@gmail.com. Our development team reviews all submissions and prioritizes them based on demand and strategic goals.";
-          category = "Business Operations";
-          lastUpdated = Time.now();
-          isActive = true;
-          usageCount = 0;
-          isBusinessOps = true;
-        },
-      ];
-
-      for (entry in generalEntries.values()) {
-        knowledgeBase.add(entry.id, entry);
-      };
-      for (entry in ecommerceEntries.values()) {
-        knowledgeBase.add(entry.id, entry);
-      };
-      for (entry in marketingEntries.values()) {
-        knowledgeBase.add(entry.id, entry);
-      };
-      for (entry in startupEntries.values()) {
-        knowledgeBase.add(entry.id, entry);
-      };
-      for (entry in businessOpsEntries.values()) {
-        knowledgeBase.add(entry.id, entry);
-      };
-    };
   };
 };

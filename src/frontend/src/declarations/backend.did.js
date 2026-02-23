@@ -19,16 +19,6 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const AssistantKnowledgeEntry = IDL.Record({
-  'id' : IDL.Text,
-  'question' : IDL.Text,
-  'isBusinessOps' : IDL.Bool,
-  'usageCount' : IDL.Nat,
-  'lastUpdated' : IDL.Int,
-  'answer' : IDL.Text,
-  'isActive' : IDL.Bool,
-  'category' : IDL.Text,
-});
 export const UserRole__1 = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -40,16 +30,6 @@ export const ShoppingItem = IDL.Record({
   'quantity' : IDL.Nat,
   'priceInCents' : IDL.Nat,
   'productDescription' : IDL.Text,
-});
-export const AdminCenterAnalytics = IDL.Record({
-  'pendingPayments' : IDL.Nat,
-  'averageTransactionAmountCents' : IDL.Float64,
-  'failedToSuccessRatio' : IDL.Float64,
-  'failedPayments' : IDL.Nat,
-  'successfulPayments' : IDL.Nat,
-  'attemptsPerSuccessfulTransaction' : IDL.Float64,
-  'totalTransactions' : IDL.Nat,
-  'totalRevenueCents' : IDL.Nat,
 });
 export const AdminPageSection = IDL.Variant({
   'b2b' : IDL.Null,
@@ -163,6 +143,16 @@ export const UserWithRole = IDL.Record({
   'profile' : UserProfile,
   'systemRole' : UserRole__1,
 });
+export const AssistantKnowledgeEntry = IDL.Record({
+  'id' : IDL.Text,
+  'question' : IDL.Text,
+  'isBusinessOps' : IDL.Bool,
+  'usageCount' : IDL.Nat,
+  'lastUpdated' : IDL.Int,
+  'answer' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'category' : IDL.Text,
+});
 export const SellerOnboardingStep = IDL.Variant({
   'marketing' : IDL.Null,
   'termsAndConditions' : IDL.Null,
@@ -178,40 +168,12 @@ export const SellerOnboardingProgress = IDL.Record({
   'currentStep' : SellerOnboardingStep,
   'completedSteps' : IDL.Vec(SellerOnboardingStep),
 });
-export const RoleApplicationStatus = IDL.Variant({
-  'pending' : IDL.Null,
-  'approved' : IDL.Null,
-  'rejected' : IDL.Null,
-});
-export const RoleApplication = IDL.Record({
-  'status' : RoleApplicationStatus,
-  'applicant' : IDL.Principal,
-  'requestedRole' : UserRole,
-  'applicationDate' : IDL.Int,
-  'reason' : IDL.Text,
-});
-export const TimeFrame = IDL.Variant({
-  'today' : IDL.Null,
-  'thisWeek' : IDL.Null,
-  'allTime' : IDL.Null,
-  'thisMonth' : IDL.Null,
-});
-export const SellerEarningsSummary = IDL.Record({
-  'totalOrders' : IDL.Nat,
-  'totalEarnings' : IDL.Nat,
-  'totalShippingCosts' : IDL.Nat,
-});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
     'response' : IDL.Text,
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
-});
-export const UserRoleSummary = IDL.Record({
-  'guestCount' : IDL.Nat,
-  'adminCount' : IDL.Nat,
-  'userCount' : IDL.Nat,
 });
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
@@ -263,18 +225,12 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-  'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-  'approveRoleApplication' : IDL.Func([IDL.Principal], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
-  'assignRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
       [IDL.Text],
       [],
     ),
-  'createPayoutTransfer' : IDL.Func([IDL.Nat], [IDL.Text], []),
-  'deleteKnowledgeEntry' : IDL.Func([IDL.Text], [], []),
-  'getAdminCenterAnalytics' : IDL.Func([], [AdminCenterAnalytics], ['query']),
   'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
   'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
@@ -307,17 +263,6 @@ export const idlService = IDL.Service({
       [IDL.Opt(SellerOnboardingProgress)],
       ['query'],
     ),
-  'getOwnerEmail' : IDL.Func([], [IDL.Text], ['query']),
-  'getPendingRoleApplications' : IDL.Func(
-      [],
-      [IDL.Vec(RoleApplication)],
-      ['query'],
-    ),
-  'getSellerEarningsSummary' : IDL.Func(
-      [TimeFrame],
-      [SellerEarningsSummary],
-      ['query'],
-    ),
   'getSellerOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
   'getSellerPayoutProfile' : IDL.Func(
       [],
@@ -340,30 +285,16 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
-  'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
   'initializeAccessControl' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'isCallerOwnerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-  'processPayoutTransfer' : IDL.Func(
-      [IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
-      [],
-      [],
-    ),
-  'rejectRoleApplication' : IDL.Func([IDL.Principal], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'saveOnboarding' : IDL.Func([SellerOnboardingProgress], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-  'submitRoleApplication' : IDL.Func([UserRole, IDL.Text], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
     ),
-  'updateAdminDashboardData' : IDL.Func([], [], []),
-  'updateAdminFinancialState' : IDL.Func([AdminFinancialState], [], []),
-  'updateKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-  'updateSellerPayoutProfile' : IDL.Func([SellerPayoutProfile], [], []),
 });
 
 export const idlInitArgs = [];
@@ -380,16 +311,6 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const AssistantKnowledgeEntry = IDL.Record({
-    'id' : IDL.Text,
-    'question' : IDL.Text,
-    'isBusinessOps' : IDL.Bool,
-    'usageCount' : IDL.Nat,
-    'lastUpdated' : IDL.Int,
-    'answer' : IDL.Text,
-    'isActive' : IDL.Bool,
-    'category' : IDL.Text,
-  });
   const UserRole__1 = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -401,16 +322,6 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'priceInCents' : IDL.Nat,
     'productDescription' : IDL.Text,
-  });
-  const AdminCenterAnalytics = IDL.Record({
-    'pendingPayments' : IDL.Nat,
-    'averageTransactionAmountCents' : IDL.Float64,
-    'failedToSuccessRatio' : IDL.Float64,
-    'failedPayments' : IDL.Nat,
-    'successfulPayments' : IDL.Nat,
-    'attemptsPerSuccessfulTransaction' : IDL.Float64,
-    'totalTransactions' : IDL.Nat,
-    'totalRevenueCents' : IDL.Nat,
   });
   const AdminPageSection = IDL.Variant({
     'b2b' : IDL.Null,
@@ -524,6 +435,16 @@ export const idlFactory = ({ IDL }) => {
     'profile' : UserProfile,
     'systemRole' : UserRole__1,
   });
+  const AssistantKnowledgeEntry = IDL.Record({
+    'id' : IDL.Text,
+    'question' : IDL.Text,
+    'isBusinessOps' : IDL.Bool,
+    'usageCount' : IDL.Nat,
+    'lastUpdated' : IDL.Int,
+    'answer' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'category' : IDL.Text,
+  });
   const SellerOnboardingStep = IDL.Variant({
     'marketing' : IDL.Null,
     'termsAndConditions' : IDL.Null,
@@ -539,40 +460,12 @@ export const idlFactory = ({ IDL }) => {
     'currentStep' : SellerOnboardingStep,
     'completedSteps' : IDL.Vec(SellerOnboardingStep),
   });
-  const RoleApplicationStatus = IDL.Variant({
-    'pending' : IDL.Null,
-    'approved' : IDL.Null,
-    'rejected' : IDL.Null,
-  });
-  const RoleApplication = IDL.Record({
-    'status' : RoleApplicationStatus,
-    'applicant' : IDL.Principal,
-    'requestedRole' : UserRole,
-    'applicationDate' : IDL.Int,
-    'reason' : IDL.Text,
-  });
-  const TimeFrame = IDL.Variant({
-    'today' : IDL.Null,
-    'thisWeek' : IDL.Null,
-    'allTime' : IDL.Null,
-    'thisMonth' : IDL.Null,
-  });
-  const SellerEarningsSummary = IDL.Record({
-    'totalOrders' : IDL.Nat,
-    'totalEarnings' : IDL.Nat,
-    'totalShippingCosts' : IDL.Nat,
-  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
       'response' : IDL.Text,
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
-  });
-  const UserRoleSummary = IDL.Record({
-    'guestCount' : IDL.Nat,
-    'adminCount' : IDL.Nat,
-    'userCount' : IDL.Nat,
   });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
@@ -621,18 +514,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-    'addKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-    'approveRoleApplication' : IDL.Func([IDL.Principal], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
-    'assignRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
         [IDL.Text],
         [],
       ),
-    'createPayoutTransfer' : IDL.Func([IDL.Nat], [IDL.Text], []),
-    'deleteKnowledgeEntry' : IDL.Func([IDL.Text], [], []),
-    'getAdminCenterAnalytics' : IDL.Func([], [AdminCenterAnalytics], ['query']),
     'getAdminDashboardData' : IDL.Func([], [AdminDashboardData], ['query']),
     'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
@@ -665,17 +552,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(SellerOnboardingProgress)],
         ['query'],
       ),
-    'getOwnerEmail' : IDL.Func([], [IDL.Text], ['query']),
-    'getPendingRoleApplications' : IDL.Func(
-        [],
-        [IDL.Vec(RoleApplication)],
-        ['query'],
-      ),
-    'getSellerEarningsSummary' : IDL.Func(
-        [TimeFrame],
-        [SellerEarningsSummary],
-        ['query'],
-      ),
     'getSellerOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
     'getSellerPayoutProfile' : IDL.Func(
         [],
@@ -698,30 +574,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
-    'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
     'initializeAccessControl' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'isCallerOwnerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-    'processPayoutTransfer' : IDL.Func(
-        [IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
-        [],
-        [],
-      ),
-    'rejectRoleApplication' : IDL.Func([IDL.Principal], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'saveOnboarding' : IDL.Func([SellerOnboardingProgress], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-    'submitRoleApplication' : IDL.Func([UserRole, IDL.Text], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
       ),
-    'updateAdminDashboardData' : IDL.Func([], [], []),
-    'updateAdminFinancialState' : IDL.Func([AdminFinancialState], [], []),
-    'updateKnowledgeEntry' : IDL.Func([AssistantKnowledgeEntry], [], []),
-    'updateSellerPayoutProfile' : IDL.Func([SellerPayoutProfile], [], []),
   });
 };
 

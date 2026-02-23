@@ -1,31 +1,27 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "ANC Marketplace project with Admin Center that needs authentication guards removed to restore access to role settings and existing data",
+  "summary": "Financial management application with PayPal integration, Stripe integration, transaction management, and admin center. Currently addressing application error in Version 64 by reverting to Version 63 (last working version) and rebuilding with targeted security changes to unblock Admin Center access while preserving data and role-based permissions.",
   "architectural_notes": [
-    "Admin Center has existing role settings system for owner/admin assignment",
-    "Internet Identity authentication guards implemented in both frontend and backend",
-    "Existing deposits and connections must be preserved during security removal"
+    "Application uses Internet Computer stable memory for data persistence across canister upgrades",
+    "Role-based permissions system exists for Admin Center security",
+    "Admin Center requires owner/admin role assignment for access",
+    "Stripe integration configured with live API keys",
+    "PayPal integration for deposits and transaction processing"
   ],
   "known_issues": [
-    "Admin Center stuck on 'Connecting to backend...' due to authentication guards blocking access",
-    "User principal ID: 2x2kc-7zyj2-widrm-locjk-ulwdv-... cannot access Admin Center"
+    "Version 64 deployment caused application error due to security guard removal",
+    "Admin Center currently blocked by authentication checks preventing owner/admin role assignment",
+    "Backend security removal attempt failed in previous build",
+    "User experiencing 'application error' message preventing app access"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-remove-internet-identity-authentication-checks-from-admincenterpage-tsx-that-are-blocking-access-to-the-admin-center-interface",
-      "title": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
+      "id": "feature-remove-all-internet-identity-authentication-checks-and-guards-that-prevent-access-to-the-admin-center-page-in-the-frontend",
+      "title": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
       "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-preserve-all-existing-admin-center-functionality-including-role-settings-deposits-financial-data-transaction-history-and-user-management-features",
-      "title": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
-      "reqIds": [
-        "REQ-3"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -33,15 +29,33 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Remove Internet Identity authentication guards blocking Admin Center access (frontend and backend)",
-      "reqIds": [],
+      "summary": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
+      "summary": "Remove backend authentication and authorization checks that prevent access to Admin Center data and operations",
       "reqIds": [
-        "REQ-2"
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Preserve all existing role-based permissions infrastructure and data models so security can be re-enabled after the owner assigns themselves admin/owner role",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Ensure all existing user data, financial records, transaction history, deposits, connections, and balances remain completely intact and accessible after the changes",
+      "reqIds": [
+        "REQ-5"
       ],
       "status": "pending"
     }

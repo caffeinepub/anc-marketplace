@@ -1,11 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Remove Internet Identity authentication guards blocking access to the Admin Center so the user can immediately access existing admin functionality, deposits, and settings.
+**Goal:** Revert to Version 63 and remove Admin Center authentication guards to restore access while preserving all user data and role infrastructure.
 
 **Planned changes:**
-- Remove authentication checks from AdminCenterPage.tsx that block page access
-- Remove principal verification and authorization checks from backend Motoko functions serving Admin Center (admin dashboard data, analytics, transactions, role management)
-- Preserve all existing Admin Center features, deposit records, transaction history, and role management functionality
+- Revert application deployment to Version 63 (last stable working version)
+- Remove Internet Identity authentication checks blocking Admin Center frontend access
+- Remove backend authentication requirements for Admin Center data and operations
+- Preserve all role-based permissions infrastructure and data models for future re-enablement
+- Ensure all user data, financial records, transactions, deposits, connections, and balances remain intact
 
-**User-visible outcome:** User can access the Admin Center interface immediately without authentication blocking, view and manage existing deposits, transactions, financial data, and assign roles without rebuilding any functionality.
+**User-visible outcome:** Admin Center becomes accessible without authentication barriers, displaying all tabs and panels with "Connecting to backend..." status as in Version 63. All existing user data and financial information remains preserved and accessible.

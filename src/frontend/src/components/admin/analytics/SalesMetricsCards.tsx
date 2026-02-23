@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingCart, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
-import type { AdminCenterAnalytics } from '../../../backend';
+import type { AdminCenterAnalytics } from '../../../types';
 
 interface SalesMetricsCardsProps {
   analytics: AdminCenterAnalytics;

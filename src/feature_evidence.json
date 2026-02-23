@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-internet-identity-authentication-checks-from-admincenterpage-tsx-that-are-blocking-access-to-the-admin-center-interface",
-      "featureTitle": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
+      "featureId": "feature-remove-all-internet-identity-authentication-checks-and-guards-that-prevent-access-to-the-admin-center-page-in-the-frontend",
+      "featureTitle": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
       "files": [
-        "frontend/src/pages/AdminCenterPage.tsx"
+        "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@3.0.0",
@@ -19,29 +20,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-preserve-all-existing-admin-center-functionality-including-role-settings-deposits-financial-data-transaction-history-and-user-management-features",
-      "featureTitle": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
-      "files": [
-        "frontend/src/pages/AdminCenterPage.tsx"
-      ],
-      "components": [
-        "authorization@3.0.0",
-        "blob-storage@4.0.0",
-        "stripe@3.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
+        "REQ-2"
       ],
       "confidence": "high"
     }

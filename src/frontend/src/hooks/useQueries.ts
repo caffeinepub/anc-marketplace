@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile, StripeConfiguration, SellerOnboardingProgress, AdminDashboardData, TransactionRecord, SellerEarningsSummary, TimeFrame, UserRoleSummary, RoleApplication, UserRole, UserWithRole, AdminCenterAnalytics } from '../backend';
+import type { UserProfile, StripeConfiguration, SellerOnboardingProgress, AdminDashboardData, TransactionRecord } from '../backend';
+import type { UserRoleSummary, RoleApplication, SellerEarningsSummary, TimeFrame, AdminCenterAnalytics } from '../types';
 import { Principal } from '@icp-sdk/core/principal';
 
 export interface AdminFinancialState {
@@ -103,42 +104,34 @@ export function useSaveCallerUserProfile() {
   });
 }
 
+// Stub hooks for role applications - backend methods not yet implemented
 export function useSubmitRoleApplication() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({ requestedRole, reason }: { requestedRole: UserRole; reason: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.submitRoleApplication(requestedRole, reason);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
+    mutationFn: async ({ requestedRole, reason }: { requestedRole: string; reason: string }) => {
+      console.warn('[useSubmitRoleApplication] Backend method not implemented');
+      throw new Error('Role application submission not yet implemented');
     },
   });
 }
 
 export function useGetPendingRoleApplications() {
-  const { actor, isFetching } = useActor();
-
   return useQuery<RoleApplication[]>({
     queryKey: ['roleApplications'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getPendingRoleApplications();
+      console.warn('[useGetPendingRoleApplications] Backend method not implemented');
+      return [];
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
 export function useApproveRoleApplication() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (applicant: Principal) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.approveRoleApplication(applicant);
+      console.warn('[useApproveRoleApplication] Backend method not implemented');
+      throw new Error('Role application approval not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
@@ -148,13 +141,12 @@ export function useApproveRoleApplication() {
 }
 
 export function useRejectRoleApplication() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (applicant: Principal) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.rejectRoleApplication(applicant);
+      console.warn('[useRejectRoleApplication] Backend method not implemented');
+      throw new Error('Role application rejection not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
@@ -163,15 +155,17 @@ export function useRejectRoleApplication() {
 }
 
 export function useGetUserRoleSummary() {
-  const { actor, isFetching } = useActor();
-
   return useQuery<UserRoleSummary>({
     queryKey: ['userRoleSummary'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getUserRoleSummary();
+      console.warn('[useGetUserRoleSummary] Backend method not implemented');
+      return {
+        adminCount: BigInt(0),
+        userCount: BigInt(0),
+        guestCount: BigInt(0),
+      };
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
@@ -189,13 +183,12 @@ export function useGetAdminDashboardData() {
 }
 
 export function useUpdateAdminDashboardData() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.updateAdminDashboardData();
+      console.warn('[useUpdateAdminDashboardData] Backend method not implemented');
+      throw new Error('Dashboard data update not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminDashboardData'] });
@@ -232,13 +225,12 @@ export function useSetStripeConfiguration() {
 }
 
 export function useSaveOnboarding() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (wizardState: SellerOnboardingProgress) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.saveOnboarding(wizardState);
+      console.warn('[useSaveOnboarding] Backend method not implemented');
+      throw new Error('Onboarding save not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding'] });
@@ -290,22 +282,24 @@ export function useGetAdminFinancialState() {
 }
 
 export function useGetSellerEarningsSummary(timeFrame: TimeFrame) {
-  const { actor, isFetching } = useActor();
-
   return useQuery<SellerEarningsSummary>({
     queryKey: ['sellerEarningsSummary', timeFrame],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getSellerEarningsSummary(timeFrame);
+      console.warn('[useGetSellerEarningsSummary] Backend method not implemented');
+      return {
+        totalEarnings: BigInt(0),
+        totalShippingCosts: BigInt(0),
+        totalOrders: BigInt(0),
+      };
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
 export function useGetAllUsers() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<UserWithRole[]>({
+  return useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
       if (!actor) return [];
@@ -316,14 +310,21 @@ export function useGetAllUsers() {
 }
 
 export function useGetAdminCenterAnalytics() {
-  const { actor, isFetching } = useActor();
-
   return useQuery<AdminCenterAnalytics>({
     queryKey: ['adminCenterAnalytics'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getAdminCenterAnalytics();
+      console.warn('[useGetAdminCenterAnalytics] Backend method not implemented');
+      return {
+        totalTransactions: BigInt(0),
+        totalRevenueCents: BigInt(0),
+        successfulPayments: BigInt(0),
+        failedPayments: BigInt(0),
+        pendingPayments: BigInt(0),
+        averageTransactionAmountCents: 0,
+        failedToSuccessRatio: 0,
+        attemptsPerSuccessfulTransaction: 0,
+      };
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }

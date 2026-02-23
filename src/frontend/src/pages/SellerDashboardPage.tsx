@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetSellerEarningsSummary } from '../hooks/useQueries';
-import { TimeFrame } from '../backend';
+import { TimeFrame } from '../types';
 import { DollarSign, Package, TruckIcon, Loader2 } from 'lucide-react';
 import RequireAuthenticatedRegisteredUser from '../components/auth/RequireAuthenticatedRegisteredUser';
 

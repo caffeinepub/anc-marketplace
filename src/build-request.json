@@ -1,77 +1,125 @@
 {
   "kind": "build_request",
-  "title": "Remove authentication guards blocking Admin Center access",
+  "title": "Revert to Version 63 and Remove Admin Center Authentication Guards",
   "projectName": "ANC Marketplace",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
-      "target": "frontend",
+      "text": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-final"
+          "msg-recent"
         ],
         "quotes": [
-          "I would like you to remove the security from the admin center so I can access it"
+          "Yes 63",
+          "Revert to version 62",
+          "revert to Version 63 (your last working version)"
         ]
       },
       "acceptanceCriteria": [
-        "AdminCenterPage loads without authentication guards",
-        "User can access Admin Center interface immediately without being blocked",
-        "No 'Connecting to backend...' loading state caused by authentication checks"
+        "Application runs without 'application error' message",
+        "Admin Center shows 'Connecting to backend...' status as it did in Version 63",
+        "All user data (deposits, transaction history, connections, balances) remains intact"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
-      "target": "backend",
+      "text": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-final"
+          "msg-recent"
         ],
         "quotes": [
-          "The security is using Internet Identity authentication",
-          "The blocking is happening in both frontend and backend"
+          "create a targeted rebuild that removes only the authentication checks blocking your Admin Center access",
+          "Remove authentication guards specifically for Admin Center"
         ]
       },
       "acceptanceCriteria": [
-        "Backend functions for admin operations do not perform principal verification",
-        "Backend functions for admin data retrieval do not check caller authorization",
-        "Admin Center can successfully fetch data from backend without authentication errors"
+        "Admin Center page (AdminCenterPage.tsx) loads without requiring authentication",
+        "Admin Center page renders all tabs and panels without authentication barriers",
+        "No RequireAuthenticatedRegisteredUser or similar auth guards wrap the Admin Center route"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
-      "target": "both",
+      "text": "Remove backend authentication and authorization checks that prevent access to Admin Center data and operations",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-final"
+          "msg-recent"
         ],
         "quotes": [
-          "I don't want you to rebuild the whole admin center from scratch because that will erase my deposits and my connections",
-          "everything is there I just can't get to it"
+          "removes ONLY the authentication checks blocking your Admin Center access",
+          "Remove frontend and backend authentication guards specifically for Admin Center access"
         ]
       },
       "acceptanceCriteria": [
-        "All existing deposit records remain intact",
-        "Transaction history data is preserved",
-        "Role settings interface remains functional",
-        "User can assign themselves as owner/admin once access is restored"
+        "Backend methods used by Admin Center (analytics, transactions, role management, financial data) are accessible without authentication",
+        "Admin Center can retrieve user roles, transaction history, deposits, and financial data",
+        "All Admin Center backend operations complete successfully without authentication errors"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Preserve all existing role-based permissions infrastructure and data models so security can be re-enabled after the owner assigns themselves admin/owner role",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "Preserve the role-based permissions system so you can secure the Admin Center after assigning yourself as owner/admin",
+          "keeping all other security infrastructure intact"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Role data structures (UserRole, RoleApplication, etc.) remain unchanged",
+        "Role assignment methods remain functional",
+        "User role query methods continue to work",
+        "All Maps and storage for roles, applications, and permissions are preserved"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Ensure all existing user data, financial records, transaction history, deposits, connections, and balances remain completely intact and accessible after the changes",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "Your data (deposits, transaction history, connections, balances) will remain completely intact",
+          "Keep all your data safe (deposits, transactions, connections, balances)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All transaction records are preserved",
+        "All deposit records remain accessible",
+        "User profile data is unchanged",
+        "Financial balances and credit accounts remain accurate",
+        "No data loss or corruption occurs during version revert or rebuild"
       ]
     }
   ],
   "constraints": [
-    "Do not rebuild or replace the Admin Center component - only remove authentication guards",
-    "Do not modify or delete any existing financial data, deposits, or transaction records",
-    "Preserve all existing role management and settings functionality"
+    "Do not modify or remove any data storage Maps (users, transactions, deposits, roles, etc.)",
+    "Do not change the role-based permissions data model or role assignment functionality",
+    "Do not modify any financial calculation or transaction processing logic",
+    "Remove authentication guards ONLY for Admin Center access, not for other protected features",
+    "Maintain single-actor architecture in backend/main.mo"
   ],
   "nonGoals": [
     "Adding new Admin Center features or functionality",
-    "Implementing alternative security mechanisms",
-    "Modifying the role assignment system",
-    "Changing the Admin Center UI or layout"
+    "Redesigning the role-based permissions system",
+    "Modifying authentication for non-Admin Center pages",
+    "Implementing new security measures or access controls",
+    "Changing the UI design or layout of Admin Center",
+    "Adding migration logic (Version 63 already exists with stable state)",
+    "Modifying Stripe integration or payment processing",
+    "Changing transaction or deposit handling logic"
   ],
   "imageRequirements": {
     "required": [],

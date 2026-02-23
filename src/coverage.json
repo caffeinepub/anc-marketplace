@@ -1,53 +1,90 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-23T05:35:54.481Z",
+  "generatedAt": "2026-02-23T10:24:52.784Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 5,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
-        "status": "implemented",
+        "summary": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx"
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/pages/AdminDashboard.tsx",
+          "frontend/src/App.tsx"
         ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx"
-        ]
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Remove authentication/authorization guards from backend Motoko functions that service the Admin Center (admin dashboard data, analytics, transactions, role management)",
+        "summary": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/pages/AdminDashboard.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/admin/AdminConsoleLayout.tsx",
+          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
+          "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+          "frontend/src/components/admin/UserRoleManagement.tsx",
+          "frontend/src/components/admin/payments/PaymentProcessorsPanel.tsx",
+          "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
+          "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/hooks/useActor.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Remove backend authentication and authorization checks that prevent access to Admin Center data and operations",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-3",
-        "summary": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminCenterPage.tsx"
-        ]
+        "id": "REQ-4",
+        "summary": "Preserve all existing role-based permissions infrastructure and data models so security can be re-enabled after the owner assigns themselves admin/owner role",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Ensure all existing user data, financial records, transaction history, deposits, connections, and balances remain completely intact and accessible after the changes",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/AdminCenterPage.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+    "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/hooks/useSellerOnboarding.ts",
+    "frontend/src/pages/SellerDashboardPage.tsx",
+    "frontend/src/types/index.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -16,13 +16,12 @@ export function useGetOnboarding() {
 }
 
 export function useSaveOnboarding() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (wizardState: SellerOnboardingProgress) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.saveOnboarding(wizardState);
+      console.warn('[useSaveOnboarding] Backend method not implemented');
+      throw new Error('Onboarding save not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sellerOnboarding'] });

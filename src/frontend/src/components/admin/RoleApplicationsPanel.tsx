@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { UserRole } from '../../backend';
 import { Principal } from '@icp-sdk/core/principal';
 
 export default function RoleApplicationsPanel() {
@@ -14,8 +13,9 @@ export default function RoleApplicationsPanel() {
   const approveApplication = useApproveRoleApplication();
   const rejectApplication = useRejectRoleApplication();
 
-  const handleApprove = async (applicantPrincipal: Principal) => {
+  const handleApprove = async (applicantString: string) => {
     try {
+      const applicantPrincipal = Principal.fromText(applicantString);
       await approveApplication.mutateAsync(applicantPrincipal);
       toast.success('Application approved successfully');
       refetch();
@@ -25,8 +25,9 @@ export default function RoleApplicationsPanel() {
     }
   };
 
-  const handleReject = async (applicantPrincipal: Principal) => {
+  const handleReject = async (applicantString: string) => {
     try {
+      const applicantPrincipal = Principal.fromText(applicantString);
       await rejectApplication.mutateAsync(applicantPrincipal);
       toast.success('Application rejected');
       refetch();
@@ -36,35 +37,43 @@ export default function RoleApplicationsPanel() {
     }
   };
 
-  const getRoleBadgeColor = (role: UserRole) => {
+  const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case UserRole.admin:
+      case 'admin':
         return 'bg-red-100 text-red-800';
-      case UserRole.employee:
+      case 'employee':
         return 'bg-teal-100 text-teal-800';
+      case 'seller':
+        return 'bg-blue-100 text-blue-800';
+      case 'customer':
+        return 'bg-green-100 text-green-800';
+      case 'business':
+        return 'bg-purple-100 text-purple-800';
+      case 'marketer':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-slate-100 text-slate-800';
     }
   };
 
-  const getRoleLabel = (role: UserRole) => {
+  const getRoleLabel = (role: string) => {
     switch (role) {
-      case UserRole.admin:
+      case 'admin':
         return 'Admin';
-      case UserRole.employee:
+      case 'employee':
         return 'Employee';
-      case UserRole.seller:
+      case 'seller':
         return 'Seller';
-      case UserRole.customer:
+      case 'customer':
         return 'Customer';
-      case UserRole.business:
+      case 'business':
         return 'Business';
-      case UserRole.marketer:
+      case 'marketer':
         return 'Affiliate Marketer';
-      case UserRole.guest:
+      case 'guest':
         return 'Guest';
       default:
-        return 'Unknown';
+        return role.charAt(0).toUpperCase() + role.slice(1);
     }
   };
 
@@ -141,9 +150,9 @@ export default function RoleApplicationsPanel() {
           </TableHeader>
           <TableBody>
             {applications.map((application) => (
-              <TableRow key={application.applicant.toString()}>
+              <TableRow key={application.applicant}>
                 <TableCell className="font-mono text-sm">
-                  {shortenPrincipal(application.applicant.toString())}
+                  {shortenPrincipal(application.applicant)}
                 </TableCell>
                 <TableCell>
                   <Badge className={getRoleBadgeColor(application.requestedRole)}>

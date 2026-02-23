@@ -49,14 +49,13 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
-export interface SellerEarningsSummary {
-    totalOrders: bigint;
-    totalEarnings: bigint;
-    totalShippingCosts: bigint;
-}
 export interface AdminDashboardData {
     adminSections: Array<AdminPageSectionStatus>;
     marketplaceRoadmap: Array<MarketplaceRoadmap>;
+}
+export interface AdminPageStatusDetails {
+    version: string;
+    notes: string;
 }
 export type StripeSessionStatus = {
     __kind__: "completed";
@@ -73,15 +72,6 @@ export type StripeSessionStatus = {
 export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
-}
-export interface UserRoleSummary {
-    guestCount: bigint;
-    adminCount: bigint;
-    userCount: bigint;
-}
-export interface AdminPageStatusDetails {
-    version: string;
-    notes: string;
 }
 export interface UserWithRole {
     principal: Principal;
@@ -105,16 +95,6 @@ export interface EcomOrder {
     totalAmount: bigint;
     products: Array<string>;
 }
-export interface AdminCenterAnalytics {
-    pendingPayments: bigint;
-    averageTransactionAmountCents: number;
-    failedToSuccessRatio: number;
-    failedPayments: bigint;
-    successfulPayments: bigint;
-    attemptsPerSuccessfulTransaction: number;
-    totalTransactions: bigint;
-    totalRevenueCents: bigint;
-}
 export interface http_header {
     value: string;
     name: string;
@@ -132,13 +112,6 @@ export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
-}
-export interface RoleApplication {
-    status: RoleApplicationStatus;
-    applicant: Principal;
-    requestedRole: UserRole;
-    applicationDate: bigint;
-    reason: string;
 }
 export interface AssistantKnowledgeEntry {
     id: string;
@@ -188,11 +161,6 @@ export enum PayoutTransferStatus {
     processed = "processed",
     failed = "failed"
 }
-export enum RoleApplicationStatus {
-    pending = "pending",
-    approved = "approved",
-    rejected = "rejected"
-}
 export enum SellerOnboardingStep {
     marketing = "marketing",
     termsAndConditions = "termsAndConditions",
@@ -200,12 +168,6 @@ export enum SellerOnboardingStep {
     storeSetup = "storeSetup",
     websiteIntegration = "websiteIntegration",
     companyDetails = "companyDetails"
-}
-export enum TimeFrame {
-    today = "today",
-    thisWeek = "thisWeek",
-    allTime = "allTime",
-    thisMonth = "thisMonth"
 }
 export enum UserRole {
     admin = "admin",
@@ -235,14 +197,8 @@ export enum Variant_successful_failed {
     failed = "failed"
 }
 export interface backendInterface {
-    addKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
-    approveRoleApplication(applicant: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
-    assignRole(user: Principal, role: UserRole__1): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
-    createPayoutTransfer(amountCents: bigint): Promise<string>;
-    deleteKnowledgeEntry(entryId: string): Promise<void>;
-    getAdminCenterAnalytics(): Promise<AdminCenterAnalytics>;
     getAdminDashboardData(): Promise<AdminDashboardData>;
     getAdminFinancialState(): Promise<AdminFinancialState>;
     getAllOrders(): Promise<Array<EcomOrder>>;
@@ -255,29 +211,16 @@ export interface backendInterface {
     getCustomerOrders(): Promise<Array<EcomOrder>>;
     getKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
-    getOwnerEmail(): Promise<string>;
-    getPendingRoleApplications(): Promise<Array<RoleApplication>>;
-    getSellerEarningsSummary(timeFrame: TimeFrame): Promise<SellerEarningsSummary>;
     getSellerOrders(): Promise<Array<EcomOrder>>;
     getSellerPayoutProfile(): Promise<SellerPayoutProfile | null>;
     getSellerPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getTransactionRecordById(transactionId: string): Promise<TransactionRecord | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
-    getUserRoleSummary(): Promise<UserRoleSummary>;
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
-    isCallerOwnerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
-    processPayoutTransfer(transferId: string, success: boolean, errorMessage: string | null): Promise<void>;
-    rejectRoleApplication(applicant: Principal): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    saveOnboarding(wizardState: SellerOnboardingProgress): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
-    submitRoleApplication(requestedRole: UserRole, reason: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updateAdminDashboardData(): Promise<void>;
-    updateAdminFinancialState(newState: AdminFinancialState): Promise<void>;
-    updateKnowledgeEntry(entry: AssistantKnowledgeEntry): Promise<void>;
-    updateSellerPayoutProfile(profile: SellerPayoutProfile): Promise<void>;
 }

@@ -204,6 +204,53 @@ export interface StoreBuilderConfig {
   domainPurchaseLink: string | null;
 }
 
+// Types not exported by backend but needed by frontend
+export interface RoleApplication {
+  applicant: string;
+  requestedRole: string;
+  reason: string;
+  applicationDate: bigint;
+  status: RoleApplicationStatus;
+}
+
+export type RoleApplicationStatus = {
+  __kind__: 'pending';
+} | {
+  __kind__: 'approved';
+} | {
+  __kind__: 'rejected';
+};
+
+export interface UserRoleSummary {
+  adminCount: bigint;
+  userCount: bigint;
+  guestCount: bigint;
+}
+
+export enum TimeFrame {
+  today = 'today',
+  thisWeek = 'thisWeek',
+  thisMonth = 'thisMonth',
+  allTime = 'allTime',
+}
+
+export interface SellerEarningsSummary {
+  totalEarnings: bigint;
+  totalShippingCosts: bigint;
+  totalOrders: bigint;
+}
+
+export interface AdminCenterAnalytics {
+  totalTransactions: bigint;
+  totalRevenueCents: bigint;
+  successfulPayments: bigint;
+  failedPayments: bigint;
+  pendingPayments: bigint;
+  averageTransactionAmountCents: number;
+  failedToSuccessRatio: number;
+  attemptsPerSuccessfulTransaction: number;
+}
+
 // Helper functions for AccessRole
 export const AccessRole = {
   guest: { __kind__: 'guest' as const },

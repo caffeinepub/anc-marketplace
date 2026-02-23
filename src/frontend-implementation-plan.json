@@ -1,38 +1,107 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Remove authentication guards blocking Admin Center access",
+  "title": "Revert to Version 63 and Remove Admin Center Authentication Guards",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove Internet Identity authentication checks from AdminCenterPage.tsx that are blocking access to the Admin Center interface",
+      "summary": "Revert the application deployment to Version 63, which was the last stable working version before the Admin Center authentication issues occurred",
       "acceptanceCriteria": [
-        "AdminCenterPage loads without authentication guards",
-        "User can access Admin Center interface immediately without being blocked",
-        "No 'Connecting to backend...' loading state caused by authentication checks"
+        "Application runs without 'application error' message",
+        "Admin Center shows 'Connecting to backend...' status as it did in Version 63",
+        "All user data (deposits, transaction history, connections, balances) remains intact"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Remove authentication guards and checks that are blocking access to the Admin Center. Remove any useInternetIdentity hooks, isAuthenticated checks, or RequireAuthenticatedRegisteredUser wrapper components that prevent immediate page access. Remove the 'Connecting to backend...' loading state caused by waiting for authentication. Allow the page to render the full Admin Center interface immediately without authentication requirements."
+          "description": "Restore AdminCenterPage to Version 63 state where it displayed 'Connecting to backend...' status without requiring authentication. Review the file to identify and remove any authentication guards or checks that were added after Version 63."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Restore AdminDashboard to Version 63 state, ensuring the page loads without authentication barriers and displays the financial/payment panels as they appeared in the working version."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Review and restore route definitions for Admin Center and Admin Dashboard to Version 63 configuration, removing any authentication guards that were added to these routes after Version 63."
         }
       ]
     },
     {
-      "id": "REQ-3",
-      "summary": "Preserve all existing Admin Center functionality including role settings, deposits, financial data, transaction history, and user management features",
+      "id": "REQ-2",
+      "summary": "Remove all Internet Identity authentication checks and guards that prevent access to the Admin Center page in the frontend",
       "acceptanceCriteria": [
-        "All existing deposit records remain intact",
-        "Transaction history data is preserved",
-        "Role settings interface remains functional",
-        "User can assign themselves as owner/admin once access is restored"
+        "Admin Center page (AdminCenterPage.tsx) loads without requiring authentication",
+        "Admin Center page renders all tabs and panels without authentication barriers",
+        "No RequireAuthenticatedRegisteredUser or similar auth guards wrap the Admin Center route"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Verify that all existing tabs and functionality remain intact after removing authentication guards: Financial Overview, Payment Processors, Fee Configuration, Transactions, Employee Payments, User Roles, Messaging, Sales Reports, and Role Applications tabs. Ensure all data fetching hooks (useGetAdminFinancialState, useGetAllTransactionHistory, useGetUserRoleSummary, etc.) continue to work. Do not modify the tab structure, panel components, or data display logic - only remove authentication barriers."
+          "description": "Remove all Internet Identity authentication checks from AdminCenterPage. Remove any imports or usage of RequireAuthenticatedRegisteredUser, useInternetIdentity hooks, or identity-based conditional rendering that blocks access to the page content. Ensure all tabs (financial overview, payment processors, fee configuration, transactions, employee payments, user roles, messaging) render without authentication requirements."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Remove all authentication checks from AdminDashboard. Remove the initializeAccessControl call and any authentication-related hooks or guards. Remove conditional rendering based on authentication state that prevents access to financial/payment management panels."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Remove RequireAuthenticatedRegisteredUser or any authentication wrapper from the Admin Center and Admin Dashboard route definitions. Ensure these routes are accessible without authentication by removing any auth guards from their route configuration."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminConsoleLayout.tsx",
+          "operation": "modify",
+          "description": "Review AdminConsoleLayout and remove any authentication checks or guards that might prevent the layout from rendering for unauthenticated users accessing Admin Center pages."
+        },
+        {
+          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
+          "operation": "modify",
+          "description": "Remove any authentication requirements from FinancialOverviewCards. Ensure the component fetches and displays user and transaction data without checking authentication state."
+        },
+        {
+          "path": "frontend/src/components/admin/analytics/SalesReportsPanel.tsx",
+          "operation": "modify",
+          "description": "Remove authentication checks from SalesReportsPanel. Ensure useGetAdminCenterAnalytics hook and data display work without requiring authenticated users."
+        },
+        {
+          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+          "operation": "modify",
+          "description": "Remove any authentication guards from AdminTransactionsPanel. Ensure transaction history displays without authentication requirements."
+        },
+        {
+          "path": "frontend/src/components/admin/UserRoleManagement.tsx",
+          "operation": "modify",
+          "description": "Remove authentication checks from UserRoleManagement component. Ensure useGetUserRoleSummary hook works without authentication barriers."
+        },
+        {
+          "path": "frontend/src/components/admin/payments/PaymentProcessorsPanel.tsx",
+          "operation": "modify",
+          "description": "Remove authentication requirements from PaymentProcessorsPanel and ensure StripeSetupCard and OwnerStripeConnectCard components display without authentication checks."
+        },
+        {
+          "path": "frontend/src/components/admin/payments/AdminRevenueInflowPanel.tsx",
+          "operation": "modify",
+          "description": "Remove authentication guards from AdminRevenueInflowPanel. Ensure Stripe checkout session creation for fee collection works without authentication checks."
+        },
+        {
+          "path": "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+          "operation": "modify",
+          "description": "Remove authentication requirements from RoleApplicationsPanel. Ensure role application data fetching and management operations work without authentication barriers."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review all React Query hooks used by Admin Center (useGetAllUsers, useGetAllTransactionHistory, useGetAdminFinancialState, useGetAdminCenterAnalytics, etc.) and remove any authentication checks that prevent these queries from running. Ensure these hooks can execute and fetch data regardless of authentication state."
+        },
+        {
+          "path": "frontend/src/hooks/useActor.ts",
+          "operation": "modify",
+          "description": "Modify useActor hook to allow Admin Center backend calls without authentication. Ensure the actor instance is created and available for Admin Center operations even when no identity is present, potentially creating an anonymous actor for Admin Center data access."
         }
       ]
     }
