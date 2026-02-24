@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Navy blue primary palette (hue 250) */
+    --background: oklch(99% 0.005 250);
+    --foreground: oklch(15% 0.02 250);
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(15% 0.02 250);
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(15% 0.02 250);
+    --primary: oklch(40% 0.15 250);
+    --primary-foreground: oklch(98% 0.01 250);
+    --secondary: oklch(92% 0.02 250);
+    --secondary-foreground: oklch(20% 0.02 250);
+    --muted: oklch(94% 0.01 250);
+    --muted-foreground: oklch(50% 0.02 250);
+    --accent: oklch(92% 0.02 250);
+    --accent-foreground: oklch(20% 0.02 250);
+    --destructive: oklch(55% 0.22 25);
+    --destructive-foreground: oklch(98% 0.01 25);
+    --border: oklch(88% 0.01 250);
+    --input: oklch(88% 0.01 250);
+    --ring: oklch(40% 0.15 250);
+    --radius: 0.5rem;
+    --chart-1: oklch(60% 0.15 250);
+    --chart-2: oklch(70% 0.12 200);
+    --chart-3: oklch(65% 0.14 150);
+    --chart-4: oklch(75% 0.10 100);
+    --chart-5: oklch(68% 0.13 50);
+
+    /* Menu-specific tokens - fully opaque, high contrast */
+    --menu-surface: 100% 0 0;
+    --menu-label: 15% 0.02 250;
+    --menu-label-hover: 30% 0.08 250;
+    --menu-border: 85% 0.01 250;
+    --menu-item-hover: 96% 0.01 240;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Force light color scheme */
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background: white;
+  }
+
+  /* Force solid backgrounds on all dialog and popover overlays */
+  [data-radix-popper-content-wrapper],
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"] {
+    background: white !important;
+  }
+}
+
+@layer components {
+  /* Menu surface styling for dropdowns and mobile sheet */
+  .menu-surface {
+    @apply bg-white border-2 border-[oklch(85%_0.01_250)] shadow-lg;
+  }
+
+  /* Menu label styling */
+  .menu-label {
+    @apply text-[oklch(15%_0.02_250)] font-semibold;
+  }
+
+  /* Menu section label for mobile menu */
+  .menu-section-label {
+    @apply text-[oklch(45%_0.02_250)] font-semibold;
+  }
+
+  /* Menu item styling with high contrast */
+  .menu-item {
+    @apply text-[oklch(15%_0.02_250)] hover:bg-[oklch(96%_0.01_240)] focus:bg-[oklch(96%_0.01_240)] transition-colors;
+  }
+
+  /* Menu link styling for mobile menu */
+  .menu-link {
+    @apply text-[oklch(15%_0.02_250)] hover:text-primary focus:text-primary transition-colors;
+  }
+}
+
+/* Animated gradient logo text */
+.logo-text {
+  background: linear-gradient(135deg, oklch(40% 0.15 250), oklch(50% 0.18 270), oklch(45% 0.16 230));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Voice-specific styling */
+.voice-listening-indicator {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
