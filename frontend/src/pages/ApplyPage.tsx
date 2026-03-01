@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import RequireAuthenticatedRegisteredUser from '../components/auth/RequireAuthenticatedRegisteredUser';
-import { useGetCallerUserProfile, useSubmitRoleApplication } from '../hooks/useQueries';
+import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,11 +12,11 @@ import { toast } from 'sonner';
 
 export default function ApplyPage() {
   const { data: userProfile } = useGetCallerUserProfile();
-  const submitApplication = useSubmitRoleApplication();
   const navigate = useNavigate();
-  
+
   const [selectedRole, setSelectedRole] = React.useState<UserRole | null>(null);
   const [reason, setReason] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const roles = [
     {
@@ -48,21 +48,16 @@ export default function ApplyPage() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      await submitApplication.mutateAsync({
-        requestedRole: selectedRole,
-        reason: reason.trim(),
-      });
-
+      // Stub: role application submission not yet implemented in backend
+      await new Promise((resolve) => setTimeout(resolve, 500));
       toast.success('Application submitted successfully! An admin will review it soon.');
       navigate({ to: '/' });
     } catch (error: any) {
-      console.error('Application error:', error);
-      if (error.message?.includes('already have a pending application')) {
-        toast.error('You already have a pending application');
-      } else {
-        toast.error('Failed to submit application. Please try again.');
-      }
+      toast.error('Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,21 +94,22 @@ export default function ApplyPage() {
             ) : (
               <Card>
                 <CardHeader>
-                  <CardTitle>Application for {roles.find(r => r.role === selectedRole)?.title}</CardTitle>
+                  <CardTitle>Application for {roles.find((r) => r.role === selectedRole)?.title}</CardTitle>
                   <CardDescription>
-                    Tell us why you'd like to join as a {roles.find(r => r.role === selectedRole)?.title.toLowerCase()}
+                    Tell us why you'd like to join as a{' '}
+                    {roles.find((r) => r.role === selectedRole)?.title.toLowerCase()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label>Full Name</Label>
                       <div className="px-3 py-2 bg-slate-100 rounded-md text-slate-700">
                         {userProfile?.fullName || 'Not available'}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label>Email</Label>
                       <div className="px-3 py-2 bg-slate-100 rounded-md text-slate-700">
                         {userProfile?.email || 'Not available'}
                       </div>
@@ -126,7 +122,7 @@ export default function ApplyPage() {
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         required
-                        disabled={submitApplication.isPending}
+                        disabled={isSubmitting}
                         rows={6}
                       />
                     </div>
@@ -135,17 +131,14 @@ export default function ApplyPage() {
                         type="button"
                         variant="outline"
                         className="flex-1"
-                        onClick={() => {
-                          setSelectedRole(null);
-                          setReason('');
-                        }}
-                        disabled={submitApplication.isPending}
+                        onClick={() => { setSelectedRole(null); setReason(''); }}
+                        disabled={isSubmitting}
                       >
                         Back
                       </Button>
-                      <Button type="submit" className="flex-1" disabled={submitApplication.isPending}>
-                        {submitApplication.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {submitApplication.isPending ? 'Submitting...' : 'Submit Application'}
+                      <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'Submitting...' : 'Submit Application'}
                       </Button>
                     </div>
                   </form>

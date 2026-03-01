@@ -1,0 +1,71 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-in-the-deposit-tab-of-the-transaction-history-financial-overview-display-the-gross-deposited-amount-as-77-957-38",
+      "featureTitle": "In the Deposit tab of the transaction history / financial overview, display the gross deposited amount as $77,957.38.",
+      "files": [
+        "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-deduct-the-payroll-savings-allocation-of-4-276-22-from-the-gross-deposit-of-77-957-38-and-display-the-resulting-net-available-balance-of-73-681-16-in-the-financial-overview-available-balance-display",
+      "featureTitle": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38, and display the resulting net available balance of $73,681.16 in the financial overview / available balance display.",
+      "files": [
+        "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-transaction-ledger-entry-for-the-payroll-savings-internal-transfer-of-4-276-22-the-entry-must-include-a-unique-auto-generated-transaction-number-label-the-entry-as-a-payroll-savings-transfer-internal-allocation-and-appear-in-the-transaction-history-list-alongside-other-records",
+      "featureTitle": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22. The entry must include a unique auto-generated transaction number, label the entry as a Payroll Savings transfer (internal allocation), and appear in the transaction history list alongside other records.",
+      "files": [
+        "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx"
+      ],
+      "components": [
+        "authorization@3.0.0",
+        "blob-storage@4.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

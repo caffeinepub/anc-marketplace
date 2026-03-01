@@ -1,0 +1,84 @@
+{
+  "kind": "build_request",
+  "title": "Transaction History Fixes — Deposit Amount, Payroll Savings Deduction & Ledger Entry",
+  "projectName": "ANC Marketplace",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "In the Deposit tab of the transaction history / financial overview, display the gross deposited amount as $77,957.38.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-12"
+        ],
+        "quotes": [
+          "Deposit tab shows correct $77,957.38 amount",
+          "Deposit tab displays the gross deposit amount of $77,957.38"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Deposit tab renders the value $77,957.38 as the gross deposit total.",
+        "No other deposit figure appears in place of this value."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38, and display the resulting net available balance of $73,681.16 in the financial overview / available balance display.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-12",
+          "msg-13"
+        ],
+        "quotes": [
+          "you have to correctly deduct what is put in the payroll savings from the deposited total",
+          "resulting in a net available balance",
+          "running balance after the deposit would show $77,957.38 − $4,276.22 = $73,681.16"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The available balance displayed is $73,681.16 ($77,957.38 − $4,276.22).",
+        "The deduction is visually attributable to the Payroll Savings allocation."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22. The entry must include a unique auto-generated transaction number, label the entry as a Payroll Savings transfer (internal allocation), and appear in the transaction history list alongside other records.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-12",
+          "msg-13"
+        ],
+        "quotes": [
+          "Payroll Savings transfer ($4,276.22) shown as a ledger entry reflecting the internal allocation",
+          "create a transaction record for that with transaction number",
+          "A transaction record is created for the Payroll Savings transfer, complete with a generated transaction number, reflecting it as an internal ledger entry"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A transaction record for $4,276.22 labeled 'Payroll Savings Transfer' (or equivalent internal allocation label) appears in the transaction history.",
+        "The record has a unique transaction number displayed alongside it.",
+        "The record is visually distinguished as an internal/ledger entry (e.g., a type badge or label), not an external payout.",
+        "The transaction number is unique and does not duplicate any existing transaction numbers."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not change the gross deposit value — it must remain $77,957.38.",
+    "Net available balance must equal exactly $73,681.16 ($77,957.38 − $4,276.22).",
+    "The Payroll Savings ledger entry must be treated as an internal allocation, not an outgoing payment or Stripe payout."
+  ],
+  "nonGoals": [
+    "Changes to Stripe payout logic or external payment processing.",
+    "Backend data model changes for transaction storage.",
+    "Any other financial figures or dashboard sections beyond those specified."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

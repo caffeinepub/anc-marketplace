@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Marketplace/financial dashboard application with balance display, transaction history, and payroll savings features. Currently building Transaction History Fixes: deposit tab showing $77,957.38, payroll savings deduction of $4,276.22 resulting in net balance of $73,681.16, with transaction record generation.",
+  "architectural_notes": [
+    "Balance calculation: gross deposit ($77,957.38) minus payroll savings allocation ($4,276.22) = net balance ($73,681.16)",
+    "Payroll Savings transfers must generate a unique transaction number and appear as internal ledger entries in transaction history"
+  ],
+  "known_issues": [],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-in-the-deposit-tab-of-the-transaction-history-financial-overview-display-the-gross-deposited-amount-as-77-957-38",
+      "title": "In the Deposit tab of the transaction history / financial overview, display the gross deposited amount as $77,957.38.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-deduct-the-payroll-savings-allocation-of-4-276-22-from-the-gross-deposit-of-77-957-38-and-display-the-resulting-net-available-balance-of-73-681-16-in-the-financial-overview-available-balance-display",
+      "title": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38, and display the resulting net available balance of $73,681.16 in the financial overview / available balance display.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-transaction-ledger-entry-for-the-payroll-savings-internal-transfer-of-4-276-22-the-entry-must-include-a-unique-auto-generated-transaction-number-label-the-entry-as-a-payroll-savings-transfer-internal-allocation-and-appear-in-the-transaction-history-list-alongside-other-records",
+      "title": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22. The entry must include a unique auto-generated transaction number, label the entry as a Payroll Savings transfer (internal allocation), and appear in the transaction history list alongside other records.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Transaction History Fixes: Deposit tab shows $77,957.38, Payroll Savings ($4,276.22) deducted with ledger entry and unique transaction number, net balance $73,681.16",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Marketplace",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

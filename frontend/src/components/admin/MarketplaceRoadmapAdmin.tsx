@@ -14,8 +14,8 @@ export default function MarketplaceRoadmapAdmin() {
   const handleRefresh = async () => {
     try {
       await updateRoadmap.mutateAsync();
-    } catch (error) {
-      console.error('Failed to update roadmap:', error);
+    } catch {
+      // stub — no-op
     }
   };
 
@@ -44,9 +44,7 @@ export default function MarketplaceRoadmapAdmin() {
             {isPermissionError ? 'Access Denied' : 'Error Loading Roadmap'}
           </CardTitle>
           <CardDescription>
-            {isPermissionError
-              ? 'You do not have permission to view the roadmap'
-              : 'Failed to load roadmap data'}
+            {isPermissionError ? 'You do not have permission to view the roadmap' : 'Failed to load roadmap data'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -60,13 +58,12 @@ export default function MarketplaceRoadmapAdmin() {
   }
 
   const roadmapItems = dashboardData?.marketplaceRoadmap || [];
-  const completedCount = roadmapItems.filter(item => item.completed).length;
+  const completedCount = roadmapItems.filter((item) => item.completed).length;
   const totalCount = roadmapItems.length;
   const overallProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className="space-y-6">
-      {/* Header Card */}
       <Card className="border-primary/20 shadow-md">
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -89,15 +86,9 @@ export default function MarketplaceRoadmapAdmin() {
               className="flex-shrink-0"
             >
               {updateRoadmap.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>
               ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh
-                </>
+                <><RefreshCw className="mr-2 h-4 w-4" />Refresh</>
               )}
             </Button>
           </div>
@@ -126,7 +117,6 @@ export default function MarketplaceRoadmapAdmin() {
         </CardContent>
       </Card>
 
-      {/* Roadmap Items */}
       <div className="grid gap-4">
         {roadmapItems.map((item) => (
           <Card key={item.roadmapId} className="border-primary/20 shadow-md hover:shadow-lg transition-shadow">

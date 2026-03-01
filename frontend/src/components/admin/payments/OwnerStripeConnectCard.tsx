@@ -8,32 +8,44 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertCircle, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateConnectedAccount, useCreateAccountLink, useRetrieveConnectedAccount } from '../../../hooks/useStripeConnect';
-import { StripeConnectedAccount } from '../../../lib/stripeConfig';
+import { StripeConnectedAccount, STRIPE_CONNECT_ACCOUNT_ID } from '../../../lib/stripeConfig';
 
 const STORAGE_KEY = 'anc_stripe_connect_account_id';
 
 export default function OwnerStripeConnectCard() {
   const [email, setEmail] = React.useState('');
   const [connectedAccount, setConnectedAccount] = React.useState<StripeConnectedAccount | null>(null);
-  const [storedAccountId, setStoredAccountId] = React.useState<string | null>(
-    () => localStorage.getItem(STORAGE_KEY)
-  );
+
+  // Pre-populate with the owner's known Connect account ID
+  const [storedAccountId, setStoredAccountId] = React.useState<string>(() => {
+    return localStorage.getItem(STORAGE_KEY) || STRIPE_CONNECT_ACCOUNT_ID;
+  });
 
   const createAccount = useCreateConnectedAccount();
   const createAccountLink = useCreateAccountLink();
   const retrieveAccount = useRetrieveConnectedAccount();
 
-  // Load account status on mount if we have a stored account ID
+  // Load account status on mount using the owner's Connect account ID
   React.useEffect(() => {
     if (storedAccountId && !connectedAccount) {
+      // Persist the account ID to localStorage if not already there
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, storedAccountId);
+      }
       retrieveAccount.mutate(storedAccountId, {
         onSuccess: (account) => {
           setConnectedAccount(account);
         },
-        onError: () => {
-          // Account may no longer exist, clear storage
-          localStorage.removeItem(STORAGE_KEY);
-          setStoredAccountId(null);
+        onError: (err: any) => {
+          // If the pre-configured account fails, allow manual entry
+          if (storedAccountId === STRIPE_CONNECT_ACCOUNT_ID) {
+            toast.error('Could not load Connect account status', {
+              description: err?.message || 'Check your Stripe dashboard for account status.',
+            });
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+            setStoredAccountId(STRIPE_CONNECT_ACCOUNT_ID);
+          }
         },
       });
     }
@@ -64,7 +76,7 @@ export default function OwnerStripeConnectCard() {
   };
 
   const handleStartOnboarding = async (accountId?: string) => {
-    const id = accountId || storedAccountId;
+    const id = accountId || storedAccountId || STRIPE_CONNECT_ACCOUNT_ID;
     if (!id) return;
 
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -87,8 +99,9 @@ export default function OwnerStripeConnectCard() {
   };
 
   const handleRefreshStatus = async () => {
-    if (!storedAccountId) return;
-    retrieveAccount.mutate(storedAccountId, {
+    const id = storedAccountId || STRIPE_CONNECT_ACCOUNT_ID;
+    if (!id) return;
+    retrieveAccount.mutate(id, {
       onSuccess: (account) => {
         setConnectedAccount(account);
         toast.success('Status refreshed');
@@ -101,7 +114,7 @@ export default function OwnerStripeConnectCard() {
 
   const handleDisconnect = () => {
     localStorage.removeItem(STORAGE_KEY);
-    setStoredAccountId(null);
+    setStoredAccountId(STRIPE_CONNECT_ACCOUNT_ID);
     setConnectedAccount(null);
     setEmail('');
     toast.info('Account disconnected from this device.');
@@ -200,7 +213,25 @@ export default function OwnerStripeConnectCard() {
     );
   }
 
-  // Show create account form
+  // Show loading state while fetching account status
+  if (retrieveAccount.isPending) {
+    return (
+      <Card className="border-slate-200 dark:border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-lg">Owner Stripe Connect Account</CardTitle>
+          <CardDescription>Loading account status...</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Fetching account status for {STRIPE_CONNECT_ACCOUNT_ID}...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show create/connect account form (fallback if auto-load failed)
   return (
     <Card className="border-slate-200 dark:border-slate-700">
       <CardHeader>
@@ -216,48 +247,79 @@ export default function OwnerStripeConnectCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Create a Stripe Express connected account to enable direct payouts to your bank account.
-          </p>
-          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Direct payouts to your bank account</li>
-            <li>Transaction ledger tracking</li>
-            <li>Automated fund transfers</li>
-          </ul>
+        {retrieveAccount.isError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Could not load account <span className="font-mono text-xs">{STRIPE_CONNECT_ACCOUNT_ID}</span>:{' '}
+              {(retrieveAccount.error as any)?.message || 'Unknown error'}. You can retry or create a new account below.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="rounded-lg bg-slate-50 dark:bg-slate-900 border p-3 space-y-1">
+          <p className="text-xs text-muted-foreground font-medium">Pre-configured Connect Account</p>
+          <p className="font-mono text-sm">{STRIPE_CONNECT_ACCOUNT_ID}</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="connect-email">Email for Connected Account</Label>
-          <Input
-            id="connect-email"
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            This email will be associated with your Stripe Express account.
-          </p>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRefreshStatus}
+            disabled={isLoading}
+            className="flex-1"
+          >
+            {retrieveAccount.isPending ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Loading...</>
+            ) : (
+              <><RefreshCw className="h-4 w-4 mr-2" />Retry Load Account</>
+            )}
+          </Button>
+          <Button
+            onClick={() => handleStartOnboarding(STRIPE_CONNECT_ACCOUNT_ID)}
+            disabled={isLoading}
+            className="flex-1"
+          >
+            {createAccountLink.isPending ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Starting...</>
+            ) : (
+              <><ExternalLink className="h-4 w-4 mr-2" />Open Onboarding</>
+            )}
+          </Button>
         </div>
 
-        <Button
-          onClick={handleCreateAccount}
-          disabled={isLoading || !email.trim()}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {createAccount.isPending ? 'Creating Account...' : 'Starting Onboarding...'}
-            </>
-          ) : (
-            <>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Connect with Stripe
-            </>
-          )}
-        </Button>
+        <div className="border-t pt-4 space-y-3">
+          <p className="text-sm text-muted-foreground font-medium">Or create a new connected account:</p>
+          <div className="space-y-2">
+            <Label htmlFor="connect-email">Email for New Connected Account</Label>
+            <Input
+              id="connect-email"
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <Button
+            onClick={handleCreateAccount}
+            disabled={isLoading || !email.trim()}
+            variant="outline"
+            className="w-full"
+          >
+            {createAccount.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              <>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Create New Connect Account
+              </>
+            )}
+          </Button>
+        </div>
 
         {(createAccount.isError || createAccountLink.isError) && (
           <Alert variant="destructive">

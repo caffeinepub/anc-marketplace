@@ -19,8 +19,7 @@ export default function RoleApplicationsPanel() {
       await approveApplication.mutateAsync(applicantPrincipal);
       toast.success('Application approved successfully');
       refetch();
-    } catch (error) {
-      console.error('Approve error:', error);
+    } catch {
       toast.error('Failed to approve application');
     }
   };
@@ -31,49 +30,33 @@ export default function RoleApplicationsPanel() {
       await rejectApplication.mutateAsync(applicantPrincipal);
       toast.success('Application rejected');
       refetch();
-    } catch (error) {
-      console.error('Reject error:', error);
+    } catch {
       toast.error('Failed to reject application');
     }
   };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-800';
-      case 'employee':
-        return 'bg-teal-100 text-teal-800';
-      case 'seller':
-        return 'bg-blue-100 text-blue-800';
-      case 'customer':
-        return 'bg-green-100 text-green-800';
-      case 'business':
-        return 'bg-purple-100 text-purple-800';
-      case 'marketer':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'employee': return 'bg-teal-100 text-teal-800';
+      case 'seller': return 'bg-blue-100 text-blue-800';
+      case 'customer': return 'bg-green-100 text-green-800';
+      case 'business': return 'bg-purple-100 text-purple-800';
+      case 'marketer': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'Admin';
-      case 'employee':
-        return 'Employee';
-      case 'seller':
-        return 'Seller';
-      case 'customer':
-        return 'Customer';
-      case 'business':
-        return 'Business';
-      case 'marketer':
-        return 'Affiliate Marketer';
-      case 'guest':
-        return 'Guest';
-      default:
-        return role.charAt(0).toUpperCase() + role.slice(1);
+      case 'admin': return 'Admin';
+      case 'employee': return 'Employee';
+      case 'seller': return 'Seller';
+      case 'customer': return 'Customer';
+      case 'business': return 'Business';
+      case 'marketer': return 'Affiliate Marketer';
+      case 'guest': return 'Guest';
+      default: return role.charAt(0).toUpperCase() + role.slice(1);
     }
   };
 
@@ -123,9 +106,7 @@ export default function RoleApplicationsPanel() {
           <CardDescription>Review and manage pending role applications</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground py-8">
-            No pending applications at this time.
-          </p>
+          <p className="text-center text-muted-foreground py-8">No pending applications at this time.</p>
         </CardContent>
       </Card>
     );
@@ -159,9 +140,7 @@ export default function RoleApplicationsPanel() {
                     {getRoleLabel(application.requestedRole)}
                   </Badge>
                 </TableCell>
-                <TableCell className="max-w-xs truncate">
-                  {application.reason}
-                </TableCell>
+                <TableCell className="max-w-xs truncate">{application.reason}</TableCell>
                 <TableCell>
                   {new Date(Number(application.applicationDate) / 1000000).toLocaleDateString()}
                 </TableCell>

@@ -1,323 +1,321 @@
-import React from 'react';
-import { useGetAdminDashboardData, useGetAdminFinancialState } from '../hooks/useQueries';
-import { useActor } from '../hooks/useActor';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
-import AdminConsoleLayout from '../components/admin/AdminConsoleLayout';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  LayoutDashboard, Users, DollarSign, BarChart2, Settings,
+  ArrowRightLeft, CreditCard, MessageSquare, BookOpen,
+  ShieldCheck, RefreshCw, AlertCircle, Loader2,
+} from 'lucide-react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useActor } from '../hooks/useActor';
+import { useQueryClient } from '@tanstack/react-query';
 import FinancialOverviewCards from '../components/admin/financial/FinancialOverviewCards';
-import PaymentProcessorsPanel from '../components/admin/payments/PaymentProcessorsPanel';
-import AdminRevenueInflowPanel from '../components/admin/payments/AdminRevenueInflowPanel';
-import FeeConfigurationPanel from '../components/admin/fees/FeeConfigurationPanel';
 import AdminTransactionsPanel from '../components/admin/transactions/AdminTransactionsPanel';
+import AllAccountsPanel from '../components/admin/accounts/AllAccountsPanel';
+import SalesReportsPanel from '../components/admin/analytics/SalesReportsPanel';
+import FeeConfigurationPanel from '../components/admin/fees/FeeConfigurationPanel';
 import EmployeePaymentsPanel from '../components/admin/employees/EmployeePaymentsPanel';
-import TransfersStubPanel from '../components/admin/transfers/TransfersStubPanel';
+import AdminMessagingPanel from '../components/admin/messaging/AdminMessagingPanel';
+import AssistantKnowledgeBaseAdmin from '../components/admin/assistant/AssistantKnowledgeBaseAdmin';
+import UnansweredQuestionsAdmin from '../components/admin/assistant/UnansweredQuestionsAdmin';
+import RoleApplicationsPanel from '../components/admin/RoleApplicationsPanel';
 import UserRoleManagement from '../components/admin/UserRoleManagement';
 import MarketplaceRoadmapAdmin from '../components/admin/MarketplaceRoadmapAdmin';
 import AdminAccessLinksPanel from '../components/admin/AdminAccessLinksPanel';
-import RoleApplicationsPanel from '../components/admin/RoleApplicationsPanel';
-import AllAccountsPanel from '../components/admin/accounts/AllAccountsPanel';
-import SalesReportsPanel from '../components/admin/analytics/SalesReportsPanel';
-import AdminMessagingPanel from '../components/admin/messaging/AdminMessagingPanel';
-import AdminDropdownMenu from '../components/admin/AdminDropdownMenu';
+import PaymentsPanel from '../components/admin/payments/PaymentsPanel';
+import TransferPanel from '../components/admin/transfers/TransferPanel';
+import {
+  useGetAdminFinancialState,
+  useGetTransactionLedger,
+} from '../hooks/useQueries';
 
 export default function AdminCenterPage() {
+  const { identity } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
-  const { data: dashboardData, isLoading: dataLoading, error: dataError, refetch: refetchData } = useGetAdminDashboardData();
-  const { data: financialState, isLoading: financialLoading, error: financialError, refetch: refetchFinancial } = useGetAdminFinancialState();
+  const queryClient = useQueryClient();
 
-  const [actorTimeout, setActorTimeout] = React.useState(false);
-  const [retryCount, setRetryCount] = React.useState(0);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [initAttempts, setInitAttempts] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
-  // Timeout mechanism for actor creation - if it takes more than 15 seconds
-  React.useEffect(() => {
-    if (!actor && actorFetching && !actorTimeout) {
-      const timeoutId = setTimeout(() => {
-        if (!actor && actorFetching) {
-          console.error('[AdminCenterPage] Actor creation timeout after 15 seconds');
-          setActorTimeout(true);
+  const { data: financialState, isLoading: financialLoading } = useGetAdminFinancialState();
+  const { data: transactions = [] } = useGetTransactionLedger();
+
+  // Auto-initialize access control
+  useEffect(() => {
+    if (!actor || actorFetching || isInitializing || initAttempts >= 3) return;
+
+    const initialize = async () => {
+      setIsInitializing(true);
+      setInitError(null);
+      try {
+        await actor.initializeAccessControl();
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        if (!msg.includes('already initialized') && !msg.includes('Unauthorized')) {
+          setInitError(msg);
+          setInitAttempts((prev) => prev + 1);
+          setIsInitializing(false);
+          return;
         }
-      }, 15000);
-
-      return () => clearTimeout(timeoutId);
-    } else if (actor) {
-      setActorTimeout(false);
-    }
-  }, [actor, actorFetching, actorTimeout]);
-
-  // Auto-retry on error (up to 3 times)
-  React.useEffect(() => {
-    if ((dataError || financialError) && retryCount < 3) {
-      const errorMessage = ((dataError || financialError) as any)?.message || '';
-      
-      // Only auto-retry on authorization errors
-      if (errorMessage.includes('Unauthorized') || errorMessage.includes('Only admins')) {
-        console.log(`[AdminCenterPage] Auto-retrying after authorization error (attempt ${retryCount + 1}/3)`);
-        
-        const retryTimeout = setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-          refetchData();
-          refetchFinancial();
-        }, 2000); // Wait 2 seconds before retry
-
-        return () => clearTimeout(retryTimeout);
       }
-    }
-  }, [dataError, financialError, retryCount, refetchData, refetchFinancial]);
+      setInitAttempts((prev) => prev + 1);
+      setIsInitializing(false);
+    };
 
-  // Actor creation timeout
-  if (actorTimeout) {
-    return (
-      <AdminConsoleLayout
-        title="Admin Center"
-        subtitle="Connection Timeout"
-      >
-        <Alert variant="destructive">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle>Backend Connection Timed Out</AlertTitle>
-          <AlertDescription className="space-y-4">
-            <p>The connection to the backend is taking longer than expected (over 15 seconds).</p>
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  console.log('[AdminCenterPage] Retry after actor timeout');
-                  setActorTimeout(false);
-                  setRetryCount(0);
-                  window.location.reload();
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Page
-              </Button>
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              <p><strong>Possible causes:</strong></p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Slow internet connection</li>
-                <li>Backend canister is busy or unresponsive</li>
-                <li>Network connectivity issues</li>
-              </ul>
-              <p className="mt-2"><strong>Suggestions:</strong></p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Check your internet connection</li>
-                <li>Try refreshing the page</li>
-                <li>Wait a moment and try again</li>
-                <li>Contact support if the issue persists</li>
-              </ul>
-            </div>
-          </AlertDescription>
-        </Alert>
-      </AdminConsoleLayout>
-    );
-  }
+    initialize();
+  }, [actor, actorFetching, initAttempts, isInitializing]);
 
-  // Show loading while actor is being created
-  if (!actor || actorFetching) {
+  const handleRetry = () => {
+    setInitAttempts(0);
+    setInitError(null);
+    queryClient.invalidateQueries();
+  };
+
+  if (actorFetching) {
     return (
-      <AdminConsoleLayout
-        title="Admin Center"
-        subtitle="Initializing..."
-      >
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
-            Connecting to backend...
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
+          <p className="text-slate-600 font-medium">Loading Admin Center...</p>
         </div>
-      </AdminConsoleLayout>
-    );
-  }
-
-  // Data loading error
-  if (dataError || financialError) {
-    const error = dataError || financialError;
-    const errorMessage = (error as any)?.message || 'Unknown error occurred';
-    
-    return (
-      <AdminConsoleLayout
-        title="Admin Center"
-        subtitle="Data Loading Failed"
-      >
-        <Alert variant="destructive">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle>Failed to Load Dashboard Data</AlertTitle>
-          <AlertDescription className="space-y-4">
-            <p>Unable to load admin dashboard data from the backend.</p>
-            {retryCount > 0 && (
-              <p className="text-sm text-muted-foreground">
-                Auto-retry attempt {retryCount} of 3...
-              </p>
-            )}
-            <div className="mt-2 p-3 bg-destructive/10 rounded text-sm">
-              <p className="font-semibold mb-1">Error Details:</p>
-              <p className="font-mono text-xs break-all">{errorMessage}</p>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  console.log('[AdminCenterPage] Manual retry data loading');
-                  setRetryCount(0);
-                  refetchData();
-                  refetchFinancial();
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRetryCount(0);
-                  window.location.reload();
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Page
-              </Button>
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              <p><strong>Suggestions:</strong></p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Click Retry to attempt loading again</li>
-                <li>Refresh the page to restart the connection</li>
-                <li>Clear your browser cache and try again</li>
-                <li>The backend may be updating - wait a moment and retry</li>
-                <li>Contact support if the issue persists</li>
-              </ul>
-            </div>
-          </AlertDescription>
-        </Alert>
-      </AdminConsoleLayout>
-    );
-  }
-
-  // Show loading while fetching initial data
-  if (dataLoading || financialLoading) {
-    return (
-      <AdminConsoleLayout
-        title="Admin Center"
-        subtitle="Loading dashboard data..."
-      >
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AdminConsoleLayout>
-    );
-  }
-
-  // If financial state is not available, show error
-  if (!financialState) {
-    return (
-      <AdminConsoleLayout
-        title="Admin Center"
-        subtitle="Data Not Available"
-      >
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Financial Data Not Available</AlertTitle>
-          <AlertDescription className="space-y-4">
-            <p>Unable to load financial state data from the backend.</p>
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRetryCount(0);
-                  window.location.reload();
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Page
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      </AdminConsoleLayout>
+      </div>
     );
   }
 
   return (
-    <AdminConsoleLayout
-      title="Admin Center"
-      subtitle="Comprehensive business management and financial oversight"
-    >
-      <div className="space-y-6">
-        {/* Admin Dropdown Menu */}
-        <div className="flex justify-end">
-          <AdminDropdownMenu />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
+      {/* Header */}
+      <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-4 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-6 h-6 text-emerald-400" />
+            <div>
+              <h1 className="text-white font-bold text-lg">Admin Center</h1>
+              <p className="text-slate-400 text-xs">ANC Electronics & Services</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {identity && (
+              <Badge variant="outline" className="text-emerald-400 border-emerald-600 text-xs hidden sm:flex">
+                {identity.getPrincipal().toString().slice(0, 12)}...
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRetry}
+              className="text-slate-300 border-slate-600 hover:bg-slate-700"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1" />
+              Refresh
+            </Button>
+          </div>
         </div>
+      </div>
 
-        {/* Financial Overview Cards */}
-        <FinancialOverviewCards financialState={financialState} />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {initError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Initialization warning: {initError}
+              <Button variant="link" size="sm" onClick={handleRetry} className="ml-2 p-0 h-auto">
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
-        {/* Tabbed Interface */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="status">Status</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="fees">Fees</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="employees">Employees</TabsTrigger>
-            <TabsTrigger value="transfers">Transfers</TabsTrigger>
-            <TabsTrigger value="accounts">Accounts</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <div className="overflow-x-auto">
+            <TabsList className="bg-slate-800/60 border border-slate-700 h-auto flex-wrap gap-1 p-1 min-w-max">
+              <TabsTrigger
+                value="overview"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="payments"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <CreditCard className="w-3.5 h-3.5 mr-1.5" />Payments
+              </TabsTrigger>
+              <TabsTrigger
+                value="transfers"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />Transfer
+              </TabsTrigger>
+              <TabsTrigger
+                value="transactions"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <DollarSign className="w-3.5 h-3.5 mr-1.5" />Transactions
+              </TabsTrigger>
+              <TabsTrigger
+                value="accounts"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <Users className="w-3.5 h-3.5 mr-1.5" />Accounts
+              </TabsTrigger>
+              <TabsTrigger
+                value="analytics"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <BarChart2 className="w-3.5 h-3.5 mr-1.5" />Analytics
+              </TabsTrigger>
+              <TabsTrigger
+                value="employees"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <Users className="w-3.5 h-3.5 mr-1.5" />Employees
+              </TabsTrigger>
+              <TabsTrigger
+                value="messaging"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />Messaging
+              </TabsTrigger>
+              <TabsTrigger
+                value="assistant"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 mr-1.5" />Assistant
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 text-xs px-3 py-1.5"
+              >
+                <Settings className="w-3.5 h-3.5 mr-1.5" />Settings
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="overview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Dashboard Overview</CardTitle>
-                <CardDescription>
-                  Quick access to key administrative functions and system status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <AdminAccessLinksPanel />
-                <UserRoleManagement />
-                <RoleApplicationsPanel />
-              </CardContent>
-            </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <FinancialOverviewCards financialState={financialState} isLoading={financialLoading} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card className="bg-white/95">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold text-slate-700">Recent Deposits & Credits</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {transactions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No transactions yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {transactions.slice(0, 5).map((txn) => (
+                        <div key={txn.id} className="flex justify-between items-center text-sm">
+                          <span className="text-slate-600 truncate max-w-[60%]">{txn.source}</span>
+                          <span className="font-semibold text-emerald-700">
+                            ${(Number(txn.amountCents) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              <MarketplaceRoadmapAdmin />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <UserRoleManagement />
+              <RoleApplicationsPanel />
+            </div>
+            <AdminAccessLinksPanel />
           </TabsContent>
 
-          <TabsContent value="status" className="space-y-6">
-            <MarketplaceRoadmapAdmin />
+          {/* Payments Tab — no gate, renders immediately */}
+          <TabsContent value="payments">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-emerald-600" />
+                  External Payments
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Send payments to Stripe, employees, partners, suppliers, or pay bills.
+                </p>
+              </div>
+              <PaymentsPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="payments" className="space-y-6">
-            <PaymentProcessorsPanel />
-            <AdminRevenueInflowPanel />
+          {/* Transfer Tab — renders immediately */}
+          <TabsContent value="transfers">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <ArrowRightLeft className="w-5 h-5 text-emerald-600" />
+                  Internal Transfers
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Transfer between Available Balance, Business Credit, and Payroll Savings.
+                </p>
+              </div>
+              <TransferPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="fees" className="space-y-6">
-            <FeeConfigurationPanel />
+          {/* Transactions Tab */}
+          <TabsContent value="transactions">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <AdminTransactionsPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="transactions" className="space-y-6">
-            <AdminTransactionsPanel />
-            <SalesReportsPanel />
+          {/* Accounts Tab */}
+          <TabsContent value="accounts">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <AllAccountsPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="employees" className="space-y-6">
-            <EmployeePaymentsPanel />
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <SalesReportsPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="transfers" className="space-y-6">
-            <TransfersStubPanel />
+          {/* Employees Tab */}
+          <TabsContent value="employees">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <EmployeePaymentsPanel />
+            </div>
           </TabsContent>
 
-          <TabsContent value="accounts" className="space-y-6">
-            <AllAccountsPanel />
-            <AdminMessagingPanel />
+          {/* Messaging Tab */}
+          <TabsContent value="messaging">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <AdminMessagingPanel />
+            </div>
+          </TabsContent>
+
+          {/* Assistant Tab */}
+          <TabsContent value="assistant" className="space-y-4">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <AssistantKnowledgeBaseAdmin />
+            </div>
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm">
+              <UnansweredQuestionsAdmin />
+            </div>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <div className="bg-white/95 rounded-xl p-4 shadow-sm space-y-4">
+              <FeeConfigurationPanel />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
-    </AdminConsoleLayout>
+    </div>
   );
 }

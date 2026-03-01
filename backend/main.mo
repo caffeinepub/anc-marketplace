@@ -5,11 +5,11 @@ import Text "mo:core/Text";
 import Blob "mo:core/Blob";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
+import Int "mo:core/Int";
 import Iter "mo:core/Iter";
 import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
-import Int "mo:core/Int";
 import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
@@ -490,13 +490,6 @@ actor {
     totalOrders : Nat;
   };
 
-  public type TimeFrame = {
-    #today;
-    #thisWeek;
-    #thisMonth;
-    #allTime;
-  };
-
   public type TransactionRecord = {
     id : Text;
     transactionType : { #deposit; #creditFunding };
@@ -507,6 +500,13 @@ actor {
     transactionId : Text;
   };
 
+  public type TimeFrame = {
+    #today;
+    #thisWeek;
+    #thisMonth;
+    #allTime;
+  };
+
   public type PayoutTransactionRecord = {
     id : Text;
     amount : Nat;
@@ -514,6 +514,23 @@ actor {
     description : Text;
     status : { #pending; #completed; #failed };
     createdAt : Time.Time;
+  };
+
+  public type StripeWebhookEventType = {
+    #checkoutSessionCompleted;
+    #invoicePaid;
+    #invoicePaymentFailed;
+    #customerSubscriptionCreated;
+    #customerSubscriptionUpdated;
+    #customerSubscriptionDeleted;
+    #unknown;
+  };
+
+  public type StripeWebhookEvent = {
+    eventType : StripeWebhookEventType;
+    eventId : Text;
+    payload : Text;
+    receivedAt : Int;
   };
 
   let accessControlState = AccessControl.initState();
@@ -697,6 +714,8 @@ actor {
 
   let payoutTransactions = List.empty<PayoutTransactionRecord>();
   var sellerBalance : Int = 0;
+  let subscriptionStatusStore = Map.empty<Text, Text>();
+  let webhookEventLog = List.empty<StripeWebhookEvent>();
 
   // Required AccessControl functions
   public shared ({ caller }) func initializeAccessControl() : async () {
@@ -713,47 +732,6 @@ actor {
 
   public query ({ caller }) func isCallerAdmin() : async Bool {
     AccessControl.isAdmin(accessControlState, caller);
-  };
-
-  // Stripe configuration - Admin only
-  public query ({ caller }) func isStripeConfigured() : async Bool {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can check Stripe configuration");
-    };
-    stripeConfiguration != null;
-  };
-
-  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can configure Stripe");
-    };
-    stripeConfiguration := ?config;
-  };
-
-  func getStripeConfiguration() : Stripe.StripeConfiguration {
-    switch (stripeConfiguration) {
-      case (null) { Runtime.trap("Stripe needs to be first configured") };
-      case (?value) { value };
-    };
-  };
-
-  // Stripe session - Users only
-  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can check session status");
-    };
-    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
-  };
-
-  public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can create checkout sessions");
-    };
-    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
-  };
-
-  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
   };
 
   // User profile functions
@@ -776,6 +754,39 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userStore.add(caller, profile);
+  };
+
+  // Stripe integration
+  public query ({ caller }) func isStripeConfigured() : async Bool {
+    stripeConfiguration != null;
+  };
+
+  public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    stripeConfiguration := ?config;
+  };
+
+  func getStripeConfiguration() : Stripe.StripeConfiguration {
+    switch (stripeConfiguration) {
+      case (null) {
+        Runtime.trap("Stripe needs to be first configured");
+      };
+      case (?config) { config };
+    };
+  };
+
+  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
+  };
+
+  public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+  };
+
+  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
   };
 
   // Onboarding - Users only

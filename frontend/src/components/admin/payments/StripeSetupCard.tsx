@@ -18,17 +18,19 @@ export default function StripeSetupCard() {
   const [allowedCountries, setAllowedCountries] = React.useState('US,CA,GB');
   const [showForm, setShowForm] = React.useState(false);
   const [showSecretKey, setShowSecretKey] = React.useState(false);
+  const [autoConfigAttempted, setAutoConfigAttempted] = React.useState(false);
 
   // Auto-configure with live keys on first load if not configured
   React.useEffect(() => {
-    if (isConfigured === false && !setConfig.isPending) {
+    if (isConfigured === false && !setConfig.isPending && !autoConfigAttempted) {
+      setAutoConfigAttempted(true);
       const config: StripeConfiguration = {
         secretKey: STRIPE_SECRET_KEY,
         allowedCountries: ['US', 'CA', 'GB', 'AU'],
       };
       setConfig.mutate(config);
     }
-  }, [isConfigured]);
+  }, [isConfigured, setConfig.isPending, autoConfigAttempted]);
 
   const handleSave = async () => {
     const keyToUse = secretKey.trim() || STRIPE_SECRET_KEY;
@@ -73,10 +75,15 @@ export default function StripeSetupCard() {
               <CheckCircle2 className="h-3 w-3 mr-1" />
               Configured
             </Badge>
-          ) : (
+          ) : setConfig.isPending ? (
             <Badge variant="secondary">
-              <AlertCircle className="h-3 w-3 mr-1" />
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               Configuring...
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Not Configured
             </Badge>
           )}
         </div>
@@ -130,7 +137,7 @@ export default function StripeSetupCard() {
           </div>
         ) : (
           <div className="space-y-4">
-            {!isConfigured && setConfig.isPending && (
+            {setConfig.isPending && (
               <Alert>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <AlertDescription>
@@ -139,60 +146,57 @@ export default function StripeSetupCard() {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="stripe-secret-key">Stripe Secret Key</Label>
-              <Input
-                id="stripe-secret-key"
-                type="password"
-                placeholder={`sk_live_... (leave blank to use configured key)`}
-                value={secretKey}
-                onChange={(e) => setSecretKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Leave blank to use the pre-configured live key.
-              </p>
-            </div>
+            {!setConfig.isPending && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="stripe-secret-key">Stripe Secret Key</Label>
+                  <Input
+                    id="stripe-secret-key"
+                    type="password"
+                    placeholder={`sk_live_... (leave blank to use configured key)`}
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave blank to use the pre-configured live key.
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="allowed-countries">Allowed Countries</Label>
-              <Input
-                id="allowed-countries"
-                placeholder="US,CA,GB"
-                value={allowedCountries}
-                onChange={(e) => setAllowedCountries(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated country codes (e.g., US,CA,GB,AU)
-              </p>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="allowed-countries">Allowed Countries</Label>
+                  <Input
+                    id="allowed-countries"
+                    placeholder="US,CA,GB"
+                    value={allowedCountries}
+                    onChange={(e) => setAllowedCountries(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Comma-separated country codes (e.g., US,CA,GB,AU)
+                  </p>
+                </div>
 
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                disabled={setConfig.isPending}
-                className="flex-1"
-              >
-                {setConfig.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Configuration'
-                )}
-              </Button>
-              {showForm && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    setSecretKey('');
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-            </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSave}
+                    disabled={setConfig.isPending}
+                    className="flex-1"
+                  >
+                    Save Configuration
+                  </Button>
+                  {showForm && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowForm(false);
+                        setSecretKey('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
 
             {setConfig.isError && (
               <Alert variant="destructive">

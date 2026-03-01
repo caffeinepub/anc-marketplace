@@ -1,5 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
-import { STRIPE_SECRET_KEY, StripeConnectedAccount, StripeAccountLink } from '../lib/stripeConfig';
+import {
+  STRIPE_SECRET_KEY,
+  STRIPE_CONNECT_ACCOUNT_ID,
+  StripeConnectedAccount,
+  StripeAccountLink,
+} from '../lib/stripeConfig';
 
 interface CreateAccountParams {
   email: string;
@@ -72,7 +77,8 @@ export function useCreateAccountLink() {
 export function useRetrieveConnectedAccount() {
   return useMutation<StripeConnectedAccount, Error, string>({
     mutationFn: async (accountId: string) => {
-      const response = await fetch(`https://api.stripe.com/v1/accounts/${accountId}`, {
+      const id = accountId || STRIPE_CONNECT_ACCOUNT_ID;
+      const response = await fetch(`https://api.stripe.com/v1/accounts/${id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${STRIPE_SECRET_KEY}`,

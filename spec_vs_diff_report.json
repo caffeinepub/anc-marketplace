@@ -1,57 +1,15 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T10:21:33.489Z",
-  "summary": "The diff implements most of the required Stripe Connect and payout features. REQ-1 through REQ-4, REQ-6, and REQ-7 appear well-addressed. REQ-5 (Stripe Checkout session creation with useStripeCheckout hook and AdminRevenueInflowPanel) has no evidence of implementation in the diff. REQ-8 (backend main.mo update) shows the file was modified but the truncated content does not confirm the required methods were added.",
-  "missing_requirements": [
-    {
-      "id": "REQ-5",
-      "requirement": "Implement a Stripe Checkout session creation flow using AdminRevenueInflowPanel and useStripeCheckout hook for marketplace fees ($5/sale) and Store Builder subscriptions ($10/month), with success/failure redirects.",
-      "reason": "No useStripeCheckout hook file was added, and no AdminRevenueInflowPanel modification is present in the diff. There is no evidence of checkout session creation logic, payment-success/payment-failure redirect wiring, or the two product types being implemented.",
-      "evidence": [
-        "frontend/src/hooks/useStripeConnect.ts",
-        "frontend/src/hooks/useStripePayout.ts"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Update backend main.mo to expose recordTransaction, getTransactions, and getSellerBalance methods persisting payout history with correct fields; initial balance 7202500 cents; balance decremented on payout.",
-      "reason": "The backend/main.mo file was modified but the diff content is truncated before showing any of the new payout-related types or methods. There is no confirmable evidence that recordTransaction, getTransactions, or getSellerBalance were added, or that the initial balance and decrement logic were implemented.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "useRetrieveConnectedAccount mutation hook for fetching existing Stripe connected account status on component mount",
-      "reason": "REQ-4 only requires creating a connected account, generating an account link, redirecting, and reflecting connection status after return. Proactively fetching account details via a separate retrieve mutation on mount was not specified.",
-      "evidence": [
-        "frontend/src/hooks/useStripeConnect.ts",
-        "frontend/src/components/admin/payments/OwnerStripeConnectCard.tsx"
-      ]
-    },
-    {
-      "description": "Auto-configuration of Stripe in StripeSetupCard via useEffect that triggers setConfig.mutate when isConfigured is false",
-      "reason": "REQ-6 only requires displaying the live configuration as active/configured with a pre-populated key and a Configured badge. Automatically calling the backend to set configuration on load was not requested.",
-      "evidence": [
-        "frontend/src/components/admin/payments/StripeSetupCard.tsx"
-      ]
-    }
-  ],
-  "confidence": 0.72,
+  "generatedAt": "2026-02-27T09:32:55.314Z",
+  "summary": "The diff implements all three requirements. REQ-1 is addressed via the CORRECT_DEPOSIT_CENTS constant ($77,957.38) used in the financial overview tooltip and deposit tab rendering. REQ-2 is addressed via CORRECT_AVAILABLE_BALANCE_CENTS ($73,681.16 = $77,957.38 − $4,276.22) displayed as available balance with a tooltip attributing the deduction to Payroll Savings. REQ-3 is addressed via the PAYROLL_SAVINGS_LEDGER_ENTRY object with a unique transaction ID ('TXN-PS-20260209-427622'), labeled 'Payroll Savings Transfer', typed as 'internalTransfer', and rendered with a distinct purple 'Internal Transfer' badge in the transaction history. All acceptance criteria appear to be met based on the diff evidence.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.85,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-    "frontend/src/components/admin/payments/OwnerStripeConnectCard.tsx",
-    "frontend/src/components/admin/payments/StripeSetupCard.tsx",
     "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-    "frontend/src/components/admin/transfers/TransfersStubPanel.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/hooks/useStripeConnect.ts",
-    "frontend/src/hooks/useStripePayout.ts",
-    "frontend/src/lib/stripeConfig.ts",
     "project_state.json"
   ]
 }
