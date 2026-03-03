@@ -97,6 +97,21 @@ export const UserWithRole = IDL.Record({
   'profile' : UserProfile,
   'systemRole' : UserRole__1,
 });
+export const DepositStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+  'failed' : IDL.Null,
+});
+export const Time = IDL.Int;
+export const DepositTransaction = IDL.Record({
+  'id' : IDL.Text,
+  'status' : DepositStatus,
+  'completedAt' : IDL.Opt(Time),
+  'createdAt' : Time,
+  'amountCents' : IDL.Nat,
+  'currency' : IDL.Text,
+  'stripeSessionId' : IDL.Text,
+});
 export const AdminPageSection = IDL.Variant({
   'b2b' : IDL.Null,
   'marketplace' : IDL.Null,
@@ -175,7 +190,6 @@ export const TransactionRecord = IDL.Record({
   'amountCents' : IDL.Nat,
   'transactionId' : IDL.Text,
 });
-export const Time = IDL.Int;
 export const PayoutTransactionRecord = IDL.Record({
   'id' : IDL.Text,
   'status' : IDL.Variant({
@@ -185,13 +199,28 @@ export const PayoutTransactionRecord = IDL.Record({
   }),
   'createdAt' : Time,
   'description' : IDL.Text,
-  'currency' : IDL.Vec(IDL.Nat8),
+  'currency' : IDL.Text,
   'amount' : IDL.Nat,
 });
 export const UserRoleSummary = IDL.Record({
   'guestCount' : IDL.Nat,
   'adminCount' : IDL.Nat,
   'userCount' : IDL.Nat,
+});
+export const StripeWebhookEventType = IDL.Variant({
+  'customerSubscriptionCreated' : IDL.Null,
+  'customerSubscriptionDeleted' : IDL.Null,
+  'checkoutSessionCompleted' : IDL.Null,
+  'invoicePaid' : IDL.Null,
+  'customerSubscriptionUpdated' : IDL.Null,
+  'invoicePaymentFailed' : IDL.Null,
+  'unknown' : IDL.Null,
+});
+export const StripeWebhookEvent = IDL.Record({
+  'eventId' : IDL.Text,
+  'receivedAt' : IDL.Int,
+  'payload' : IDL.Text,
+  'eventType' : StripeWebhookEventType,
 });
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
@@ -249,6 +278,11 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
+  'createDepositCheckoutSession' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
   'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
   'getAllPayoutTransfers' : IDL.Func(
@@ -262,9 +296,15 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAllUsers' : IDL.Func([], [IDL.Vec(UserWithRole)], ['query']),
+  'getCallerDepositTransactions' : IDL.Func(
+      [],
+      [IDL.Vec(DepositTransaction)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCustomerOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
+  'getDepositLedger' : IDL.Func([], [IDL.Vec(DepositTransaction)], ['query']),
   'getFinancialOverview' : IDL.Func([], [AdminDashboardData], ['query']),
   'getKnowledgeBase' : IDL.Func(
       [],
@@ -310,6 +350,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
+  'handleStripeWebhook' : IDL.Func([StripeWebhookEvent], [], []),
   'initializeAccessControl' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
@@ -415,6 +456,21 @@ export const idlFactory = ({ IDL }) => {
     'profile' : UserProfile,
     'systemRole' : UserRole__1,
   });
+  const DepositStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+    'failed' : IDL.Null,
+  });
+  const Time = IDL.Int;
+  const DepositTransaction = IDL.Record({
+    'id' : IDL.Text,
+    'status' : DepositStatus,
+    'completedAt' : IDL.Opt(Time),
+    'createdAt' : Time,
+    'amountCents' : IDL.Nat,
+    'currency' : IDL.Text,
+    'stripeSessionId' : IDL.Text,
+  });
   const AdminPageSection = IDL.Variant({
     'b2b' : IDL.Null,
     'marketplace' : IDL.Null,
@@ -493,7 +549,6 @@ export const idlFactory = ({ IDL }) => {
     'amountCents' : IDL.Nat,
     'transactionId' : IDL.Text,
   });
-  const Time = IDL.Int;
   const PayoutTransactionRecord = IDL.Record({
     'id' : IDL.Text,
     'status' : IDL.Variant({
@@ -503,13 +558,28 @@ export const idlFactory = ({ IDL }) => {
     }),
     'createdAt' : Time,
     'description' : IDL.Text,
-    'currency' : IDL.Vec(IDL.Nat8),
+    'currency' : IDL.Text,
     'amount' : IDL.Nat,
   });
   const UserRoleSummary = IDL.Record({
     'guestCount' : IDL.Nat,
     'adminCount' : IDL.Nat,
     'userCount' : IDL.Nat,
+  });
+  const StripeWebhookEventType = IDL.Variant({
+    'customerSubscriptionCreated' : IDL.Null,
+    'customerSubscriptionDeleted' : IDL.Null,
+    'checkoutSessionCompleted' : IDL.Null,
+    'invoicePaid' : IDL.Null,
+    'customerSubscriptionUpdated' : IDL.Null,
+    'invoicePaymentFailed' : IDL.Null,
+    'unknown' : IDL.Null,
+  });
+  const StripeWebhookEvent = IDL.Record({
+    'eventId' : IDL.Text,
+    'receivedAt' : IDL.Int,
+    'payload' : IDL.Text,
+    'eventType' : StripeWebhookEventType,
   });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
@@ -564,6 +634,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
+    'createDepositCheckoutSession' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
     'getAdminFinancialState' : IDL.Func([], [AdminFinancialState], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
     'getAllPayoutTransfers' : IDL.Func(
@@ -577,9 +652,15 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAllUsers' : IDL.Func([], [IDL.Vec(UserWithRole)], ['query']),
+    'getCallerDepositTransactions' : IDL.Func(
+        [],
+        [IDL.Vec(DepositTransaction)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCustomerOrders' : IDL.Func([], [IDL.Vec(EcomOrder)], ['query']),
+    'getDepositLedger' : IDL.Func([], [IDL.Vec(DepositTransaction)], ['query']),
     'getFinancialOverview' : IDL.Func([], [AdminDashboardData], ['query']),
     'getKnowledgeBase' : IDL.Func(
         [],
@@ -625,6 +706,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUserRoleSummary' : IDL.Func([], [UserRoleSummary], ['query']),
+    'handleStripeWebhook' : IDL.Func([StripeWebhookEvent], [], []),
     'initializeAccessControl' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),

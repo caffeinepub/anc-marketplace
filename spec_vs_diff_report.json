@@ -1,15 +1,28 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T09:32:55.314Z",
-  "summary": "The diff implements all three requirements. REQ-1 is addressed via the CORRECT_DEPOSIT_CENTS constant ($77,957.38) used in the financial overview tooltip and deposit tab rendering. REQ-2 is addressed via CORRECT_AVAILABLE_BALANCE_CENTS ($73,681.16 = $77,957.38 − $4,276.22) displayed as available balance with a tooltip attributing the deduction to Payroll Savings. REQ-3 is addressed via the PAYROLL_SAVINGS_LEDGER_ENTRY object with a unique transaction ID ('TXN-PS-20260209-427622'), labeled 'Payroll Savings Transfer', typed as 'internalTransfer', and rendered with a distinct purple 'Internal Transfer' badge in the transaction history. All acceptance criteria appear to be met based on the diff evidence.",
-  "missing_requirements": [],
+  "generatedAt": "2026-03-03T04:10:52.615Z",
+  "summary": "The diff implements parts of all three requirements. REQ-2 (frontend display of Zapier URL) and REQ-3 (admin access control fix) appear substantially implemented. REQ-1 (backend HTTP outcalls to Zapier) is partially evidenced but the backend/main.mo content is truncated, making it difficult to confirm all acceptance criteria are met.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "In main.mo, configure all outgoing payment notification/webhook HTTP outcalls to POST payment data to the Zapier webhook URL for all payment events (checkout, deposit, payout, fee collection). POST body must include amount, type, user, timestamp in JSON. Failed calls must not block primary transaction.",
+      "reason": "The backend/main.mo diff is truncated and does not show the actual webhook call implementation, the ZAPIER_WEBHOOK_URL constant definition, or the sendZapierWebhook helper function. While the file was modified, there is no evidence in the visible portion that HTTP outcalls to Zapier are triggered for each payment event type (checkout, deposit, payout, fee), that the POST body includes the required JSON fields, or that error handling prevents blocking the primary transaction.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    }
+  ],
   "hallucinated_features": [],
-  "confidence": 0.85,
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-    "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+    "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+    "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+    "frontend/src/components/admin/payments/PaymentsPanel.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminCenterPage.tsx",
     "project_state.json"
   ]
 }

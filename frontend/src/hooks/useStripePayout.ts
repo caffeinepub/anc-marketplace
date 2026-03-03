@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { STRIPE_SECRET_KEY, StripePayout } from '../lib/stripeConfig';
-import { PayoutTransactionRecord, Variant_pending_completed_failed } from '../backend';
+import { PayoutTransactionRecord, DepositStatus } from '../backend';
 
 interface PayoutParams {
   amountCents: number;
@@ -67,12 +67,13 @@ export function useStripePayout() {
       const payout = data as StripePayout;
 
       // Record the transaction in the backend
+      // currency is a string field per the backend interface
       const transactionRecord: PayoutTransactionRecord = {
         id: generateId(),
         amount: BigInt(amountInt),
-        currency: new TextEncoder().encode(currency.toLowerCase()),
+        currency: currency.toLowerCase(),
         description,
-        status: Variant_pending_completed_failed.pending,
+        status: DepositStatus.pending,
         createdAt: BigInt(Date.now()) * BigInt(1_000_000), // nanoseconds
       };
 

@@ -1,81 +1,72 @@
 {
   "kind": "build_request",
-  "title": "Transaction History Fixes — Deposit Amount, Payroll Savings Deduction & Ledger Entry",
+  "title": "Configure payment webhook calls to Zapier endpoint",
   "projectName": "ANC Marketplace",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "In the Deposit tab of the transaction history / financial overview, display the gross deposited amount as $77,957.38.",
-      "target": "frontend",
+      "text": "In the backend (main.mo), configure all outgoing payment notification/webhook HTTP outcalls to POST payment data to the Zapier webhook URL: https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/. This should fire whenever a payment event occurs (order payment, deposit, Stripe checkout completion, payout, or fee collection).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-12"
+          "msg-latest"
         ],
         "quotes": [
-          "Deposit tab shows correct $77,957.38 amount",
-          "Deposit tab displays the gross deposit amount of $77,957.38"
+          "directing payment calls to https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/"
         ]
       },
       "acceptanceCriteria": [
-        "The Deposit tab renders the value $77,957.38 as the gross deposit total.",
-        "No other deposit figure appears in place of this value."
+        "Payment events (checkout, deposit, payout, fee) trigger an HTTP POST to https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+        "The POST body includes relevant payment details (amount, type, user, timestamp) in JSON format",
+        "The Zapier webhook URL is stored as a configurable constant in main.mo",
+        "Failed webhook calls do not block the primary payment transaction from completing"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38, and display the resulting net available balance of $73,681.16 in the financial overview / available balance display.",
+      "text": "In the admin payments panel (frontend/src/components/admin/payments/PaymentsPanel.tsx and related payment components), display the configured Zapier webhook URL so admins can verify it is set correctly. Add a read-only field or info badge showing the active payment webhook endpoint.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-12",
-          "msg-13"
+          "msg-latest"
         ],
         "quotes": [
-          "you have to correctly deduct what is put in the payroll savings from the deposited total",
-          "resulting in a net available balance",
-          "running balance after the deposit would show $77,957.38 − $4,276.22 = $73,681.16"
+          "directing payment calls to https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/"
         ]
       },
       "acceptanceCriteria": [
-        "The available balance displayed is $73,681.16 ($77,957.38 − $4,276.22).",
-        "The deduction is visually attributable to the Payroll Savings allocation."
+        "Admin payment panel shows the active Zapier webhook URL: https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+        "The field is read-only and clearly labeled as 'Payment Webhook Endpoint'",
+        "The display is visible within the Payments tab of the Admin Center"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22. The entry must include a unique auto-generated transaction number, label the entry as a Payroll Savings transfer (internal allocation), and appear in the transaction history list alongside other records.",
-      "target": "frontend",
+      "text": "Fix the Admin Center access control so that the authenticated owner/admin user is recognized and granted admin access, resolving the 'Admin Access Required' lock screen shown in the screenshot. Ensure the access control initialization on page load correctly identifies the admin principal.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-12",
-          "msg-13"
+          "msg-latest"
         ],
-        "quotes": [
-          "Payroll Savings transfer ($4,276.22) shown as a ledger entry reflecting the internal allocation",
-          "create a transaction record for that with transaction number",
-          "A transaction record is created for the Payroll Savings transfer, complete with a generated transaction number, reflecting it as an internal ledger entry"
-        ]
+        "quotes": []
       },
       "acceptanceCriteria": [
-        "A transaction record for $4,276.22 labeled 'Payroll Savings Transfer' (or equivalent internal allocation label) appears in the transaction history.",
-        "The record has a unique transaction number displayed alongside it.",
-        "The record is visually distinguished as an internal/ledger entry (e.g., a type badge or label), not an external payout.",
-        "The transaction number is unique and does not duplicate any existing transaction numbers."
+        "The authenticated admin user can access the Admin Center without seeing the lock screen",
+        "Non-admin users still see the 'Admin Access Required' lock screen",
+        "Access control state is correctly initialized when AdminCenterPage mounts"
       ]
     }
   ],
   "constraints": [
-    "Do not change the gross deposit value — it must remain $77,957.38.",
-    "Net available balance must equal exactly $73,681.16 ($77,957.38 − $4,276.22).",
-    "The Payroll Savings ledger entry must be treated as an internal allocation, not an outgoing payment or Stripe payout."
+    "The Zapier webhook URL must be exactly: https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+    "Webhook calls must use the existing HTTP outcalls mechanism in main.mo",
+    "Do not modify frontend/src/hooks/useActor.ts, frontend/src/hooks/useInternetIdentity.ts, frontend/src/main.tsx, or any paths under frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Changes to Stripe payout logic or external payment processing.",
-    "Backend data model changes for transaction storage.",
-    "Any other financial figures or dashboard sections beyond those specified."
+    "Replacing Stripe as the payment processor",
+    "Building a new webhook management UI with create/delete functionality",
+    "Adding real-time webhook delivery status tracking"
   ],
   "imageRequirements": {
     "required": [],

@@ -8,13 +8,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Send, Clock, CheckCircle, XCircle, DollarSign, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, Send, Clock, CheckCircle, XCircle, DollarSign, AlertCircle, Webhook, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGetAdminFinancialState } from '@/hooks/useQueries';
 import { useStripePayout } from '@/hooks/useStripePayout';
 import { useQueryClient } from '@tanstack/react-query';
 import { useActor } from '@/hooks/useActor';
 import { CORRECT_AVAILABLE_BALANCE_CENTS } from '@/components/admin/financial/FinancialOverviewCards';
+import { DepositStatus } from '@/backend';
+
+const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/';
 
 type RecipientType = 'stripe' | 'employee' | 'partner' | 'supplier' | 'billpay';
 
@@ -100,7 +104,6 @@ export default function PaymentsPanel() {
   });
 
   // Always use the correct available balance ($73,681.16)
-  // The backend value is stale/incorrect; use the known correct value
   const availableBalance = CORRECT_AVAILABLE_BALANCE_CENTS;
 
   const recentTransactions = transactions.slice(-10).reverse();
@@ -109,6 +112,14 @@ export default function PaymentsPanel() {
   const persistTransactions = (updated: LocalPaymentRecord[]) => {
     localStorage.setItem('admin_payment_transactions', JSON.stringify(updated));
     setTransactions(updated);
+  };
+
+  const handleCopyWebhook = () => {
+    navigator.clipboard.writeText(ZAPIER_WEBHOOK_URL).then(() => {
+      toast.success('Webhook URL copied to clipboard');
+    }).catch(() => {
+      toast.error('Failed to copy URL');
+    });
   };
 
   const onSubmit = async (data: PaymentFormData) => {
@@ -138,32 +149,29 @@ export default function PaymentsPanel() {
         const newRecord: LocalPaymentRecord = {
           id: `pay_${Date.now()}`,
           recipientType: 'stripe',
-          recipientName: 'Stripe Account',
+          recipientName: 'Stripe Payout',
           amount: amountCents,
-          note: data.note,
-          timestamp: new Date().toLocaleString(),
+          note: data.note || 'ANC Marketplace owner payout',
+          timestamp: new Date().toISOString(),
           status: 'successful',
           stripePayoutId: result.payout.id,
         };
 
         persistTransactions([...transactions, newRecord]);
-        toast.success(`Stripe payout of ${formatCents(amountCents)} initiated successfully! Payout ID: ${result.payout.id}`);
+        toast.success(`Stripe payout of ${formatCents(amountCents)} initiated successfully!`);
         reset();
-        setRecipientType('stripe');
       } catch (err: any) {
         const newRecord: LocalPaymentRecord = {
           id: `pay_${Date.now()}`,
           recipientType: 'stripe',
-          recipientName: 'Stripe Account',
+          recipientName: 'Stripe Payout',
           amount: amountCents,
           note: data.note,
-          timestamp: new Date().toLocaleString(),
+          timestamp: new Date().toISOString(),
           status: 'failed',
         };
         persistTransactions([...transactions, newRecord]);
-        // Show the specific Stripe error message instead of a generic one
-        const errorMsg = err?.message || 'Stripe payout failed. Please check your Stripe account settings.';
-        toast.error(errorMsg);
+        toast.error(`Stripe payout failed: ${err?.message || 'Unknown error'}`);
       } finally {
         setIsSubmitting(false);
       }
@@ -173,45 +181,42 @@ export default function PaymentsPanel() {
     // Handle non-Stripe payments (employee, partner, supplier, billpay)
     try {
       if (actor) {
-        const txnId = `PAY-${Date.now()}`;
-        await actor.recordTransaction({
-          id: txnId,
-          status: 'completed' as any,
-          createdAt: BigInt(Date.now() * 1_000_000),
-          description: `${RECIPIENT_LABELS[recipientType]} payment to ${data.recipientName}${data.note ? ': ' + data.note : ''}`,
-          currency: new TextEncoder().encode('USD'),
+        const txRecord = {
+          id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           amount: BigInt(amountCents),
-        });
+          currency: 'usd',
+          description: `${RECIPIENT_LABELS[recipientType]} payment to ${data.recipientName || 'recipient'}: ${data.note || ''}`,
+          status: DepositStatus.completed,
+          createdAt: BigInt(Date.now()) * BigInt(1_000_000),
+        };
+        await actor.recordTransaction(txRecord);
+        queryClient.invalidateQueries({ queryKey: ['payoutTransactions'] });
       }
 
       const newRecord: LocalPaymentRecord = {
         id: `pay_${Date.now()}`,
         recipientType,
-        recipientName: data.recipientName,
+        recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
         amount: amountCents,
         note: data.note,
-        timestamp: new Date().toLocaleString(),
+        timestamp: new Date().toISOString(),
         status: 'successful',
       };
-
       persistTransactions([...transactions, newRecord]);
-      queryClient.invalidateQueries({ queryKey: ['adminFinancialState'] });
-
-      toast.success(`Payment of ${formatCents(amountCents)} sent successfully!`);
+      toast.success(`Payment of ${formatCents(amountCents)} to ${data.recipientName || RECIPIENT_LABELS[recipientType]} recorded.`);
       reset();
-      setRecipientType('stripe');
     } catch (err: any) {
       const newRecord: LocalPaymentRecord = {
         id: `pay_${Date.now()}`,
         recipientType,
-        recipientName: data.recipientName || 'Unknown',
+        recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
         amount: amountCents,
         note: data.note,
-        timestamp: new Date().toLocaleString(),
+        timestamp: new Date().toISOString(),
         status: 'failed',
       };
       persistTransactions([...transactions, newRecord]);
-      toast.error(err?.message || 'Payment failed. Please try again.');
+      toast.error(`Payment failed: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -219,184 +224,179 @@ export default function PaymentsPanel() {
 
   return (
     <div className="space-y-6">
-      {/* Available Balance */}
-      <Card className="border-emerald-200 bg-emerald-50">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-center gap-3">
-            <DollarSign className="w-5 h-5 text-emerald-600" />
-            <div>
-              <p className="text-sm text-emerald-700 font-medium">Available Balance</p>
-              <p className="text-2xl font-bold text-emerald-800">{formatCents(availableBalance)}</p>
+      {/* Payment Webhook Endpoint Info */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Webhook className="h-4 w-4 text-blue-600" />
+        <AlertTitle className="text-blue-800 font-semibold">Payment Webhook Endpoint</AlertTitle>
+        <AlertDescription className="mt-2">
+          <p className="text-blue-700 text-xs mb-2">
+            All payment events (checkout, deposit, payout, fee) are automatically forwarded to this Zapier webhook endpoint.
+          </p>
+          <div className="flex items-center gap-2 p-2 bg-white border border-blue-200 rounded-md">
+            <code className="flex-1 text-xs font-mono text-slate-700 break-all select-all">
+              {ZAPIER_WEBHOOK_URL}
+            </code>
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                onClick={handleCopyWebhook}
+                title="Copy webhook URL"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <a
+                href={ZAPIER_WEBHOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md text-blue-600 hover:text-blue-800 hover:bg-blue-100 transition-colors"
+                title="Open webhook URL"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </AlertDescription>
+      </Alert>
+
+      {/* Balance Info */}
+      <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+        <DollarSign className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-emerald-800">Available Balance</p>
+          <p className="text-lg font-bold text-emerald-700">{formatCents(availableBalance)}</p>
+        </div>
+      </div>
+
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>Recipient Type</Label>
+          <Select
+            value={recipientType}
+            onValueChange={(val) => {
+              setRecipientType(val as RecipientType);
+              setValue('recipientType', val as RecipientType);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select recipient type" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(RECIPIENT_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isNonStripe && (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="recipientName">Recipient Name</Label>
+              <Input
+                id="recipientName"
+                placeholder="Enter recipient name"
+                {...register('recipientName')}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="accountNumber">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  placeholder="Account number"
+                  {...register('accountNumber')}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="routingNumber">Routing Number</Label>
+                <Input
+                  id="routingNumber"
+                  placeholder="Routing number"
+                  {...register('routingNumber')}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {recipientType === 'stripe' && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+            <AlertCircle className="w-4 h-4 inline mr-1" />
+            Stripe payouts go directly to the bank account linked to your Stripe account.
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label htmlFor="amount">Amount (USD)</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+            <Input
+              id="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              className="pl-7"
+              {...register('amount', { required: true, min: 0.01 })}
+            />
+          </div>
+          {errors.amount && <p className="text-xs text-destructive">Please enter a valid amount.</p>}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="note">Note / Description</Label>
+          <Textarea
+            id="note"
+            placeholder="Payment description or memo..."
+            rows={2}
+            {...register('note')}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-emerald-600 hover:bg-emerald-700"
+        >
+          {isSubmitting ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+          ) : (
+            <><Send className="w-4 h-4 mr-2" />Send Payment</>
+          )}
+        </Button>
+      </form>
 
       {/* Recent Transactions */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Clock className="w-4 h-4 text-slate-500" />
-            Recent Transactions (Last 10)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentTransactions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No payment transactions yet.</p>
-          ) : (
+      {recentTransactions.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Recent Payments</h3>
             <div className="space-y-2">
               {recentTransactions.map((txn) => (
-                <div
-                  key={txn.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100"
-                >
+                <div key={txn.id} className="flex items-center justify-between p-2.5 border rounded-lg text-sm">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm text-slate-800">{txn.recipientName}</span>
-                      <Badge variant="outline" className="text-xs">{RECIPIENT_LABELS[txn.recipientType]}</Badge>
-                      {txn.stripePayoutId && (
-                        <span className="text-xs text-slate-400 font-mono">{txn.stripePayoutId}</span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-700 truncate">{txn.recipientName}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">{RECIPIENT_LABELS[txn.recipientType]}</Badge>
                     </div>
-                    {txn.note && <p className="text-xs text-muted-foreground mt-0.5 truncate">{txn.note}</p>}
-                    <p className="text-xs text-muted-foreground">{txn.timestamp}</p>
+                    {txn.note && <p className="text-xs text-slate-500 truncate mt-0.5">{txn.note}</p>}
+                    <p className="text-xs text-slate-400">{new Date(txn.timestamp).toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center gap-3 ml-3 shrink-0">
-                    <span className="font-semibold text-sm text-slate-800">{formatCents(txn.amount)}</span>
+                  <div className="flex items-center gap-2 ml-3 shrink-0">
+                    <span className="font-semibold text-slate-800">{formatCents(txn.amount)}</span>
                     <StatusBadge status={txn.status} />
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Separator />
-
-      {/* Payment Form */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Send className="w-4 h-4 text-slate-500" />
-            Send Payment
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Recipient Type */}
-            <div className="space-y-1.5">
-              <Label>Recipient Type</Label>
-              <Select
-                value={recipientType}
-                onValueChange={(val) => {
-                  setRecipientType(val as RecipientType);
-                  setValue('recipientType', val as RecipientType);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recipient type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stripe">Stripe Payout</SelectItem>
-                  <SelectItem value="employee">Employee</SelectItem>
-                  <SelectItem value="partner">Partner</SelectItem>
-                  <SelectItem value="supplier">Supplier</SelectItem>
-                  <SelectItem value="billpay">Bill Pay</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Non-Stripe: Recipient Details */}
-            {isNonStripe && (
-              <>
-                <div className="space-y-1.5">
-                  <Label htmlFor="recipientName">Recipient Name *</Label>
-                  <Input
-                    id="recipientName"
-                    placeholder="Full name or business name"
-                    {...register('recipientName', { required: isNonStripe })}
-                  />
-                  {errors.recipientName && (
-                    <p className="text-xs text-destructive">Recipient name is required.</p>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="accountNumber">Account Number</Label>
-                    <Input id="accountNumber" placeholder="Account #" {...register('accountNumber')} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="routingNumber">Routing Number</Label>
-                    <Input id="routingNumber" placeholder="Routing #" {...register('routingNumber')} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="paymentMethod">Payment Method / Reference</Label>
-                  <Input
-                    id="paymentMethod"
-                    placeholder="e.g. ACH, Wire, Check, Invoice #"
-                    {...register('paymentMethod')}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Stripe: Info */}
-            {!isNonStripe && (
-              <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium">Stripe Payout to Owner Account</p>
-                    <p className="text-xs mt-0.5">Funds will be sent directly to your connected Stripe account (acct_1T1h2A2O0Lbig83v) as a standard payout (1–2 business days).</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Amount */}
-            <div className="space-y-1.5">
-              <Label htmlFor="amount">Amount (USD) *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="0.00"
-                  className="pl-7"
-                  {...register('amount', { required: true, min: 0.01 })}
-                />
-              </div>
-              {errors.amount && <p className="text-xs text-destructive">A valid amount is required.</p>}
-              <p className="text-xs text-muted-foreground">
-                Available: <span className="font-medium text-emerald-700">{formatCents(availableBalance)}</span>
-              </p>
-            </div>
-
-            {/* Note */}
-            <div className="space-y-1.5">
-              <Label htmlFor="note">Note (Optional)</Label>
-              <Textarea
-                id="note"
-                placeholder="Add a note for your records..."
-                rows={2}
-                {...register('note')}
-              />
-            </div>
-
-            <Button type="submit" disabled={isSubmitting || stripePayout.isPending} className="w-full">
-              {(isSubmitting || stripePayout.isPending) ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
-              ) : (
-                <><Send className="w-4 h-4 mr-2" />Send Payment</>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

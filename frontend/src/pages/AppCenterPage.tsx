@@ -30,12 +30,14 @@ function AppCenterContent() {
           name: 'Template Selector',
           description: 'Choose from professional store templates',
           status: 'available',
+          external: false,
         },
         {
           id: 'branding-tools',
           name: 'Branding Tools',
           description: 'Customize your store appearance',
           status: 'coming-soon',
+          external: false,
         },
       ],
     },
@@ -58,6 +60,7 @@ function AppCenterContent() {
           name: 'Email Campaigns',
           description: 'Send targeted email marketing',
           status: 'coming-soon',
+          external: false,
         },
       ],
     },
@@ -73,12 +76,14 @@ function AppCenterContent() {
           name: 'Dropshipping Partners',
           description: 'Connect with dropshipping suppliers',
           status: 'available',
+          external: false,
         },
         {
           id: 'shipping-labels',
           name: 'Shipping Labels',
           description: 'Print shipping labels and track packages',
           status: 'coming-soon',
+          external: false,
         },
       ],
     },
@@ -94,12 +99,14 @@ function AppCenterContent() {
           name: 'Sales Dashboard',
           description: 'Monitor your sales and revenue',
           status: 'available',
+          external: false,
         },
         {
           id: 'customer-insights',
           name: 'Customer Insights',
           description: 'Understand your customer behavior',
           status: 'coming-soon',
+          external: false,
         },
       ],
     },
@@ -115,14 +122,30 @@ function AppCenterContent() {
     return colors[color] || colors.blue;
   };
 
+  const handleAppLaunch = (appId: string, external: boolean) => {
+    if (appId === 'sales-dashboard') {
+      navigate({ to: '/seller-dashboard' });
+    } else if (appId === 'clickfunnels') {
+      window.open('https://clickfunnels.com', '_blank');
+    } else if (appId === 'template-selector') {
+      navigate({ to: '/store-builder' });
+    } else {
+      // For other apps, navigate to the app center sub-page using the correct registered route
+      navigate({ to: '/app-center/$appId', params: { appId } });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4">App Center</h1>
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+            App Center
+          </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Discover and integrate powerful apps to grow your business. From marketing tools to fulfillment solutions, find everything you need in one place.
+            Discover and integrate powerful apps to grow your business. From marketing tools to
+            fulfillment solutions, find everything you need in one place.
           </p>
         </div>
 
@@ -139,7 +162,9 @@ function AppCenterContent() {
                     <Icon className={`h-6 w-6 ${colorClasses.text}`} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{category.name}</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {category.name}
+                    </h2>
                     <p className="text-slate-600 dark:text-slate-400">{category.description}</p>
                   </div>
                 </div>
@@ -152,7 +177,9 @@ function AppCenterContent() {
                           <div>
                             <CardTitle className="flex items-center gap-2">
                               {app.name}
-                              {app.external && <ExternalLink className="h-4 w-4 text-muted-foreground" />}
+                              {app.external && (
+                                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                              )}
                             </CardTitle>
                             <CardDescription>{app.description}</CardDescription>
                           </div>
@@ -165,16 +192,7 @@ function AppCenterContent() {
                         {app.status === 'available' ? (
                           <Button
                             className="w-full"
-                            onClick={() => {
-                              if (app.id === 'sales-dashboard') {
-                                navigate({ to: '/seller/dashboard' });
-                              } else {
-                                navigate({ 
-                                  to: '/app-launch/$appId',
-                                  params: { appId: app.id }
-                                });
-                              }
-                            }}
+                            onClick={() => handleAppLaunch(app.id, app.external)}
                           >
                             {app.external ? 'Launch App' : 'Configure'}
                           </Button>
@@ -202,7 +220,8 @@ function AppCenterContent() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Contact us at ancelectronicsnservices@gmail.com for app integration support, custom solutions, or to request new app integrations.
+              Contact us at anc.electronics.n.more@gmail.com for app integration support,
+              custom solutions, or to request new app integrations.
             </p>
             <Button variant="outline">
               <Mail className="mr-2 h-4 w-4" />

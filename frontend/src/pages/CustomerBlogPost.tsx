@@ -32,7 +32,7 @@ export default function CustomerBlogPost() {
         'Adding to Cart: When you find something you like, simply click "Add to Cart." You can continue shopping and add multiple items before checking out. Your cart is saved automatically, so you can come back later to complete your purchase.',
         'Checkout Process: When you\'re ready to purchase, go to your cart and click "Checkout." You\'ll be guided through a secure payment process powered by Stripe. We accept all major credit and debit cards. Your payment information is encrypted and never stored on our servers.',
         'Order Tracking: After completing your purchase, you can track your order status from your account dashboard. You\'ll also receive email notifications for order updates and shipping information.',
-        'Need Help? Our customer support team is always ready to assist you. Contact us at support@ancelectronics.com for any questions or concerns.',
+        'Need Help? Our customer support team is always ready to assist you. Contact us at anc.electronics.n.more@gmail.com for any questions or concerns.',
       ],
     },
     'secure-shopping-tips': {
@@ -91,7 +91,7 @@ export default function CustomerBlogPost() {
       readTime: '3 min read',
       content: [
         'Our customer support team is here to ensure you have the best possible experience. Here\'s how to get help when you need it.',
-        'Contact Methods: Reach us via email at support@ancelectronics.com. We typically respond within 24 hours during business days. For urgent matters, please indicate "URGENT" in your subject line.',
+        'Contact Methods: Reach us via email at anc.electronics.n.more@gmail.com. We typically respond within 24 hours during business days. For urgent matters, please indicate "URGENT" in your subject line.',
         'Order Tracking: You can track your orders directly from your account dashboard. This is the fastest way to get real-time updates on your purchases.',
         'Common Issues: Many questions can be answered in our FAQ section. Check there first for quick answers about accounts, payments, shipping, and returns.',
         'Providing Information: When contacting support, include your order number (if applicable), a clear description of the issue, and any relevant screenshots. This helps us resolve your issue faster.',
@@ -107,8 +107,10 @@ export default function CustomerBlogPost() {
       <div className="container py-12">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl font-bold mb-4">Post Not Found</h1>
-          <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate({ to: '/customer-blog' })}>
+          <p className="text-muted-foreground mb-6">
+            The blog post you're looking for doesn't exist.
+          </p>
+          <Button onClick={() => navigate({ to: '/blog/customers' })}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Blog
           </Button>
@@ -122,7 +124,7 @@ export default function CustomerBlogPost() {
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
-          onClick={() => navigate({ to: '/customer-blog' })}
+          onClick={() => navigate({ to: '/blog/customers' })}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

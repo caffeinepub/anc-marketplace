@@ -1,15 +1,25 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingCart, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
-import type { AdminCenterAnalytics } from '../../../types';
+
+export interface AdminCenterAnalytics {
+  totalTransactions: number;
+  totalRevenueCents: number;
+  successfulPayments: number;
+  failedPayments: number;
+  pendingPayments: number;
+  averageTransactionAmountCents: number;
+  failedToSuccessRatio: number;
+  attemptsPerSuccessfulTransaction: number;
+}
 
 interface SalesMetricsCardsProps {
   analytics: AdminCenterAnalytics;
 }
 
 export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps) {
-  const formatCurrency = (cents: bigint | number): string => {
-    const dollars = Number(cents) / 100;
+  const formatCurrency = (cents: number): string => {
+    const dollars = cents / 100;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -29,7 +39,7 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
     },
     {
       title: 'Total Sales',
-      value: Number(analytics.successfulPayments).toString(),
+      value: analytics.successfulPayments.toString(),
       icon: ShoppingCart,
       description: 'Completed transactions',
       color: 'text-blue-600 dark:text-blue-400',
@@ -37,7 +47,7 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
     },
     {
       title: 'Pending Payments',
-      value: Number(analytics.pendingPayments).toString(),
+      value: analytics.pendingPayments.toString(),
       icon: Clock,
       description: 'Awaiting completion',
       color: 'text-amber-600 dark:text-amber-400',
@@ -45,7 +55,7 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
     },
     {
       title: 'Failed Payments',
-      value: Number(analytics.failedPayments).toString(),
+      value: analytics.failedPayments.toString(),
       icon: AlertTriangle,
       description: 'Unsuccessful transactions',
       color: 'text-red-600 dark:text-red-400',
@@ -53,7 +63,7 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
     },
     {
       title: 'Total Transactions',
-      value: Number(analytics.totalTransactions).toString(),
+      value: analytics.totalTransactions.toString(),
       icon: TrendingUp,
       description: 'All payment attempts',
       color: 'text-purple-600 dark:text-purple-400',

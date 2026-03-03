@@ -7,11 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Receipt, RefreshCw, AlertCircle, ArrowDownLeft, ArrowUpRight, Layers } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllTransactionHistory, useGetPayoutTransactions } from '../../../hooks/useQueries';
-import { Variant_creditFunding_deposit, Variant_successful_failed, Variant_pending_completed_failed } from '../../../backend';
+import { useGetTransactionLedger, useGetTransactions } from '../../../hooks/useQueries';
+import { Variant_creditFunding_deposit, Variant_successful_failed, DepositStatus } from '../../../backend';
 import { CORRECT_PAYROLL_SAVINGS_CENTS } from '../financial/FinancialOverviewCards';
 
-// Payroll Savings internal ledger entry — unique transaction number, never conflicts with backend IDs
+// Payroll Savings internal ledger entry
 const PAYROLL_SAVINGS_LEDGER_ENTRY = {
   id: 'internal-ps-20260209',
   transactionId: 'TXN-PS-20260209-427622',
@@ -24,8 +24,18 @@ const PAYROLL_SAVINGS_LEDGER_ENTRY = {
 };
 
 export default function AdminTransactionsPanel() {
-  const { data: transactions, isLoading: txLoading, error: txError, refetch: refetchTx } = useGetAllTransactionHistory();
-  const { data: payouts, isLoading: payoutsLoading, error: payoutsError, refetch: refetchPayouts } = useGetPayoutTransactions();
+  const {
+    data: transactions,
+    isLoading: txLoading,
+    error: txError,
+    refetch: refetchTx,
+  } = useGetTransactionLedger();
+  const {
+    data: payouts,
+    isLoading: payoutsLoading,
+    error: payoutsError,
+    refetch: refetchPayouts,
+  } = useGetTransactions();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const formatCurrency = (cents: bigint | number): string => {
@@ -41,18 +51,26 @@ export default function AdminTransactionsPanel() {
   const formatDate = (dateString: string): string => {
     const [month, day, year] = dateString.split('/');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   const formatTimestamp = (nanoseconds: bigint): string => {
     const ms = Number(nanoseconds) / 1_000_000;
     return new Date(ms).toLocaleString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
-  const decodeCurrency = (bytes: Uint8Array): string => {
-    try { return new TextDecoder().decode(bytes).toUpperCase(); } catch { return 'USD'; }
+  const displayCurrency = (currency: string): string => {
+    return currency.toUpperCase() || 'USD';
   };
 
   const getStatusBadge = (status: Variant_successful_failed) => {
@@ -64,27 +82,33 @@ export default function AdminTransactionsPanel() {
     return <Badge variant="outline">{status}</Badge>;
   };
 
-  const getPayoutStatusBadge = (status: Variant_pending_completed_failed) => {
-    if (status === Variant_pending_completed_failed.completed) {
+  const getPayoutStatusBadge = (status: DepositStatus) => {
+    if (status === DepositStatus.completed) {
       return <Badge variant="default" className="bg-emerald-600">Completed</Badge>;
-    } else if (status === Variant_pending_completed_failed.failed) {
+    } else if (status === DepositStatus.failed) {
       return <Badge variant="destructive">Failed</Badge>;
     }
-    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>;
+    return (
+      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+        Pending
+      </Badge>
+    );
   };
 
   const getTypeBadge = (type: Variant_creditFunding_deposit | 'internalTransfer') => {
     if (type === 'internalTransfer') {
       return (
         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-          <Layers className="h-3 w-3 mr-1" />Internal Transfer
+          <Layers className="h-3 w-3 mr-1" />
+          Internal Transfer
         </Badge>
       );
     }
     if (type === Variant_creditFunding_deposit.deposit) {
       return (
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-          <ArrowDownLeft className="h-3 w-3 mr-1" />Deposit
+          <ArrowDownLeft className="h-3 w-3 mr-1" />
+          Deposit
         </Badge>
       );
     } else if (type === Variant_creditFunding_deposit.creditFunding) {
@@ -127,7 +151,6 @@ export default function AdminTransactionsPanel() {
   }
 
   // Merge backend transactions with the hardcoded Payroll Savings ledger entry
-  // The PS entry is inserted after the deposit it relates to (TXN-0058655951, date 02/09/2026)
   const allDepositRows: Array<{
     id: string;
     transactionId: string;
@@ -150,7 +173,6 @@ export default function AdminTransactionsPanel() {
         status: txn.status,
         transactionType: txn.transactionType,
       });
-      // Insert the Payroll Savings ledger entry immediately after the related deposit
       if (txn.transactionId === 'TXN-0058655951') {
         allDepositRows.push({
           id: PAYROLL_SAVINGS_LEDGER_ENTRY.id,
@@ -166,8 +188,7 @@ export default function AdminTransactionsPanel() {
     }
   }
 
-  // If the deposit wasn't found in backend data (e.g. empty), still show the PS entry
-  const psAlreadyAdded = allDepositRows.some(r => r.id === PAYROLL_SAVINGS_LEDGER_ENTRY.id);
+  const psAlreadyAdded = allDepositRows.some((r) => r.id === PAYROLL_SAVINGS_LEDGER_ENTRY.id);
   if (!psAlreadyAdded) {
     allDepositRows.push({
       id: PAYROLL_SAVINGS_LEDGER_ENTRY.id,
@@ -192,7 +213,9 @@ export default function AdminTransactionsPanel() {
               <Receipt className="h-5 w-5" />
               Transaction History
             </CardTitle>
-            <CardDescription>Complete ledger of all financial transactions and payouts</CardDescription>
+            <CardDescription>
+              Complete ledger of all financial transactions and payouts
+            </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -207,14 +230,18 @@ export default function AdminTransactionsPanel() {
               <ArrowDownLeft className="h-4 w-4 mr-1" />
               Deposits & Credits
               {totalDepositsCount > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">{totalDepositsCount}</Badge>
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {totalDepositsCount}
+                </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="payouts">
               <ArrowUpRight className="h-4 w-4 mr-1" />
               Payouts & Withdrawals
               {payouts && payouts.length > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">{payouts.length}</Badge>
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {payouts.length}
+                </Badge>
               )}
             </TabsTrigger>
           </TabsList>
@@ -225,8 +252,14 @@ export default function AdminTransactionsPanel() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>Failed to load deposit history.</span>
-                  <Button variant="outline" size="sm" onClick={() => refetchTx()} className="ml-4">
-                    <RefreshCw className="h-4 w-4 mr-2" />Retry
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchTx()}
+                    className="ml-4"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -252,19 +285,37 @@ export default function AdminTransactionsPanel() {
                     {allDepositRows.map((row) => (
                       <TableRow
                         key={row.id}
-                        className={row.transactionType === 'internalTransfer' ? 'bg-purple-50/40' : undefined}
+                        className={
+                          row.transactionType === 'internalTransfer'
+                            ? 'bg-purple-50/40'
+                            : undefined
+                        }
                       >
                         <TableCell className="font-mono text-xs">{row.transactionId}</TableCell>
-                        <TableCell className="text-sm whitespace-nowrap">{formatDate(row.date)}</TableCell>
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {formatDate(row.date)}
+                        </TableCell>
                         <TableCell>{getTypeBadge(row.transactionType)}</TableCell>
                         <TableCell className="text-sm max-w-xs">
                           {row.label && (
-                            <div className="font-semibold text-purple-700 text-xs mb-0.5">{row.label}</div>
+                            <div className="font-semibold text-purple-700 text-xs mb-0.5">
+                              {row.label}
+                            </div>
                           )}
-                          <div className="truncate text-slate-600" title={row.source}>{row.source}</div>
+                          <div
+                            className="truncate text-slate-600"
+                            title={row.source}
+                          >
+                            {row.source}
+                          </div>
                         </TableCell>
-                        <TableCell className={`font-semibold whitespace-nowrap ${row.transactionType === 'internalTransfer' ? 'text-purple-700' : ''}`}>
-                          {row.transactionType === 'internalTransfer' ? '−' : ''}{formatCurrency(row.amountCents)}
+                        <TableCell
+                          className={`font-semibold whitespace-nowrap ${
+                            row.transactionType === 'internalTransfer' ? 'text-purple-700' : ''
+                          }`}
+                        >
+                          {row.transactionType === 'internalTransfer' ? '−' : ''}
+                          {formatCurrency(row.amountCents)}
                         </TableCell>
                         <TableCell>{getStatusBadge(row.status)}</TableCell>
                       </TableRow>
@@ -281,15 +332,23 @@ export default function AdminTransactionsPanel() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>Failed to load payout history.</span>
-                  <Button variant="outline" size="sm" onClick={() => refetchPayouts()} className="ml-4">
-                    <RefreshCw className="h-4 w-4 mr-2" />Retry
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchPayouts()}
+                    className="ml-4"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
                   </Button>
                 </AlertDescription>
               </Alert>
             ) : !payouts || payouts.length === 0 ? (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>No payout records found. Processed withdrawals will appear here.</AlertDescription>
+                <AlertDescription>
+                  No payout records found. Processed withdrawals will appear here.
+                </AlertDescription>
               </Alert>
             ) : (
               <div className="border rounded-lg overflow-x-auto">
@@ -307,12 +366,20 @@ export default function AdminTransactionsPanel() {
                   <TableBody>
                     {payouts.map((payout) => (
                       <TableRow key={payout.id}>
-                        <TableCell className="font-mono text-xs">{payout.id.substring(0, 20)}…</TableCell>
-                        <TableCell className="text-sm whitespace-nowrap">{formatTimestamp(payout.createdAt)}</TableCell>
-                        <TableCell className="text-sm max-w-xs">
-                          <div className="truncate" title={payout.description}>{payout.description}</div>
+                        <TableCell className="font-mono text-xs">
+                          {payout.id.substring(0, 20)}…
                         </TableCell>
-                        <TableCell className="text-sm uppercase">{decodeCurrency(payout.currency)}</TableCell>
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {formatTimestamp(payout.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-sm max-w-xs">
+                          <div className="truncate" title={payout.description}>
+                            {payout.description}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm uppercase">
+                          {displayCurrency(payout.currency)}
+                        </TableCell>
                         <TableCell className="font-semibold whitespace-nowrap text-destructive">
                           -{formatCurrency(payout.amount)}
                         </TableCell>

@@ -1,140 +1,271 @@
-import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { Heart, Shield, Users } from 'lucide-react';
-import { SiVisa, SiMastercard, SiAmericanexpress, SiDiscover } from 'react-icons/si';
+import React from "react";
+import { Link } from "@tanstack/react-router";
+import {
+  Shield,
+  Mail,
+  ExternalLink,
+  Lock,
+  Settings,
+  Users,
+  Heart,
+} from "lucide-react";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-  const appIdentifier = encodeURIComponent(
-    typeof window !== 'undefined' ? window.location.hostname : 'anc-marketplace'
+  const year = new Date().getFullYear();
+  const appId = encodeURIComponent(
+    typeof window !== "undefined" ? window.location.hostname : "anc-marketplace"
   );
 
   return (
-    <footer className="bg-muted/30 border-t border-border mt-auto">
-      <div className="container mx-auto px-4 py-8">
+    <footer className="bg-gray-900 text-gray-300 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Legal Links */}
+          {/* Brand */}
+          <div className="col-span-1 md:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <img
+                src="/assets/generated/anc-logo-transparent.dim_200x200.png"
+                alt="ANC Marketplace"
+                className="h-10 w-10 object-contain"
+              />
+              <span className="font-bold text-white text-lg">
+                ANC Marketplace
+              </span>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Your trusted platform for buying, selling, and growing your
+              business.
+            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Mail className="h-4 w-4 shrink-0" />
+              <a
+                href="mailto:anc.electronics.n.more@gmail.com"
+                className="hover:text-white transition-colors"
+              >
+                anc.electronics.n.more@gmail.com
+              </a>
+            </div>
+          </div>
+
+          {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Legal & Policies</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">
+              Quick Links
+            </h3>
+            <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/" className="hover:text-white transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/faq/customers"
+                  className="hover:text-white transition-colors"
+                >
+                  Customer FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/blog/customers"
+                  className="hover:text-white transition-colors"
+                >
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/register"
+                  className="hover:text-white transition-colors"
+                >
+                  Register
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/apply"
+                  className="hover:text-white transition-colors"
+                >
+                  Apply for Role
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Sellers & Businesses */}
+          <div>
+            <h3 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">
+              Sellers & Businesses
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  to="/faq/sellers-businesses"
+                  className="hover:text-white transition-colors"
+                >
+                  Sellers FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/blog/sellers-businesses"
+                  className="hover:text-white transition-colors"
+                >
+                  Sellers Blog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/store-builder"
+                  className="hover:text-white transition-colors"
+                >
+                  Store Builder
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/app-center"
+                  className="hover:text-white transition-colors"
+                >
+                  App Center
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/funnels"
+                  className="hover:text-white transition-colors"
+                >
+                  Funnels
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal & Security */}
+          <div>
+            <h3 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">
+              Legal & Security
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className="hover:text-white transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/shipping-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Shipping Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Returns Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms-and-conditions" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  to="/terms-conditions"
+                  className="hover:text-white transition-colors"
+                >
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link to="/marketplace-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  to="/shipping-policy"
+                  className="hover:text-white transition-colors"
+                >
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/returns-policy"
+                  className="hover:text-white transition-colors"
+                >
+                  Returns Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/marketplace-policy"
+                  className="hover:text-white transition-colors"
+                >
                   Marketplace Policy
                 </Link>
               </li>
               <li>
-                <Link to="/pci-compliance" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  to="/pci-compliance"
+                  className="flex items-center gap-1 hover:text-white transition-colors"
+                >
+                  <Shield className="h-3 w-3" />
                   PCI Compliance
                 </Link>
               </li>
             </ul>
-          </div>
 
-          {/* Contact Information */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
-            <div className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">ANC Marketplace</p>
-              <p className="text-xs italic">Featuring stores like ANC Electronics N Services</p>
-              <p className="mt-2">EIN: 33-3107359</p>
-              <p>Florida DBA G25000056278</p>
-              <p className="mt-3">Owner: Angela MW Miller</p>
-              <p>Email: <a href="mailto:support@anc-electronics-n-services.net" className="hover:text-primary transition-colors">support@anc-electronics-n-services.net</a></p>
-              <p className="text-xs italic">Customer Service is contacted by email.</p>
-              <p className="mt-2">Administration: <a href="tel:903-993-7369" className="hover:text-primary transition-colors">903-993-7369</a></p>
-              <p className="mt-3">5253 SE 38th St<br />Ocala, FL 34480</p>
-            </div>
-          </div>
-
-          {/* Admin & Employee Access */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Access</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link 
-                  to="/admin" 
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                >
-                  <Shield className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="underline-offset-4 group-hover:underline">Admin Center</span>
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/employee-dashboard" 
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                >
-                  <Users className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="underline-offset-4 group-hover:underline">Employee Section</span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Payment & Partners */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Payment & Partners</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">We Accept:</p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <SiVisa className="h-8 w-12 text-muted-foreground" />
-                  <SiMastercard className="h-8 w-12 text-muted-foreground" />
-                  <SiAmericanexpress className="h-8 w-12 text-muted-foreground" />
-                  <SiDiscover className="h-8 w-12 text-muted-foreground" />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Payment Partner:</p>
-                <div className="text-sm text-muted-foreground">
-                  <p>Stripe</p>
-                </div>
-              </div>
+            {/* Admin / Employee access */}
+            <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+              <Link
+                to="/admin"
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                <Lock className="h-3 w-3" />
+                Admin Center
+              </Link>
+              <Link
+                to="/employee-dashboard"
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                <Users className="h-3 w-3" />
+                Employee Section
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-              <p>© {currentYear} ANC Electronics N More</p>
-              <p className="hidden md:block">•</p>
-              <p>PCI Compliant # 201100278838</p>
+        {/* Payment logos */}
+        <div className="mt-8 pt-6 border-t border-gray-700">
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <span className="text-xs text-gray-500 uppercase tracking-wider">
+              Accepted Payments:
+            </span>
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span className="px-2 py-1 border border-gray-600 rounded text-xs">
+                VISA
+              </span>
+              <span className="px-2 py-1 border border-gray-600 rounded text-xs">
+                MC
+              </span>
+              <span className="px-2 py-1 border border-gray-600 rounded text-xs">
+                AMEX
+              </span>
+              <span className="px-2 py-1 border border-gray-600 rounded text-xs">
+                DISCOVER
+              </span>
+              <span className="px-2 py-1 border border-gray-600 rounded text-xs">
+                PayPal
+              </span>
             </div>
-            <div className="flex items-center gap-1">
-              <span>Built with</span>
-              <Heart className="h-4 w-4 text-red-500 fill-red-500" />
-              <span>using</span>
+            <span className="text-xs text-gray-500">
+              Payment partner:{" "}
+              <span className="text-gray-300 font-medium">Stripe</span>
+            </span>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+            <p>
+              &copy; {year} ANC Electronics N Services. All rights reserved.
+            </p>
+            <p className="flex items-center gap-1">
+              Built with{" "}
+              <Heart className="h-3 w-3 text-red-500 fill-red-500 mx-0.5" />{" "}
+              using{" "}
               <a
-                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appIdentifier}`}
+                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium hover:text-primary transition-colors"
+                className="text-gray-400 hover:text-white transition-colors underline underline-offset-2"
               >
                 caffeine.ai
               </a>
-            </div>
+            </p>
           </div>
         </div>
       </div>

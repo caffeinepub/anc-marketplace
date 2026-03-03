@@ -92,31 +92,14 @@ export default function SellersBusinessesBlogPost() {
       category: 'Funnels',
       readTime: '9 min read',
       content: [
-        'Sales funnels are critical for converting leads into customers. This guide will help you create and optimize effective funnels.',
-        'Understanding Funnels: A sales funnel guides potential customers through stages from awareness to purchase. Our Funnels feature integrates with partner platforms to help you build and manage these customer journeys.',
-        'Funnel Stages: Typical stages include awareness (attracting attention), interest (engaging prospects), decision (presenting offers), and action (closing the sale). Each stage requires different content and strategies.',
-        'Creating Your First Funnel: Access the Funnels page to configure your funnel partner integration. Once connected, you can create landing pages, email sequences, and conversion paths tailored to your business.',
-        'Optimization Strategies: Test different headlines, calls-to-action, and offers. Use A/B testing to identify what resonates with your audience. Small improvements at each stage compound into significant conversion increases.',
-        'Tracking Performance: Monitor key metrics like conversion rates at each stage, average time in funnel, and overall ROI. Use this data to identify bottlenecks and opportunities for improvement.',
-        'Common Mistakes: Avoid overly complex funnels, unclear value propositions, and neglecting follow-up. Keep your funnels simple, focused, and aligned with customer needs.',
-        'Advanced Techniques: Implement retargeting for abandoned carts, create segmented funnels for different customer types, and use automation to nurture leads efficiently.',
-      ],
-    },
-    'business-credit-building': {
-      id: 'business-credit-building',
-      title: 'Building Business Credit: A Comprehensive Guide',
-      date: 'January 24, 2026',
-      category: 'Business Credit',
-      readTime: '8 min read',
-      content: [
-        'Building business credit is essential for accessing financing and establishing credibility. Our program makes this process straightforward.',
-        'Why Business Credit Matters: Strong business credit allows you to secure loans, negotiate better terms with suppliers, and separate personal and business finances. It\'s a critical asset for any growing business.',
-        'Getting Started: Access the Business Credit module in your Startup Dashboard. You\'ll see your current verification status, credit bureau registration status, and overall completion percentage.',
-        'Business Verification: The first step is verifying your business entity. This typically involves registering your LLC or corporation, obtaining an EIN, and establishing a business address. Our program guides you through each requirement.',
-        'Credit Bureau Registration: Once verified, register with major business credit bureaus (Dun & Bradstreet, Experian Business, Equifax Business). Each bureau has specific requirements—our program provides detailed instructions.',
-        'Building Credit History: Start by establishing trade lines with vendors who report to credit bureaus. Pay all bills on time, maintain low credit utilization, and regularly monitor your credit reports.',
-        'Monitoring Progress: Track your completion percentage in the dashboard. As you complete milestones, your score improves. The program provides educational content to help you understand each step.',
-        'Long-term Strategy: Building strong business credit takes time—typically 6-12 months for initial establishment. Stay consistent, follow best practices, and use credit responsibly to build a strong financial foundation.',
+        'Sales funnels are the backbone of successful online marketing. This guide will help you optimize your funnels for maximum conversion rates.',
+        'Understanding Your Funnel: A sales funnel represents the journey from awareness to purchase. Map out each stage: awareness, interest, consideration, intent, and purchase. Understanding where prospects drop off helps you identify improvement opportunities.',
+        'Top of Funnel (Awareness): Create compelling content that attracts your target audience. Blog posts, social media content, and educational resources help build brand awareness. Focus on providing value rather than selling.',
+        'Middle of Funnel (Consideration): Nurture leads with targeted content that addresses their specific needs and pain points. Email sequences, case studies, and product comparisons help prospects evaluate your offerings.',
+        'Bottom of Funnel (Conversion): Remove friction from the purchase process. Clear calls-to-action, simplified checkout, and strong guarantees help convert interested prospects into customers.',
+        'Testing and Optimization: Continuously test different elements of your funnel—headlines, images, copy, and CTAs. Use A/B testing to identify what resonates with your audience and improve conversion rates.',
+        'Analytics and Tracking: Monitor key metrics at each funnel stage. Track conversion rates, drop-off points, and customer acquisition costs. Use this data to make informed optimization decisions.',
+        'ClickFunnels Integration: Our partnership with ClickFunnels gives you access to professional funnel-building tools. Use our affiliate link to sign up and get started with creating high-converting funnels for your business.',
       ],
     },
   };
@@ -128,8 +111,10 @@ export default function SellersBusinessesBlogPost() {
       <div className="container py-12">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl font-bold mb-4">Post Not Found</h1>
-          <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate({ to: '/sellers-businesses-blog' })}>
+          <p className="text-muted-foreground mb-6">
+            The blog post you're looking for doesn't exist.
+          </p>
+          <Button onClick={() => navigate({ to: '/blog/sellers-businesses' })}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Blog
           </Button>
@@ -143,7 +128,7 @@ export default function SellersBusinessesBlogPost() {
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
-          onClick={() => navigate({ to: '/sellers-businesses-blog' })}
+          onClick={() => navigate({ to: '/blog/sellers-businesses' })}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

@@ -1,5 +1,10 @@
 import React from 'react';
-import { useGetPendingRoleApplications, useApproveRoleApplication, useRejectRoleApplication } from '../../hooks/useQueries';
+import {
+  useGetPendingRoleApplications,
+  useApproveRoleApplication,
+  useRejectRoleApplication,
+  type RoleApplication,
+} from '../../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,7 +111,9 @@ export default function RoleApplicationsPanel() {
           <CardDescription>Review and manage pending role applications</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground py-8">No pending applications at this time.</p>
+          <p className="text-center text-muted-foreground py-8">
+            No pending applications at this time.
+          </p>
         </CardContent>
       </Card>
     );
@@ -130,7 +137,7 @@ export default function RoleApplicationsPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {applications.map((application) => (
+            {applications.map((application: RoleApplication) => (
               <TableRow key={application.applicant}>
                 <TableCell className="font-mono text-sm">
                   {shortenPrincipal(application.applicant)}
@@ -142,7 +149,7 @@ export default function RoleApplicationsPanel() {
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{application.reason}</TableCell>
                 <TableCell>
-                  {new Date(Number(application.applicationDate) / 1000000).toLocaleDateString()}
+                  {new Date(Number(application.applicationDate) / 1_000_000).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

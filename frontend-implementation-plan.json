@@ -1,62 +1,42 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Transaction History Fixes — Deposit Amount, Payroll Savings Deduction & Ledger Entry",
+  "title": "Configure payment webhook calls to Zapier endpoint",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Display the gross deposited amount as $77,957.38 in the Deposit tab of the transaction history / financial overview",
-      "acceptanceCriteria": [
-        "The Deposit tab renders the value $77,957.38 as the gross deposit total.",
-        "No other deposit figure appears in place of this value."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-          "operation": "modify",
-          "description": "Update the 'Total Deposited' card to display $77,957.38 (7795738 cents) as the gross deposit amount. Replace any existing deposit value with this hardcoded correct value to ensure the Deposit tab shows the accurate gross deposit total."
-        },
-        {
-          "path": "frontend/src/pages/AdminCenterPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the Transactions tab (which includes the Deposit tab view) correctly references and displays the $77,957.38 gross deposit amount from the financial overview data. Verify the tab's transaction filtering or display logic does not override this value."
-        }
-      ]
-    },
-    {
       "id": "REQ-2",
-      "summary": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38 and display the resulting net available balance of $73,681.16",
+      "summary": "Display the configured Zapier webhook URL in the admin payments panel so admins can verify the active payment webhook endpoint",
       "acceptanceCriteria": [
-        "The available balance displayed is $73,681.16 ($77,957.38 − $4,276.22).",
-        "The deduction is visually attributable to the Payroll Savings allocation."
+        "Admin payment panel shows the active Zapier webhook URL: https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+        "The field is read-only and clearly labeled as 'Payment Webhook Endpoint'",
+        "The display is visible within the Payments tab of the Admin Center"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
+          "path": "frontend/src/components/admin/payments/PaymentsPanel.tsx",
           "operation": "modify",
-          "description": "Update the 'Available Balance' card to display $73,681.16 (7368116 cents), calculated as the gross deposit $77,957.38 minus the Payroll Savings allocation $4,276.22. Add a visual indicator (such as a tooltip, subtext, or help icon) that explains this balance reflects the deduction of $4,276.22 for Payroll Savings. Ensure the Payroll Savings card continues to display $4,276.22 (427622 cents) for visual attribution."
+          "description": "Add a read-only info section at the top of PaymentsPanel displaying the Zapier webhook URL (https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/) as 'Payment Webhook Endpoint'. Use a Card or Alert component with an info icon, clear label, and the full URL rendered in a monospace font. Position it above the existing payout form so admins can verify the configuration before making payments."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22 with a unique auto-generated transaction number",
+      "summary": "Fix Admin Center access control so the authenticated owner/admin user is recognized and granted admin access, resolving the 'Admin Access Required' lock screen",
       "acceptanceCriteria": [
-        "A transaction record for $4,276.22 labeled 'Payroll Savings Transfer' (or equivalent internal allocation label) appears in the transaction history.",
-        "The record has a unique transaction number displayed alongside it.",
-        "The record is visually distinguished as an internal/ledger entry (e.g., a type badge or label), not an external payout.",
-        "The transaction number is unique and does not duplicate any existing transaction numbers."
+        "The authenticated admin user can access the Admin Center without seeing the lock screen",
+        "Non-admin users still see the 'Admin Access Required' lock screen",
+        "Access control state is correctly initialized when AdminCenterPage mounts"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "operation": "modify",
-          "description": "Add a new hardcoded transaction record to the transaction history list representing the Payroll Savings internal transfer. The record must include: amount of $4,276.22 (427622 cents), a unique auto-generated transaction number (e.g., 'TXN-PS-' + timestamp or UUID), a label such as 'Payroll Savings Transfer' or 'Internal Allocation: Payroll Savings', and a status badge or type indicator (e.g., 'Internal Transfer' badge styled differently from 'Payout' or 'Payment'). Ensure the transaction number is unique and does not conflict with existing IDs. Position this entry appropriately in the transaction history chronologically."
-        },
-        {
           "path": "frontend/src/pages/AdminCenterPage.tsx",
           "operation": "modify",
-          "description": "Verify the Transactions tab correctly renders the new Payroll Savings ledger entry from AdminTransactionsPanel with its unique transaction number and internal allocation label visible in the transaction list. Ensure filtering or sorting logic does not exclude or hide this internal transfer record."
+          "description": "Review the access control initialization logic in AdminCenterPage. Currently the page calls initializeAccessControl on mount and checks isCallerAdmin. Ensure that: (1) the initializeAccessControl mutation is awaited or its success is monitored before rendering the lock screen, (2) the isCallerAdmin query is enabled only after the actor is available and the user is authenticated, (3) loading states for both the initialization and the admin check are properly handled so the lock screen does not flash prematurely, and (4) the condition rendering the lock screen waits for isFetched from the isCallerAdmin query. Add error handling for initialization failures. Verify the component's usage instructions for the authorization component before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review and ensure the useIsCallerAdmin query hook is correctly configured with enabled: !!actor && !actorFetching, and that it exposes both isLoading and isFetched states. If the query is incorrectly enabled or missing dependency checks, update it to mirror the pattern used in useGetCallerUserProfile (check actor availability and actorFetching before enabling). This ensures AdminCenterPage can reliably determine when the admin check has completed."
         }
       ]
     }

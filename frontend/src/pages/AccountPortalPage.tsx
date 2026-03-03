@@ -5,7 +5,7 @@ import RequireAuthenticatedRegisteredUser from '../components/auth/RequireAuthen
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User, Settings, CreditCard, FileText, ArrowRight } from 'lucide-react';
+import { User, Settings, FileText, ArrowRight } from 'lucide-react';
 
 export default function AccountPortalPage() {
   return (
@@ -43,8 +43,12 @@ function AccountPortalContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Account Portal</h1>
-          <p className="text-slate-600 dark:text-slate-400">Manage your account settings and preferences</p>
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            Account Portal
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            Manage your account settings and preferences
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -79,7 +83,9 @@ function AccountPortalContent() {
                   <div>
                     <p className="text-sm text-muted-foreground">Active Role</p>
                     <p className="font-medium capitalize">
-                      {userProfile.activeRole.replace(/([A-Z])/g, ' $1').trim()}
+                      {String(userProfile.activeRole)
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()}
                     </p>
                   </div>
                 </div>
@@ -90,7 +96,10 @@ function AccountPortalContent() {
           </Card>
 
           {/* Settings */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/settings' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: '/settings' })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -114,7 +123,10 @@ function AccountPortalContent() {
           </Card>
 
           {/* Seller Profile */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/seller/profile' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: '/seller-profile' })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
@@ -138,7 +150,10 @@ function AccountPortalContent() {
           </Card>
 
           {/* Policies */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/privacy-policy' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: '/privacy-policy' })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/10 rounded-lg">

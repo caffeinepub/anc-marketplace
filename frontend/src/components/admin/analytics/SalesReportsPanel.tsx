@@ -11,20 +11,6 @@ export default function SalesReportsPanel() {
   const { data: analytics, isLoading, error, refetch } = useGetAdminCenterAnalytics();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  const formatCurrency = (cents: bigint | number): string => {
-    const dollars = Number(cents) / 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(dollars);
-  };
-
-  const formatPercentage = (value: number): string => {
-    return `${(value * 100).toFixed(2)}%`;
-  };
-
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refetch();
@@ -126,26 +112,32 @@ export default function SalesReportsPanel() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold">{formatCurrency(analytics.totalRevenueCents)}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
-              <p className="text-2xl font-bold">
-                {Number(analytics.totalTransactions) > 0
-                  ? formatPercentage(Number(analytics.successfulPayments) / Number(analytics.totalTransactions))
-                  : '0.00%'}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-muted-foreground mb-1">Average Transaction</p>
+              <p className="text-xl font-bold">
+                ${(analytics.averageTransactionAmountCents / 100).toFixed(2)}
               </p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Failed / Success Ratio</p>
-              <p className="text-2xl font-bold">{analytics.failedToSuccessRatio.toFixed(2)}</p>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-muted-foreground mb-1">Failed/Success Ratio</p>
+              <p className="text-xl font-bold">
+                {(analytics.failedToSuccessRatio * 100).toFixed(1)}%
+              </p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Avg Transaction</p>
-              <p className="text-2xl font-bold">{formatCurrency(analytics.averageTransactionAmountCents)}</p>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-muted-foreground mb-1">Attempts per Success</p>
+              <p className="text-xl font-bold">
+                {analytics.attemptsPerSuccessfulTransaction.toFixed(2)}
+              </p>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-muted-foreground mb-1">Success Rate</p>
+              <p className="text-xl font-bold">
+                {analytics.totalTransactions > 0
+                  ? ((analytics.successfulPayments / analytics.totalTransactions) * 100).toFixed(1)
+                  : '0.0'}%
+              </p>
             </div>
           </div>
         </CardContent>

@@ -38,8 +38,12 @@ export default function UnansweredQuestionsAdmin() {
               <div key={q.id} className="border rounded-lg p-3 space-y-1">
                 <p className="text-sm font-medium">{q.question}</p>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{q.categorySuggestion}</Badge>
-                  <span className="text-xs text-muted-foreground">Asked {q.interactionCount}x</span>
+                  <Badge variant="outline" className="text-xs">
+                    {q.categorySuggestion}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Asked {q.interactionCount}x
+                  </span>
                 </div>
               </div>
             ))}

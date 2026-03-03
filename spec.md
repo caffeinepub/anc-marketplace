@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix transaction history and financial overview to correctly display the gross deposit amount, deduct the Payroll Savings allocation from the available balance, and add a ledger entry for the internal Payroll Savings transfer.
+**Goal:** Configure payment webhook calls to a Zapier endpoint, display the webhook URL in the admin payments panel, and fix the Admin Center access control so the authenticated admin can access it.
 
 **Planned changes:**
-- Display the gross deposit amount of $77,957.38 in the Deposit tab of the transaction history / financial overview.
-- Calculate and display the net available balance as $73,681.16 ($77,957.38 − $4,276.22 Payroll Savings deduction), with the deduction visually attributed to the Payroll Savings allocation.
-- Add a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22, including a unique auto-generated transaction number, labeled as "Payroll Savings Transfer" (internal allocation), visually distinguished from external payouts, and listed alongside other transaction history records.
+- In `main.mo`, add a configurable constant for the Zapier webhook URL (`https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/`) and trigger an HTTP POST with payment details (amount, type, user, timestamp) on every payment event (order payment, deposit, Stripe checkout completion, payout, fee collection); failed webhook calls must not block the primary transaction
+- In the admin payments panel (`PaymentsPanel.tsx` and related components), add a read-only field labeled "Payment Webhook Endpoint" displaying the active Zapier webhook URL
+- Fix the Admin Center access control initialization so the authenticated owner/admin principal is correctly recognized on page load, eliminating the "Admin Access Required" lock screen for admin users while still showing it for non-admins
 
-**User-visible outcome:** The transaction history correctly shows the $77,957.38 gross deposit, a net available balance of $73,681.16 after the Payroll Savings deduction, and a dedicated internal ledger entry for the $4,276.22 Payroll Savings transfer with its own transaction number.
+**User-visible outcome:** Payment events automatically notify the configured Zapier webhook; admins can see the active webhook URL in the Payments tab; and the authenticated admin user can successfully enter the Admin Center without hitting the lock screen.

@@ -31,7 +31,8 @@ export default function AssistantKnowledgeBaseAdmin() {
 
   const handleSave = async (id: string) => {
     try {
-      await updateEntry.mutateAsync({ id, newAnswer: editAnswer });
+      // Use 'answer' field (correct field name from AssistantKnowledgeEntry)
+      await updateEntry.mutateAsync({ id, answer: editAnswer });
       toast.success('Knowledge entry updated');
       setEditingId(null);
     } catch {
@@ -93,7 +94,9 @@ export default function AssistantKnowledgeBaseAdmin() {
 
         {filteredEntries.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
-            {entries.length === 0 ? 'No knowledge base entries yet.' : 'No entries match your search.'}
+            {entries.length === 0
+              ? 'No knowledge base entries yet.'
+              : 'No entries match your search.'}
           </p>
         ) : (
           <div className="space-y-3">
@@ -103,20 +106,34 @@ export default function AssistantKnowledgeBaseAdmin() {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{entry.question}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">{entry.category}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {entry.category}
+                      </Badge>
                       {entry.isBusinessOps && (
-                        <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">Business Ops</Badge>
+                        <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                          Business Ops
+                        </Badge>
                       )}
                       {entry.isActive ? (
-                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">Active</Badge>
+                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+                          Active
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Inactive
+                        </Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">Used {Number(entry.usageCount)}x</span>
+                      <span className="text-xs text-muted-foreground">
+                        Used {Number(entry.usageCount)}x
+                      </span>
                     </div>
                   </div>
                   {editingId !== entry.id && (
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(entry.id, entry.answer)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(entry.id, entry.answer)}
+                    >
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
                   )}
@@ -132,12 +149,21 @@ export default function AssistantKnowledgeBaseAdmin() {
                       className="text-sm"
                     />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleSave(entry.id)} disabled={updateEntry.isPending}>
-                        {updateEntry.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                      <Button
+                        size="sm"
+                        onClick={() => handleSave(entry.id)}
+                        disabled={updateEntry.isPending}
+                      >
+                        {updateEntry.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        )}
                         Save
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleCancel}>
-                        <X className="h-3.5 w-3.5 mr-1" />Cancel
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        Cancel
                       </Button>
                     </div>
                   </div>

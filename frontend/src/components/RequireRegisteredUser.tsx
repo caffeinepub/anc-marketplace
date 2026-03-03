@@ -1,51 +1,47 @@
-import React from 'react';
-import { useNavigate, useLocation } from '@tanstack/react-router';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
+import React from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useGetCallerUserProfile } from "../hooks/useQueries";
+import { useEffect } from "react";
 
 interface RequireRegisteredUserProps {
   children: React.ReactNode;
 }
 
-export default function RequireRegisteredUser({ children }: RequireRegisteredUserProps) {
+export default function RequireRegisteredUser({
+  children,
+}: RequireRegisteredUserProps) {
   const { identity } = useInternetIdentity();
-  const { data: userProfile, isLoading, isFetched } = useGetCallerUserProfile();
   const navigate = useNavigate();
-  const location = useLocation();
+  const {
+    data: userProfile,
+    isLoading,
+    isFetched,
+  } = useGetCallerUserProfile();
 
   const isAuthenticated = !!identity;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated && isFetched && userProfile === null) {
-      navigate({
-        to: '/profile-setup',
-        search: { redirect: location.pathname },
-      });
+      navigate({ to: "/profile-setup" });
     }
-  }, [isAuthenticated, isFetched, userProfile, navigate, location.pathname]);
+  }, [isAuthenticated, isFetched, userProfile, navigate]);
 
-  // Allow public access when not authenticated
+  // Not authenticated: allow public access
   if (!isAuthenticated) {
     return <>{children}</>;
   }
 
-  // Show loading while checking profile
+  // Loading profile
   if (isLoading || !isFetched) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <>{children}</>;
   }
 
-  // Redirect to profile setup if no profile (handled by useEffect)
-  if (userProfile === null) {
-    return null;
+  // Profile exists
+  if (userProfile) {
+    return <>{children}</>;
   }
 
-  // Render children when profile exists
-  return <>{children}</>;
+  // Redirecting to profile setup
+  return null;
 }

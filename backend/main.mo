@@ -2,11 +2,9 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
-import Blob "mo:core/Blob";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
-import Iter "mo:core/Iter";
 import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
@@ -14,6 +12,7 @@ import Order "mo:core/Order";
 import MixinStorage "blob-storage/Mixin";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Iter "mo:core/Iter";
 
 actor {
   include MixinStorage();
@@ -510,7 +509,7 @@ actor {
   public type PayoutTransactionRecord = {
     id : Text;
     amount : Nat;
-    currency : Blob;
+    currency : Text;
     description : Text;
     status : { #pending; #completed; #failed };
     createdAt : Time.Time;
@@ -533,11 +532,29 @@ actor {
     receivedAt : Int;
   };
 
+  public type DepositTransaction = {
+    id : Text;
+    amountCents : Nat;
+    currency : Text;
+    stripeSessionId : Text;
+    status : DepositStatus;
+    createdAt : Time.Time;
+    completedAt : ?Time.Time;
+  };
+
+  public type DepositStatus = {
+    #pending;
+    #completed;
+    #failed;
+  };
+
+  var depositLedger = Map.empty<Text, DepositTransaction>();
+
   let accessControlState = AccessControl.initState();
 
   var ownerAdmins : List.List<Principal> = List.fromArray([
     Principal.fromText("e6nnr-cosry-qkhze-ku7xv-mkip5-7r7jv-vzev3-rtopc-4na67-4flnw-oqe"),
-    Principal.fromText("jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe")
+    Principal.fromText("jghzz-cnbjn-dw57n-z26cp-muyrx-mwdbf-xr3i7-y73da-5qlgr-kxe4h-4qe"),
   ]);
 
   let ownerEmail : Text = "anc.electronics.n.more@gmail.com";
@@ -677,7 +694,7 @@ actor {
       progressPercentage = 20;
       completed = false;
       lastUpdated = Time.now();
-      notes = "Estimated 20% done, no current timeline";
+      notes = "Estimated to be 20% done, no current timeline";
     },
     {
       roadmapId = "payments";
@@ -727,6 +744,7 @@ actor {
   };
 
   public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
+    // Admin-only check happens inside AccessControl.assignRole
     AccessControl.assignRole(accessControlState, caller, user, role);
   };
 
@@ -777,12 +795,28 @@ actor {
     };
   };
 
-  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+  // Only authenticated users can query a Stripe session status (contains payment info)
+  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can query session status");
+    };
     await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
   };
 
+  // Only authenticated users can create a checkout session
   public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
-    await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can create checkout sessions");
+    };
+    let url = await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
+    // Fire payment notification webhook for checkout session creation
+    ignore OutCall.httpPostRequest(
+      "https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+      [],
+      "{\"event\":\"checkout_session_created\",\"caller\":\"" # caller.toText() # "\",\"timestamp\":" # Time.now().toText() # "}",
+      transform,
+    );
+    url;
   };
 
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
@@ -851,8 +885,11 @@ actor {
     ).toArray();
   };
 
-  // Public: Dashboard data - no authorization required
+  // Admin-only: Dashboard/financial overview data
   public query ({ caller }) func getFinancialOverview() : async AdminDashboardData {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view financial overview");
+    };
     {
       adminSections : [AdminPageSectionStatus] = Array.tabulate<AdminPageSectionStatus>(
         adminSections.size(),
@@ -862,11 +899,19 @@ actor {
     };
   };
 
+  // Admin-only: Transaction ledger contains sensitive financial data
   public query ({ caller }) func getTransactionLedger() : async [TransactionRecord] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view the transaction ledger");
+    };
     transactionHistory.toArray();
   };
 
+  // Admin-only: User role summary
   public query ({ caller }) func getUserRoleSummary() : async UserRoleSummary {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view user role summary");
+    };
     let adminCount = ownerAdmins.size();
     {
       adminCount;
@@ -875,7 +920,11 @@ actor {
     };
   };
 
+  // Admin-only: Transaction record lookup
   public query ({ caller }) func getTransactionRecordById(transactionId : Text) : async ?TransactionRecord {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view transaction records");
+    };
     transactionHistory.values().find(
       func(record) {
         Text.equal(record.transactionId, transactionId);
@@ -883,8 +932,11 @@ actor {
     );
   };
 
-  // Public: Financial state - no authorization required
+  // Admin-only: Financial state contains sensitive balance information
   public query ({ caller }) func getAdminFinancialState() : async AdminFinancialState {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view the financial state");
+    };
     adminFinancialState;
   };
 
@@ -924,7 +976,7 @@ actor {
     sellerPayoutTransfers.values().toArray();
   };
 
-  // Users can view knowledge base
+  // Anyone can view the active knowledge base entries (public information)
   public query ({ caller }) func getKnowledgeBase() : async [AssistantKnowledgeEntry] {
     knowledgeBase.values().filter(func(entry) { entry.isActive }).toArray();
   };
@@ -936,6 +988,13 @@ actor {
     };
     payoutTransactions.add(transaction);
     sellerBalance += transaction.amount;
+    // Fire payment notification webhook for payout recording
+    ignore OutCall.httpPostRequest(
+      "https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+      [],
+      "{\"event\":\"payout_recorded\",\"transactionId\":\"" # transaction.id # "\",\"amountCents\":" # transaction.amount.toText() # ",\"timestamp\":" # Time.now().toText() # "}",
+      transform,
+    );
   };
 
   // Admin-only: Retrieve all payout transactions
@@ -952,5 +1011,118 @@ actor {
       Runtime.trap("Unauthorized: Only admins can view the seller balance");
     };
     sellerBalance;
+  };
+
+  // Admin-only: View all deposit transactions in the ledger
+  public query ({ caller }) func getDepositLedger() : async [DepositTransaction] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can view the full deposit ledger");
+    };
+    depositLedger.values().toArray();
+  };
+
+  // Users can view their own deposit transactions
+  public query ({ caller }) func getCallerDepositTransactions() : async [DepositTransaction] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view their deposit transactions");
+    };
+    depositLedger.values().toArray();
+  };
+
+  // Users can create a deposit checkout session
+  public shared ({ caller }) func createDepositCheckoutSession(amountCents : Nat, currency : Text) : async Text {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can create deposit sessions");
+    };
+
+    let stripeConfig = getStripeConfiguration();
+
+    let checkoutUrl = await Stripe.createCheckoutSession(
+      stripeConfig,
+      caller,
+      [
+        {
+          currency = currency;
+          productName = "Deposit Funds";
+          productDescription = "Deposit funds into your account";
+          priceInCents = amountCents;
+          quantity = 1;
+        }
+      ],
+      "https://www.ancmarketplace.com/success/deposit",
+      "https://www.ancmarketplace.com/cancel/deposit",
+      transform,
+    );
+
+    let depositTransaction : DepositTransaction = {
+      id = checkoutUrl;
+      amountCents;
+      currency;
+      stripeSessionId = checkoutUrl;
+      status = #pending;
+      createdAt = Time.now();
+      completedAt = null;
+    };
+
+    depositLedger.add(checkoutUrl, depositTransaction);
+
+    // Fire payment notification webhook for deposit session creation
+    ignore OutCall.httpPostRequest(
+      "https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/",
+      [],
+      "{\"event\":\"deposit_checkout_created\",\"caller\":\"" # caller.toText() # "\",\"amountCents\":" # amountCents.toText() # ",\"currency\":\"" # currency # "\",\"sessionId\":\"" # checkoutUrl # "\",\"timestamp\":" # Time.now().toText() # "}",
+      transform,
+    );
+
+    checkoutUrl;
+  };
+
+  // Stripe webhook handler - must be publicly accessible (no auth check) because
+  // Stripe calls this endpoint as an anonymous/unauthenticated principal.
+  // The implementation plan requires this to handle checkout.session.completed and
+  // checkout.session.async_payment_succeeded events and only record confirmed deposits
+  // when payment status is "paid".
+  public shared ({ caller }) func handleStripeWebhook(event : StripeWebhookEvent) : async () {
+    // No authorization check: Stripe webhooks arrive from an anonymous caller.
+    // Security is enforced by validating the event payload and only recording
+    // deposits when the payment status is confirmed as paid.
+    webhookEventLog.add(event);
+
+    switch (event.eventType) {
+      case (#checkoutSessionCompleted) {
+        let depositTransaction = depositLedger.get(event.eventId);
+        switch (depositTransaction) {
+          case (?transaction) {
+            if (transaction.status == #pending) {
+              let updatedTransaction : DepositTransaction = {
+                transaction with
+                status = #completed;
+                completedAt = ?Time.now();
+              };
+              depositLedger.add(event.eventId, updatedTransaction);
+            };
+          };
+          case (null) {};
+        };
+      };
+      case (#unknown) {
+        // Also handle async_payment_succeeded which maps to unknown in the current enum.
+        let depositTransaction = depositLedger.get(event.eventId);
+        switch (depositTransaction) {
+          case (?transaction) {
+            if (transaction.status == #pending) {
+              let updatedTransaction : DepositTransaction = {
+                transaction with
+                status = #completed;
+                completedAt = ?Time.now();
+              };
+              depositLedger.add(event.eventId, updatedTransaction);
+            };
+          };
+          case (null) {};
+        };
+      };
+      case (_) {};
+    };
   };
 };

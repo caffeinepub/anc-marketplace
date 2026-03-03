@@ -1,59 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useActor } from "./useActor";
 import type {
   UserProfile,
+  SellerOnboardingProgress,
+  AdminDashboardData,
+  AdminFinancialState,
   TransactionRecord,
   PayoutTransactionRecord,
-  AdminFinancialState,
-  AssistantKnowledgeEntry,
+  UserRoleSummary,
   UserWithRole,
-  AdminDashboardData,
-  StripeConfiguration,
-} from '../backend';
-import type { SellerEarningsSummary, TimeFrame, AdminCenterAnalytics, RoleApplication } from '../types';
-import { Principal } from '@icp-sdk/core/principal';
-
-export type { UserWithRole };
-
-export interface UnansweredQuestion {
-  id: string;
-  question: string;
-  categorySuggestion: string;
-  creationTime: number;
-  interactionCount: number;
-}
-
-// ─── Access Control ──────────────────────────────────────────────────────────
-
-export function useInitializeAccessControl() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.initializeAccessControl();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['userRoleSummary'] });
-    },
-  });
-}
-
-export function useIsCallerAdmin() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<boolean>({
-    queryKey: ['isAdmin'],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
+  EcomOrder,
+  AssistantKnowledgeEntry,
+  SellerPayoutProfile,
+  SellerPayoutTransferRecord,
+  DepositTransaction,
+} from "../backend";
+import { UserRole__1 } from "../backend";
+import type { Principal } from "@icp-sdk/core/principal";
 
 // ─── User Profile ────────────────────────────────────────────────────────────
 
@@ -61,9 +24,9 @@ export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
   const query = useQuery<UserProfile | null>({
-    queryKey: ['currentUserProfile'],
+    queryKey: ["currentUserProfile"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
@@ -77,129 +40,145 @@ export function useGetCallerUserProfile() {
   };
 }
 
+export function useGetUserProfile(user: Principal | undefined) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<UserProfile | null>({
+    queryKey: ["userProfile", user?.toString()],
+    queryFn: async () => {
+      if (!actor || !user) return null;
+      return actor.getUserProfile(user);
+    },
+    enabled: !!actor && !isFetching && !!user,
+  });
+}
+
 export function useSaveCallerUserProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       await actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
     },
   });
 }
 
-// ─── Role Applications ───────────────────────────────────────────────────────
+// ─── Access Control ──────────────────────────────────────────────────────────
 
-export function useSubmitRoleApplication() {
-  return useMutation({
-    mutationFn: async (_params: { requestedRole: string; reason: string }) => {
-      // Stub: backend method not yet implemented
-      throw new Error('Role application submission not yet implemented');
+export function useIsCallerAdmin() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const query = useQuery<boolean>({
+    queryKey: ["isCallerAdmin"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.isCallerAdmin();
     },
+    enabled: !!actor && !actorFetching,
+    retry: false,
   });
+
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
 }
 
-export function useGetPendingRoleApplications() {
-  return useQuery<RoleApplication[]>({
-    queryKey: ['roleApplications'],
-    queryFn: async () => [],
-  });
-}
-
-export function useGetRoleApplications() {
-  return useQuery<RoleApplication[]>({
-    queryKey: ['roleApplications'],
-    queryFn: async () => [],
-  });
-}
-
-export function useApproveRoleApplication() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (applicant: Principal) => {
-      // Stub: backend method not yet implemented
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-    },
-  });
-}
-
-export function useRejectRoleApplication() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (applicant: Principal) => {
-      // Stub: backend method not yet implemented
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roleApplications'] });
-    },
-  });
-}
-
-// ─── User Role Summary ───────────────────────────────────────────────────────
-
-export function useGetUserRoleSummary() {
+export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
 
-  return useQuery({
-    queryKey: ['userRoleSummary'],
+  return useQuery<UserRole__1>({
+    queryKey: ["callerUserRole"],
     queryFn: async () => {
-      if (!actor) return { adminCount: BigInt(0), userCount: BigInt(0), guestCount: BigInt(0) };
-      return actor.getUserRoleSummary();
+      if (!actor) throw new Error("Actor not available");
+      return actor.getCallerUserRole();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-// ─── Admin Dashboard / Financial Overview ────────────────────────────────────
+export function useAssignCallerUserRole() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      user,
+      role,
+    }: {
+      user: Principal;
+      role: UserRole__1;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.assignCallerUserRole(user, role);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["callerUserRole"] });
+      queryClient.invalidateQueries({ queryKey: ["isCallerAdmin"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    },
+  });
+}
+
+// ─── Onboarding ──────────────────────────────────────────────────────────────
+
+export function useGetOnboarding() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SellerOnboardingProgress | null>({
+    queryKey: ["onboarding"],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getOnboarding();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Admin Dashboard ─────────────────────────────────────────────────────────
 
 export function useGetAdminDashboardData() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AdminDashboardData>({
-    queryKey: ['financialOverview'],
+    queryKey: ["adminDashboardData"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.getFinancialOverview();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetFinancialOverview() {
-  return useGetAdminDashboardData();
-}
-
 export function useUpdateAdminDashboardData() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      // Stub: no backend update method
+    mutationFn: async (_data?: unknown) => {
+      // Stub: backend update not yet implemented
+      await new Promise((resolve) => setTimeout(resolve, 300));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['financialOverview'] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboardData"] });
     },
   });
 }
 
-// ─── Admin Financial State ───────────────────────────────────────────────────
+// ─── Admin Financial ─────────────────────────────────────────────────────────
 
 export function useGetAdminFinancialState() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AdminFinancialState>({
-    queryKey: ['adminFinancialState'],
+    queryKey: ["adminFinancialState"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.getAdminFinancialState();
     },
     enabled: !!actor && !isFetching,
@@ -208,50 +187,52 @@ export function useGetAdminFinancialState() {
 
 // ─── Transaction Ledger ──────────────────────────────────────────────────────
 
-export function useGetAllTransactionHistory() {
+export function useGetTransactionLedger() {
   const { actor, isFetching } = useActor();
 
   return useQuery<TransactionRecord[]>({
-    queryKey: ['transactionLedger'],
+    queryKey: ["transactionLedger"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not available");
       return actor.getTransactionLedger();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetTransactionLedger() {
-  return useGetAllTransactionHistory();
+// Alias for backward compatibility
+export const useGetAllTransactionHistory = useGetTransactionLedger;
+
+export function useGetTransactionRecordById(transactionId: string | undefined) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<TransactionRecord | null>({
+    queryKey: ["transactionRecord", transactionId],
+    queryFn: async () => {
+      if (!actor || !transactionId) return null;
+      return actor.getTransactionRecordById(transactionId);
+    },
+    enabled: !!actor && !isFetching && !!transactionId,
+  });
 }
 
 // ─── Payout Transactions ─────────────────────────────────────────────────────
 
-export function useGetPayoutTransactions() {
+export function useGetTransactions() {
   const { actor, isFetching } = useActor();
 
   return useQuery<PayoutTransactionRecord[]>({
-    queryKey: ['payoutTransactions'],
+    queryKey: ["payoutTransactions"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not available");
       return actor.getTransactions();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetSellerBalance() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<bigint>({
-    queryKey: ['sellerBalance'],
-    queryFn: async () => {
-      if (!actor) return BigInt(0);
-      return actor.getSellerBalance();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
+// Alias for backward compatibility
+export const useGetPayoutTransactions = useGetTransactions;
 
 export function useRecordTransaction() {
   const { actor } = useActor();
@@ -259,14 +240,43 @@ export function useRecordTransaction() {
 
   return useMutation({
     mutationFn: async (transaction: PayoutTransactionRecord) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       await actor.recordTransaction(transaction);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payoutTransactions'] });
-      queryClient.invalidateQueries({ queryKey: ['sellerBalance'] });
-      queryClient.invalidateQueries({ queryKey: ['adminFinancialState'] });
+      queryClient.invalidateQueries({ queryKey: ["payoutTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["sellerBalance"] });
     },
+  });
+}
+
+// ─── Seller Balance ──────────────────────────────────────────────────────────
+
+export function useGetSellerBalance() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<bigint>({
+    queryKey: ["sellerBalance"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getSellerBalance();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── User Role Summary ───────────────────────────────────────────────────────
+
+export function useGetUserRoleSummary() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<UserRoleSummary>({
+    queryKey: ["userRoleSummary"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getUserRoleSummary();
+    },
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -276,10 +286,51 @@ export function useGetAllUsers() {
   const { actor, isFetching } = useActor();
 
   return useQuery<UserWithRole[]>({
-    queryKey: ['allUsers'],
+    queryKey: ["allUsers"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not available");
       return actor.getAllUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+export function useGetAllOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<EcomOrder[]>({
+    queryKey: ["allOrders"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getAllOrders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetSellerOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<EcomOrder[]>({
+    queryKey: ["sellerOrders"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getSellerOrders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetCustomerOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<EcomOrder[]>({
+    queryKey: ["customerOrders"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getCustomerOrders();
     },
     enabled: !!actor && !isFetching,
   });
@@ -291,7 +342,7 @@ export function useIsStripeConfigured() {
   const { actor, isFetching } = useActor();
 
   return useQuery<boolean>({
-    queryKey: ['isStripeConfigured'],
+    queryKey: ["isStripeConfigured"],
     queryFn: async () => {
       if (!actor) return false;
       return actor.isStripeConfigured();
@@ -305,27 +356,13 @@ export function useSetStripeConfiguration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (config: StripeConfiguration) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (config: { secretKey: string; allowedCountries: string[] }) => {
+      if (!actor) throw new Error("Actor not available");
       await actor.setStripeConfiguration(config);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['isStripeConfigured'] });
+      queryClient.invalidateQueries({ queryKey: ["isStripeConfigured"] });
     },
-  });
-}
-
-// ─── Seller Earnings ─────────────────────────────────────────────────────────
-
-export function useGetSellerEarningsSummary(_timeFrame: TimeFrame) {
-  return useQuery<SellerEarningsSummary>({
-    queryKey: ['sellerEarningsSummary', _timeFrame],
-    queryFn: async () => ({
-      totalEarnings: BigInt(0),
-      totalShippingCosts: BigInt(0),
-      totalOrders: BigInt(0),
-    }),
-    enabled: false,
   });
 }
 
@@ -335,7 +372,7 @@ export function useGetKnowledgeBase() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AssistantKnowledgeEntry[]>({
-    queryKey: ['knowledgeBase'],
+    queryKey: ["knowledgeBase"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getKnowledgeBase();
@@ -348,91 +385,281 @@ export function useUpdateKnowledgeEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_params: { id: string; newAnswer: string }) => {
+    mutationFn: async (_entry: Partial<AssistantKnowledgeEntry>) => {
       // Stub: backend update not yet implemented
+      await new Promise((resolve) => setTimeout(resolve, 300));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] });
+      queryClient.invalidateQueries({ queryKey: ["knowledgeBase"] });
     },
   });
 }
 
-// ─── Unanswered Questions ────────────────────────────────────────────────────
+// ─── Unanswered Questions (stub) ─────────────────────────────────────────────
+
+export interface UnansweredQuestion {
+  id: string;
+  question: string;
+  categorySuggestion: string;
+  creationTime: number;
+  interactionCount: number;
+}
 
 export function useGetUnansweredQuestions() {
   return useQuery<UnansweredQuestion[]>({
-    queryKey: ['unansweredQuestions'],
-    queryFn: async () => [],
+    queryKey: ["unansweredQuestions"],
+    queryFn: async () => {
+      // Stub: no backend method yet
+      return [] as UnansweredQuestion[];
+    },
   });
 }
 
-// ─── Analytics ───────────────────────────────────────────────────────────────
+// ─── Seller Payout Profile ───────────────────────────────────────────────────
 
-export function useGetAdminCenterAnalytics() {
-  return useQuery<AdminCenterAnalytics>({
-    queryKey: ['adminCenterAnalytics'],
-    queryFn: async () => ({
-      totalTransactions: BigInt(0),
-      totalRevenueCents: BigInt(0),
-      successfulPayments: BigInt(0),
-      failedPayments: BigInt(0),
-      pendingPayments: BigInt(0),
-      averageTransactionAmountCents: 0,
-      failedToSuccessRatio: 0,
-      attemptsPerSuccessfulTransaction: 0,
-    }),
-  });
-}
-
-// ─── Onboarding ──────────────────────────────────────────────────────────────
-
-export function useGetOnboarding() {
+export function useGetSellerPayoutProfile() {
   const { actor, isFetching } = useActor();
 
-  return useQuery({
-    queryKey: ['onboarding'],
+  return useQuery<SellerPayoutProfile | null>({
+    queryKey: ["sellerPayoutProfile"],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getOnboarding();
+      return actor.getSellerPayoutProfile();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useSaveOnboarding() {
-  const queryClient = useQueryClient();
+export function useGetAllSellerPayoutProfiles() {
+  const { actor, isFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (_wizardState: any) => {
-      // Stub: not yet implemented
+  return useQuery<SellerPayoutProfile[]>({
+    queryKey: ["allSellerPayoutProfiles"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getAllSellerPayoutProfiles();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['onboarding'] });
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetSellerPayoutTransfers() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SellerPayoutTransferRecord[]>({
+    queryKey: ["sellerPayoutTransfers"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getSellerPayoutTransfers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllPayoutTransfers() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SellerPayoutTransferRecord[]>({
+    queryKey: ["allPayoutTransfers"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getAllPayoutTransfers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Deposit Ledger ──────────────────────────────────────────────────────────
+
+export function useGetDepositLedger() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<DepositTransaction[]>({
+    queryKey: ["depositLedger"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getDepositLedger();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetCallerDepositTransactions() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<DepositTransaction[]>({
+    queryKey: ["callerDepositTransactions"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getCallerDepositTransactions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Seller Earnings Summary (stub) ─────────────────────────────────────────
+
+export interface SellerEarningsSummary {
+  totalEarnings: bigint;
+  totalShippingCosts: bigint;
+  totalOrders: bigint;
+}
+
+export function useGetSellerEarningsSummary() {
+  return useQuery<SellerEarningsSummary>({
+    queryKey: ["sellerEarningsSummary"],
+    queryFn: async () => {
+      return {
+        totalEarnings: BigInt(0),
+        totalShippingCosts: BigInt(0),
+        totalOrders: BigInt(0),
+      };
     },
   });
 }
 
-// ─── Business Verification ───────────────────────────────────────────────────
+// ─── Admin Center Analytics (stub) ──────────────────────────────────────────
+
+export function useGetAdminCenterAnalytics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ["adminCenterAnalytics"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      // Derive analytics from transaction ledger
+      const transactions = await actor.getTransactionLedger();
+      const totalTransactions = transactions.length;
+      const successful = transactions.filter((t) => t.status === "successful");
+      const failed = transactions.filter((t) => t.status === "failed");
+      const totalRevenueCents = successful.reduce(
+        (sum, t) => sum + Number(t.amountCents),
+        0
+      );
+      return {
+        totalTransactions,
+        totalRevenueCents,
+        successfulPayments: successful.length,
+        failedPayments: failed.length,
+        pendingPayments: 0,
+        averageTransactionAmountCents:
+          successful.length > 0 ? totalRevenueCents / successful.length : 0,
+        failedToSuccessRatio:
+          successful.length > 0 ? failed.length / successful.length : 0,
+        attemptsPerSuccessfulTransaction:
+          successful.length > 0 ? totalTransactions / successful.length : 0,
+      };
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Pending Role Applications (stub) ────────────────────────────────────────
+
+export interface RoleApplication {
+  applicant: string;
+  requestedRole: string;
+  reason: string;
+  applicationDate: number;
+  status: "pending" | "approved" | "rejected";
+}
+
+export function useGetPendingRoleApplications() {
+  return useQuery<RoleApplication[]>({
+    queryKey: ["pendingRoleApplications"],
+    queryFn: async () => {
+      return [] as RoleApplication[];
+    },
+  });
+}
+
+export function useApproveRoleApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (_applicant: Principal) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pendingRoleApplications"] });
+    },
+  });
+}
+
+export function useRejectRoleApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (_applicant: Principal) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pendingRoleApplications"] });
+    },
+  });
+}
+
+// ─── Business Verification (stub) ────────────────────────────────────────────
 
 export function useUpdateBusinessVerificationStatus() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (_status: string) => {},
+    mutationFn: async (_status: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["businessVerification"] });
+    },
+  });
+}
+
+// ─── User Activities (stub) ──────────────────────────────────────────────────
+
+export interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  resourceLink: string;
+  isCompleted: boolean;
+}
+
+export function useGetUserActivities() {
+  return useQuery<Activity[]>({
+    queryKey: ["userActivities"],
+    queryFn: async () => {
+      return [] as Activity[];
+    },
   });
 }
 
 // ─── Funnel Partner ──────────────────────────────────────────────────────────
 
-export function useUpdateFunnelPartner() {
-  return useMutation({
-    mutationFn: async (_partner: { partnerName: string; signupLink: string; profileLink: string }) => {},
+export interface FunnelPartner {
+  partnerName: string;
+  signupLink: string;
+  profileLink: string;
+}
+
+export function useGetFunnelPartner() {
+  return useQuery<FunnelPartner>({
+    queryKey: ["funnelPartner"],
+    queryFn: async () => {
+      return {
+        partnerName: "ClickFunnels",
+        signupLink:
+          "https://clickfunnels.com/signup-flow?aff=anc_marketplace_sellers",
+        profileLink: "https://app.clickfunnels.com/my-profile",
+      };
+    },
   });
 }
 
-// ─── User Activities ─────────────────────────────────────────────────────────
-
-export function useGetUserActivities() {
-  return useQuery({
-    queryKey: ['userActivities'],
-    queryFn: async () => [] as any[],
+export function useUpdateFunnelPartner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (_partner: FunnelPartner) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["funnelPartner"] });
+    },
   });
 }

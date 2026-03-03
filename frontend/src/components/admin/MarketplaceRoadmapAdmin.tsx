@@ -13,7 +13,8 @@ export default function MarketplaceRoadmapAdmin() {
 
   const handleRefresh = async () => {
     try {
-      await updateRoadmap.mutateAsync();
+      // Pass undefined as the stub accepts an optional argument
+      await updateRoadmap.mutateAsync(undefined);
     } catch {
       // stub — no-op
     }
@@ -34,7 +35,8 @@ export default function MarketplaceRoadmapAdmin() {
 
   if (error) {
     const errorMessage = String(error);
-    const isPermissionError = errorMessage.includes('Permission denied') || errorMessage.includes('Unauthorized');
+    const isPermissionError =
+      errorMessage.includes('Permission denied') || errorMessage.includes('Unauthorized');
 
     return (
       <Card className="border-destructive/20 shadow-md">
@@ -44,7 +46,9 @@ export default function MarketplaceRoadmapAdmin() {
             {isPermissionError ? 'Access Denied' : 'Error Loading Roadmap'}
           </CardTitle>
           <CardDescription>
-            {isPermissionError ? 'You do not have permission to view the roadmap' : 'Failed to load roadmap data'}
+            {isPermissionError
+              ? 'You do not have permission to view the roadmap'
+              : 'Failed to load roadmap data'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,9 +90,15 @@ export default function MarketplaceRoadmapAdmin() {
               className="flex-shrink-0"
             >
               {updateRoadmap.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
               ) : (
-                <><RefreshCw className="mr-2 h-4 w-4" />Refresh</>
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh
+                </>
               )}
             </Button>
           </div>
@@ -97,7 +107,9 @@ export default function MarketplaceRoadmapAdmin() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Overall Progress</span>
-              <span className="font-semibold text-primary">{completedCount} of {totalCount} completed</span>
+              <span className="font-semibold text-primary">
+                {completedCount} of {totalCount} completed
+              </span>
             </div>
             <Progress value={overallProgress} className="h-3" />
             <p className="text-sm text-muted-foreground">{overallProgress}% complete</p>
@@ -105,7 +117,9 @@ export default function MarketplaceRoadmapAdmin() {
           {updateRoadmap.isSuccess && (
             <Alert className="border-primary bg-primary/5 mt-4">
               <CheckCircle2 className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-primary">Roadmap updated successfully!</AlertDescription>
+              <AlertDescription className="text-primary">
+                Roadmap refreshed successfully!
+              </AlertDescription>
             </Alert>
           )}
           {updateRoadmap.isError && (
@@ -119,11 +133,18 @@ export default function MarketplaceRoadmapAdmin() {
 
       <div className="grid gap-4">
         {roadmapItems.map((item) => (
-          <Card key={item.roadmapId} className="border-primary/20 shadow-md hover:shadow-lg transition-shadow">
+          <Card
+            key={item.roadmapId}
+            className="border-primary/20 shadow-md hover:shadow-lg transition-shadow"
+          >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <div className={`p-2 rounded-lg mt-0.5 ${item.completed ? 'bg-primary/10' : 'bg-muted'}`}>
+                  <div
+                    className={`p-2 rounded-lg mt-0.5 ${
+                      item.completed ? 'bg-primary/10' : 'bg-muted'
+                    }`}
+                  >
                     {item.completed ? (
                       <CheckCircle2 className="h-5 w-5 text-primary" />
                     ) : (
@@ -156,7 +177,10 @@ export default function MarketplaceRoadmapAdmin() {
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>Last updated: {new Date(Number(item.lastUpdated) / 1000000).toLocaleDateString()}</span>
+                <span>
+                  Last updated:{' '}
+                  {new Date(Number(item.lastUpdated) / 1_000_000).toLocaleDateString()}
+                </span>
               </div>
             </CardContent>
           </Card>

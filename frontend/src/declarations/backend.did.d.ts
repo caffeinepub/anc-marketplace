@@ -47,6 +47,18 @@ export interface CreditAccount {
   'creditLimitCents' : bigint,
   'usedAmountCents' : bigint,
 }
+export type DepositStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'failed' : null };
+export interface DepositTransaction {
+  'id' : string,
+  'status' : DepositStatus,
+  'completedAt' : [] | [Time],
+  'createdAt' : Time,
+  'amountCents' : bigint,
+  'currency' : string,
+  'stripeSessionId' : string,
+}
 export interface EcomOrder {
   'status' : OrderStatus,
   'sellerPrincipal' : [] | [Principal],
@@ -75,7 +87,7 @@ export interface PayoutTransactionRecord {
     { 'failed' : null },
   'createdAt' : Time,
   'description' : string,
-  'currency' : Uint8Array,
+  'currency' : string,
   'amount' : bigint,
 }
 export type PayoutTransferStatus = { 'pending' : null } |
@@ -126,6 +138,19 @@ export type StripeSessionStatus = {
     'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
   } |
   { 'failed' : { 'error' : string } };
+export interface StripeWebhookEvent {
+  'eventId' : string,
+  'receivedAt' : bigint,
+  'payload' : string,
+  'eventType' : StripeWebhookEventType,
+}
+export type StripeWebhookEventType = { 'customerSubscriptionCreated' : null } |
+  { 'customerSubscriptionDeleted' : null } |
+  { 'checkoutSessionCompleted' : null } |
+  { 'invoicePaid' : null } |
+  { 'customerSubscriptionUpdated' : null } |
+  { 'invoicePaymentFailed' : null } |
+  { 'unknown' : null };
 export type Time = bigint;
 export interface TransactionRecord {
   'id' : string,
@@ -212,14 +237,17 @@ export interface _SERVICE {
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'createDepositCheckoutSession' : ActorMethod<[bigint, string], string>,
   'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
   'getAllOrders' : ActorMethod<[], Array<EcomOrder>>,
   'getAllPayoutTransfers' : ActorMethod<[], Array<SellerPayoutTransferRecord>>,
   'getAllSellerPayoutProfiles' : ActorMethod<[], Array<SellerPayoutProfile>>,
   'getAllUsers' : ActorMethod<[], Array<UserWithRole>>,
+  'getCallerDepositTransactions' : ActorMethod<[], Array<DepositTransaction>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCustomerOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getDepositLedger' : ActorMethod<[], Array<DepositTransaction>>,
   'getFinancialOverview' : ActorMethod<[], AdminDashboardData>,
   'getKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
@@ -236,6 +264,7 @@ export interface _SERVICE {
   'getTransactions' : ActorMethod<[], Array<PayoutTransactionRecord>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
+  'handleStripeWebhook' : ActorMethod<[StripeWebhookEvent], undefined>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,

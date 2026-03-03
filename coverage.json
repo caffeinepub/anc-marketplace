@@ -1,59 +1,59 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T09:32:55.318Z",
+  "generatedAt": "2026-03-03T04:10:52.619Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 3,
-    "implemented": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "In the Deposit tab of the transaction history / financial overview, display the gross deposited amount as $77,957.38.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-          "frontend/src/pages/AdminCenterPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
-        ]
+        "summary": "In the backend (main.mo), configure all outgoing payment notification/webhook HTTP outcalls to POST payment data to the Zapier webhook URL: https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/. This should fire whenever a payment event occurs (order payment, deposit, Stripe checkout completion, payout, or fee collection).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Deduct the Payroll Savings allocation of $4,276.22 from the gross deposit of $77,957.38, and display the resulting net available balance of $73,681.16 in the financial overview / available balance display.",
+        "summary": "In the admin payments panel (frontend/src/components/admin/payments/PaymentsPanel.tsx and related payment components), display the configured Zapier webhook URL so admins can verify it is set correctly. Add a read-only field or info badge showing the active payment webhook endpoint.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
+          "frontend/src/components/admin/payments/PaymentsPanel.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/financial/FinancialOverviewCards.tsx"
+          "frontend/src/components/admin/payments/PaymentsPanel.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Create a transaction ledger entry for the Payroll Savings internal transfer of $4,276.22. The entry must include a unique auto-generated transaction number, label the entry as a Payroll Savings transfer (internal allocation), and appear in the transaction history list alongside other records.",
+        "summary": "Fix the Admin Center access control so that the authenticated owner/admin user is recognized and granted admin access, resolving the 'Admin Access Required' lock screen shown in the screenshot. Ensure the access control initialization on page load correctly identifies the admin principal.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
-          "frontend/src/pages/AdminCenterPage.tsx"
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx"
+          "frontend/src/pages/AdminCenterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/admin/financial/FinancialOverviewCards.tsx",
-    "frontend/src/components/admin/transactions/AdminTransactionsPanel.tsx",
+    "frontend/src/components/admin/RoleApplicationsPanel.tsx",
+    "frontend/src/components/admin/analytics/SalesMetricsCards.tsx",
+    "frontend/src/components/admin/payments/PaymentsPanel.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminCenterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
