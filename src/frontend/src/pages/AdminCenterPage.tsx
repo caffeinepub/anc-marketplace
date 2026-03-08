@@ -8,6 +8,7 @@ import { useIsCallerAdmin } from "../hooks/useQueries";
 
 import AdminAccessLinksPanel from "../components/admin/AdminAccessLinksPanel";
 import MarketplaceRoadmapAdmin from "../components/admin/MarketplaceRoadmapAdmin";
+import RoleApplicationsPanel from "../components/admin/RoleApplicationsPanel";
 import UserRoleManagement from "../components/admin/UserRoleManagement";
 import AllAccountsPanel from "../components/admin/accounts/AllAccountsPanel";
 import SalesReportsPanel from "../components/admin/analytics/SalesReportsPanel";
@@ -20,6 +21,7 @@ import AdminMessagingPanel from "../components/admin/messaging/AdminMessagingPan
 // Admin panel components
 import PaymentProcessorsPanel from "../components/admin/payments/PaymentProcessorsPanel";
 import PaymentsPanel from "../components/admin/payments/PaymentsPanel";
+import AdminSettingsPanel from "../components/admin/settings/AdminSettingsPanel";
 import AdminTransactionsPanel from "../components/admin/transactions/AdminTransactionsPanel";
 import TransferPanel from "../components/admin/transfers/TransferPanel";
 
@@ -134,6 +136,8 @@ export default function AdminCenterPage() {
 
             <TabsContent value="settings">
               <div className="space-y-6">
+                <AdminSettingsPanel />
+                <RoleApplicationsPanel />
                 <AdminAccessLinksPanel />
               </div>
             </TabsContent>

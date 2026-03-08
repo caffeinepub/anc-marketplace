@@ -8,8 +8,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DollarSign, Info, Lock, PiggyBank, TrendingUp } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import type { AdminFinancialState } from "../../../backend";
+import { useAdminBalance } from "../../../hooks/useAdminBalance";
 
 // Correct financial constants (in cents)
 // Deposit: $77,957.38 = 7,795,738 cents
@@ -18,32 +19,6 @@ import type { AdminFinancialState } from "../../../backend";
 export const CORRECT_DEPOSIT_CENTS = 7_795_738;
 export const CORRECT_PAYROLL_SAVINGS_CENTS = 427_622;
 export const CORRECT_AVAILABLE_BALANCE_CENTS = 7_368_116;
-
-const PAYROLL_SAVINGS_KEY = "admin_payroll_savings";
-
-function initPayrollSavings(): number {
-  try {
-    const stored = localStorage.getItem(PAYROLL_SAVINGS_KEY);
-    if (stored === null) {
-      localStorage.setItem(
-        PAYROLL_SAVINGS_KEY,
-        String(CORRECT_PAYROLL_SAVINGS_CENTS),
-      );
-      return CORRECT_PAYROLL_SAVINGS_CENTS;
-    }
-    const parsed = Number.parseInt(stored, 10);
-    if (Number.isNaN(parsed) || parsed === 0) {
-      localStorage.setItem(
-        PAYROLL_SAVINGS_KEY,
-        String(CORRECT_PAYROLL_SAVINGS_CENTS),
-      );
-      return CORRECT_PAYROLL_SAVINGS_CENTS;
-    }
-    return parsed;
-  } catch {
-    return CORRECT_PAYROLL_SAVINGS_CENTS;
-  }
-}
 
 interface FinancialOverviewCardsProps {
   financialState?: AdminFinancialState;
@@ -62,7 +37,7 @@ export default function FinancialOverviewCards({
   financialState,
   isLoading,
 }: FinancialOverviewCardsProps) {
-  const [payrollSavings] = useState<number>(() => initPayrollSavings());
+  const { availableCents, payrollCents } = useAdminBalance();
 
   if (isLoading) {
     return (
@@ -81,9 +56,8 @@ export default function FinancialOverviewCards({
     );
   }
 
-  // Use the correct available balance: $73,681.16
-  // = $77,957.38 (gross deposit) - $4,276.22 (Payroll Savings allocation)
-  const availableFunds = CORRECT_AVAILABLE_BALANCE_CENTS;
+  // Use reactive balance from useAdminBalance hook
+  const availableFunds = availableCents;
 
   const creditLimit =
     financialState?.creditAccount.creditLimitCents ?? BigInt(0);
@@ -178,7 +152,7 @@ export default function FinancialOverviewCards({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-700">
-              {formatCents(payrollSavings)}
+              {formatCents(payrollCents)}
             </div>
             <Badge className="mt-1 bg-purple-100 text-purple-700 border-purple-200 text-xs">
               Virtual Wallet Pool

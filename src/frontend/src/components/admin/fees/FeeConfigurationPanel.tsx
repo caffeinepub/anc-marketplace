@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,32 +8,59 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2, DollarSign } from "lucide-react";
-import React from "react";
+import { CheckCircle2, DollarSign, Loader2 } from "lucide-react";
+import React, { useEffect } from "react";
+import { toast } from "sonner";
+
+const FEE_KEY = "admin_fee_config";
+
+function loadSavedFee(): string {
+  try {
+    const stored = localStorage.getItem(FEE_KEY);
+    if (!stored) return "5.00";
+    const parsed = JSON.parse(stored);
+    return parsed.saleFee ?? "5.00";
+  } catch {
+    return "5.00";
+  }
+}
 
 export default function FeeConfigurationPanel() {
   const [saleFee, setSaleFee] = React.useState("5.00");
   const [isSaving, setIsSaving] = React.useState(false);
-  const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+  // Load saved fee on mount
+  useEffect(() => {
+    setSaleFee(loadSavedFee());
+  }, []);
 
   const handleSave = async () => {
+    const numFee = Number.parseFloat(saleFee);
+    if (Number.isNaN(numFee) || numFee < 0) {
+      toast.error("Please enter a valid fee amount.");
+      return;
+    }
     setIsSaving(true);
-    setSaveSuccess(false);
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Simulate save operation (backend integration pending)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      localStorage.setItem(
+        FEE_KEY,
+        JSON.stringify({ saleFee: numFee.toFixed(2) }),
+      );
+      toast.success(`Per-sale fee updated to $${numFee.toFixed(2)}`);
+    } catch {
+      toast.error("Failed to save fee configuration.");
+    }
 
     setIsSaving(false);
-    setSaveSuccess(true);
-
-    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5" />
+          <DollarSign className="h-5 w-5 text-emerald-600" />
           Fee Configuration
         </CardTitle>
         <CardDescription>
@@ -42,14 +68,6 @@ export default function FeeConfigurationPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Fee configuration is currently view-only. Backend integration for
-            fee updates is on the roadmap.
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-2">
           <Label htmlFor="sale-fee">Per-Sale Service Fee (USD)</Label>
           <div className="flex gap-2">
@@ -65,26 +83,33 @@ export default function FeeConfigurationPanel() {
                 value={saleFee}
                 onChange={(e) => setSaleFee(e.target.value)}
                 className="pl-7"
-                disabled
+                data-ocid="fees.sale_fee.input"
               />
             </div>
-            <Button onClick={handleSave} disabled={isSaving || true}>
-              {isSaving ? "Saving..." : "Save"}
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              data-ocid="fees.save.primary_button"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Save
+                </>
+              )}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Current fee: $5.00 per marketplace sale
+            Non-refundable fee charged per marketplace sale. Currently: $
+            {saleFee} per sale.
           </p>
         </div>
-
-        {saveSuccess && (
-          <Alert>
-            <CheckCircle2 className="h-4 w-4" />
-            <AlertDescription>
-              Fee configuration saved successfully.
-            </AlertDescription>
-          </Alert>
-        )}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,4 @@
 import { DepositStatus } from "@/backend";
-import { CORRECT_AVAILABLE_BALANCE_CENTS } from "@/components/admin/financial/FinancialOverviewCards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
+import { useAdminBalance } from "@/hooks/useAdminBalance";
 import { useGetAdminFinancialState } from "@/hooks/useQueries";
 import { useStripeBalance } from "@/hooks/useStripeBalance";
 import { useStripePayout } from "@/hooks/useStripePayout";
@@ -107,6 +107,7 @@ export default function PaymentsPanel() {
   const queryClient = useQueryClient();
   useGetAdminFinancialState();
   const stripePayout = useStripePayout();
+  const { availableCents, deductFromAvailable } = useAdminBalance();
   const {
     data: stripeBalance,
     isLoading: stripeBalanceLoading,
@@ -143,8 +144,8 @@ export default function PaymentsPanel() {
     },
   });
 
-  // Always use the correct available balance ($73,681.16)
-  const availableBalance = CORRECT_AVAILABLE_BALANCE_CENTS;
+  // Use reactive balance from useAdminBalance hook
+  const availableBalance = availableCents;
 
   const recentTransactions = transactions.slice(-10).reverse();
   const isNonStripe = recipientType !== "stripe";
@@ -202,6 +203,7 @@ export default function PaymentsPanel() {
           stripePayoutId: result.payout.id,
         };
 
+        deductFromAvailable(amountCents);
         persistTransactions([...transactions, newRecord]);
         toast.success(
           `Stripe payout of ${formatCents(amountCents)} initiated successfully!`,
@@ -249,6 +251,7 @@ export default function PaymentsPanel() {
         timestamp: new Date().toISOString(),
         status: "successful",
       };
+      deductFromAvailable(amountCents);
       persistTransactions([...transactions, newRecord]);
       toast.success(
         `Payment of ${formatCents(amountCents)} to ${data.recipientName || RECIPIENT_LABELS[recipientType]} recorded.`,

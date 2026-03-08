@@ -1,8 +1,4 @@
 import { DepositStatus } from "@/backend";
-import {
-  CORRECT_AVAILABLE_BALANCE_CENTS,
-  CORRECT_PAYROLL_SAVINGS_CENTS,
-} from "@/components/admin/financial/FinancialOverviewCards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +15,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
+import { useAdminBalance } from "@/hooks/useAdminBalance";
 import { useGetAdminFinancialState, useGetAllUsers } from "@/hooks/useQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -94,35 +91,20 @@ function StatusBadge({ status }: { status: "successful" | "failed" }) {
   );
 }
 
-function initPayrollSavings(): number {
-  try {
-    const stored = localStorage.getItem("admin_payroll_savings");
-    if (stored === null) {
-      localStorage.setItem(
-        "admin_payroll_savings",
-        String(CORRECT_PAYROLL_SAVINGS_CENTS),
-      );
-      return CORRECT_PAYROLL_SAVINGS_CENTS;
-    }
-    const parsed = Number.parseInt(stored, 10);
-    if (Number.isNaN(parsed) || parsed === 0) {
-      localStorage.setItem(
-        "admin_payroll_savings",
-        String(CORRECT_PAYROLL_SAVINGS_CENTS),
-      );
-      return CORRECT_PAYROLL_SAVINGS_CENTS;
-    }
-    return parsed;
-  } catch {
-    return CORRECT_PAYROLL_SAVINGS_CENTS;
-  }
-}
-
 export default function TransferPanel() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   const { data: financialState } = useGetAdminFinancialState();
   const { data: allUsers = [] } = useGetAllUsers();
+  const {
+    availableCents,
+    payrollCents,
+    creditCents,
+    deductFromAvailable,
+    deductFromPayroll,
+    deductFromCredit,
+    addToPayroll,
+  } = useAdminBalance();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [source, setSource] = useState<TransferSource>("available");
   const [destination, setDestination] =
@@ -153,16 +135,18 @@ export default function TransferPanel() {
     },
   });
 
-  // Use correct balances from shared constants
-  const availableBalance = CORRECT_AVAILABLE_BALANCE_CENTS;
-  const payrollSavings = initPayrollSavings();
+  // Use reactive balances from useAdminBalance hook
+  const availableBalance = availableCents;
+  const payrollSavings = payrollCents;
   const creditLimit = Number(
     financialState?.creditAccount.creditLimitCents ?? BigInt(0),
   );
   const creditUsed = Number(
     financialState?.creditAccount.usedAmountCents ?? BigInt(0),
   );
-  const creditAvailable = creditLimit - creditUsed;
+  // Use hook's creditCents if financial state is not loaded yet
+  const creditAvailable =
+    creditLimit > 0 ? creditLimit - creditUsed : creditCents;
 
   const getSourceBalance = (src: TransferSource): number => {
     if (src === "available") return availableBalance;
@@ -219,6 +203,14 @@ export default function TransferPanel() {
             data.platformUserId ||
             "Platform User"
           : DEST_LABELS[data.destination];
+
+      // Deduct from source balance
+      if (data.source === "available") deductFromAvailable(amountCents);
+      else if (data.source === "payroll") deductFromPayroll(amountCents);
+      else if (data.source === "credit") deductFromCredit(amountCents);
+
+      // Add to destination if payroll savings
+      if (data.destination === "payroll_savings") addToPayroll(amountCents);
 
       const newRecord: LocalTransferRecord = {
         id: `transfer_${Date.now()}`,
