@@ -47,6 +47,18 @@ export interface CreditAccount {
   'creditLimitCents' : bigint,
   'usedAmountCents' : bigint,
 }
+export type DepositStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'failed' : null };
+export interface DepositTransaction {
+  'id' : string,
+  'status' : DepositStatus,
+  'completedAt' : [] | [Time],
+  'createdAt' : Time,
+  'amountCents' : bigint,
+  'currency' : string,
+  'stripeSessionId' : string,
+}
 export interface EcomOrder {
   'status' : OrderStatus,
   'sellerPrincipal' : [] | [Principal],
@@ -68,6 +80,16 @@ export type OrderStatus = { 'cancelled' : null } |
   { 'pending' : null } |
   { 'completed' : null } |
   { 'inProgress' : null };
+export interface PayoutTransactionRecord {
+  'id' : string,
+  'status' : { 'pending' : null } |
+    { 'completed' : null } |
+    { 'failed' : null },
+  'createdAt' : Time,
+  'description' : string,
+  'currency' : string,
+  'amount' : bigint,
+}
 export type PayoutTransferStatus = { 'pending' : null } |
   { 'processed' : null } |
   { 'failed' : null };
@@ -116,6 +138,20 @@ export type StripeSessionStatus = {
     'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
   } |
   { 'failed' : { 'error' : string } };
+export interface StripeWebhookEvent {
+  'eventId' : string,
+  'receivedAt' : bigint,
+  'payload' : string,
+  'eventType' : StripeWebhookEventType,
+}
+export type StripeWebhookEventType = { 'customerSubscriptionCreated' : null } |
+  { 'customerSubscriptionDeleted' : null } |
+  { 'checkoutSessionCompleted' : null } |
+  { 'invoicePaid' : null } |
+  { 'customerSubscriptionUpdated' : null } |
+  { 'invoicePaymentFailed' : null } |
+  { 'unknown' : null };
+export type Time = bigint;
 export interface TransactionRecord {
   'id' : string,
   'status' : { 'successful' : null } |
@@ -197,21 +233,26 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
+  'completeDepositSession' : ActorMethod<[string], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
+  'createDepositCheckoutSession' : ActorMethod<[bigint, string], string>,
   'getAdminFinancialState' : ActorMethod<[], AdminFinancialState>,
   'getAllOrders' : ActorMethod<[], Array<EcomOrder>>,
   'getAllPayoutTransfers' : ActorMethod<[], Array<SellerPayoutTransferRecord>>,
   'getAllSellerPayoutProfiles' : ActorMethod<[], Array<SellerPayoutProfile>>,
   'getAllUsers' : ActorMethod<[], Array<UserWithRole>>,
+  'getCallerDepositTransactions' : ActorMethod<[], Array<DepositTransaction>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCustomerOrders' : ActorMethod<[], Array<EcomOrder>>,
+  'getDepositLedger' : ActorMethod<[], Array<DepositTransaction>>,
   'getFinancialOverview' : ActorMethod<[], AdminDashboardData>,
   'getKnowledgeBase' : ActorMethod<[], Array<AssistantKnowledgeEntry>>,
   'getOnboarding' : ActorMethod<[], [] | [SellerOnboardingProgress]>,
+  'getSellerBalance' : ActorMethod<[], bigint>,
   'getSellerOrders' : ActorMethod<[], Array<EcomOrder>>,
   'getSellerPayoutProfile' : ActorMethod<[], [] | [SellerPayoutProfile]>,
   'getSellerPayoutTransfers' : ActorMethod<
@@ -221,11 +262,15 @@ export interface _SERVICE {
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getTransactionLedger' : ActorMethod<[], Array<TransactionRecord>>,
   'getTransactionRecordById' : ActorMethod<[string], [] | [TransactionRecord]>,
+  'getTransactions' : ActorMethod<[], Array<PayoutTransactionRecord>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserRoleSummary' : ActorMethod<[], UserRoleSummary>,
+  'handleStripeWebhook' : ActorMethod<[StripeWebhookEvent], undefined>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'recordDepositSession' : ActorMethod<[string, bigint, string], undefined>,
+  'recordTransaction' : ActorMethod<[PayoutTransactionRecord], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,

@@ -1,6 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -11,7 +9,7 @@ interface State {
   error: Error | null;
 }
 
-export default class RuntimeErrorBoundary extends Component<Props, State> {
+export class RuntimeErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -22,58 +20,57 @@ export default class RuntimeErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Runtime error caught by boundary:', error, errorInfo);
+    console.error("RuntimeErrorBoundary caught:", error, errorInfo);
   }
 
   componentDidMount() {
-    // Catch unhandled promise rejections during startup
-    window.addEventListener('unhandledrejection', this.handleUnhandledRejection);
+    window.addEventListener(
+      "unhandledrejection",
+      this.handleUnhandledRejection,
+    );
   }
 
   componentWillUnmount() {
-    window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
+    window.removeEventListener(
+      "unhandledrejection",
+      this.handleUnhandledRejection,
+    );
   }
 
   handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    this.setState({
-      hasError: true,
-      error: event.reason instanceof Error ? event.reason : new Error(String(event.reason))
-    });
-  };
-
-  handleRefresh = () => {
-    window.location.reload();
+    console.error("Unhandled promise rejection:", event.reason);
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full bg-card border border-border rounded-lg p-6 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="h-8 w-8 text-destructive flex-shrink-0" />
-              <h1 className="text-2xl font-bold">Application Error</h1>
-            </div>
-            <p className="text-muted-foreground mb-4">
-              An unexpected error occurred during application startup or runtime. This may be due to a configuration issue or network problem. Please try refreshing the page to restart the application.
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+          <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Something went wrong
+            </h1>
+            <p className="text-gray-600 mb-4">
+              An unexpected error occurred. Please refresh the page to try
+              again.
             </p>
             {this.state.error && (
-              <details className="mb-4 p-3 bg-muted rounded text-sm">
-                <summary className="cursor-pointer font-medium mb-2">Technical details</summary>
-                <pre className="whitespace-pre-wrap break-words text-xs mt-2">
-                  {this.state.error.toString()}
-                  {this.state.error.stack && `\n\n${this.state.error.stack}`}
+              <details className="text-left mb-4 p-3 bg-gray-100 rounded text-xs text-gray-700">
+                <summary className="cursor-pointer font-medium">
+                  Technical details
+                </summary>
+                <pre className="mt-2 whitespace-pre-wrap break-all">
+                  {this.state.error.message}
                 </pre>
               </details>
             )}
-            <Button
-              onClick={this.handleRefresh}
-              className="w-full"
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
               Refresh Page
-            </Button>
+            </button>
           </div>
         </div>
       );

@@ -1,5 +1,5 @@
-import { useGetCallerUserProfile } from './useQueries';
-import { UserRole } from '../backend';
+import { UserRole } from "../backend";
+import { useGetCallerUserProfile } from "./useQueries";
 
 export function useRoleBasedRedirect() {
   const { data: userProfile, isLoading } = useGetCallerUserProfile();
@@ -9,18 +9,17 @@ export function useRoleBasedRedirect() {
 
     switch (userProfile.activeRole) {
       case UserRole.seller:
-        return '/seller/dashboard';
+        return "/seller/dashboard";
       case UserRole.customer:
-        return '/customer-dashboard';
+        return "/customer-dashboard";
       case UserRole.business:
-        return '/business-dashboard';
+        return "/business-dashboard";
       case UserRole.marketer:
-        return '/affiliate-dashboard';
+        return "/affiliate-dashboard";
       case UserRole.employee:
-        return '/employee-dashboard';
+        return "/employee-dashboard";
       case UserRole.admin:
-        return '/admin';
-      case UserRole.guest:
+        return "/admin";
       default:
         return null;
     }

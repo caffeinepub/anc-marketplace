@@ -1,49 +1,75 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Phone, Mic, MicOff, Volume2, VolumeX, Radio } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAskAssistant } from '../../hooks/useAssistant';
-import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
-import { useTextToSpeech } from '../../hooks/useTextToSpeech';
-import { usePageActivity } from '../../hooks/usePageActivity';
-import { useVoiceSettings } from '../../contexts/VoiceSettingsContext';
-import { isSpeechRecognitionSupported, isSpeechSynthesisSupported } from '../../lib/voice/browserVoice';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  Loader2,
+  Mic,
+  MicOff,
+  Phone,
+  Radio,
+  Send,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useVoiceSettings } from "../../contexts/VoiceSettingsContext";
+import { useAskAssistant } from "../../hooks/useAssistant";
+import { usePageActivity } from "../../hooks/usePageActivity";
+import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
+import { useTextToSpeech } from "../../hooks/useTextToSpeech";
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+} from "../../lib/voice/browserVoice";
 
 type Message = {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   showEscalation?: boolean;
 };
 
-type AssistantMode = 'Customer' | 'Seller' | 'Website/App Builder' | 'Business Operations';
+type AssistantMode =
+  | "Customer"
+  | "Seller"
+  | "Website/App Builder"
+  | "Business Operations";
 
 const MODE_PLACEHOLDERS: Record<AssistantMode, string> = {
-  'Customer': 'Ask about customer help...',
-  'Seller': 'Ask about seller help...',
-  'Website/App Builder': 'Ask about website & app builder...',
-  'Business Operations': 'Ask about funnels, reports, onboarding, advertising...',
+  Customer: "Ask about customer help...",
+  Seller: "Ask about seller help...",
+  "Website/App Builder": "Ask about website & app builder...",
+  "Business Operations":
+    "Ask about funnels, reports, onboarding, advertising...",
 };
 
 interface AssistantChatPanelProps {
   isOpen: boolean;
 }
 
-export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) {
-  const [mode, setMode] = useState<AssistantMode>('Customer');
+export default function AssistantChatPanel({
+  isOpen,
+}: AssistantChatPanelProps) {
+  const [mode, setMode] = useState<AssistantMode>("Customer");
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m the ANC Assistant. I can help customers with purchasing and support, sellers with onboarding and selling, guide you through our Website & App Builder, and assist with business operations like funnels, reports, onboarding, and advertising. Select your mode above and ask me anything!',
+      id: "1",
+      role: "assistant",
+      content:
+        "Hello! I'm the ANC Assistant. I can help customers with purchasing and support, sellers with onboarding and selling, guide you through our Website & App Builder, and assist with business operations like funnels, reports, onboarding, and advertising. Select your mode above and ask me anything!",
     },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const askAssistant = useAskAssistant();
@@ -91,7 +117,8 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
     isSupported: isTTSAvailable,
   } = useTextToSpeech();
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-runs on messages/transcript change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -100,7 +127,12 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
 
   // Handle voice activation mode
   useEffect(() => {
-    if (preferences.voiceActivationEnabled && isOpen && isPageActive && canStartRecognition) {
+    if (
+      preferences.voiceActivationEnabled &&
+      isOpen &&
+      isPageActive &&
+      canStartRecognition
+    ) {
       if (!isListening) {
         startRecognition();
       }
@@ -109,7 +141,15 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
         stopRecognition();
       }
     }
-  }, [preferences.voiceActivationEnabled, isOpen, isPageActive, canStartRecognition, isListening, startRecognition, stopRecognition]);
+  }, [
+    preferences.voiceActivationEnabled,
+    isOpen,
+    isPageActive,
+    canStartRecognition,
+    isListening,
+    startRecognition,
+    stopRecognition,
+  ]);
 
   // Stop speech when widget closes
   useEffect(() => {
@@ -132,12 +172,12 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: input.trim(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput("");
     setIsTyping(true);
 
     // Stop any ongoing speech
@@ -151,8 +191,10 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: answer || 'I apologize, but I don\'t have enough information to answer that question confidently.',
+        role: "assistant",
+        content:
+          answer ||
+          "I apologize, but I don't have enough information to answer that question confidently.",
         showEscalation: !answer,
       };
 
@@ -162,11 +204,11 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
       if (preferences.spokenRepliesEnabled && answer && isTTSAvailable) {
         speak(answer, assistantMessage.id);
       }
-    } catch (error) {
+    } catch (_error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'I\'m sorry, I encountered an error. Please try again.',
+        role: "assistant",
+        content: "I'm sorry, I encountered an error. Please try again.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -175,14 +217,14 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
   const handleMicToggle = async () => {
-    if (micPermissionStatus !== 'granted') {
+    if (micPermissionStatus !== "granted") {
       const granted = await requestMicPermission();
       if (!granted) return;
     }
@@ -195,7 +237,7 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
   };
 
   const handleVoiceActivationToggle = async (enabled: boolean) => {
-    if (enabled && micPermissionStatus !== 'granted') {
+    if (enabled && micPermissionStatus !== "granted") {
       const granted = await requestMicPermission();
       if (!granted) {
         return;
@@ -228,26 +270,36 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
           <Label htmlFor="assistant-mode" className="text-sm font-medium">
             Assistant Mode
           </Label>
-          <Select value={mode} onValueChange={(value) => setMode(value as AssistantMode)}>
+          <Select
+            value={mode}
+            onValueChange={(value) => setMode(value as AssistantMode)}
+          >
             <SelectTrigger id="assistant-mode" className="w-full">
               <SelectValue placeholder="Select mode" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Customer">Customer Help</SelectItem>
               <SelectItem value="Seller">Seller Help</SelectItem>
-              <SelectItem value="Website/App Builder">Website & App Builder</SelectItem>
-              <SelectItem value="Business Operations">Business Operations</SelectItem>
+              <SelectItem value="Website/App Builder">
+                Website & App Builder
+              </SelectItem>
+              <SelectItem value="Business Operations">
+                Business Operations
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Voice Controls */}
-        {voiceFeaturesAvailable && micPermissionStatus === 'granted' && (
+        {voiceFeaturesAvailable && micPermissionStatus === "granted" && (
           <div className="space-y-2 pt-2 border-t">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Radio className="h-4 w-4 text-primary" />
-                <Label htmlFor="voice-activation" className="text-sm font-medium cursor-pointer">
+                <Label
+                  htmlFor="voice-activation"
+                  className="text-sm font-medium cursor-pointer"
+                >
                   Voice Activation
                 </Label>
               </div>
@@ -260,7 +312,10 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Volume2 className="h-4 w-4 text-primary" />
-                <Label htmlFor="spoken-replies" className="text-sm font-medium cursor-pointer">
+                <Label
+                  htmlFor="spoken-replies"
+                  className="text-sm font-medium cursor-pointer"
+                >
                   Spoken Replies
                 </Label>
               </div>
@@ -285,16 +340,18 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
         {!voiceFeaturesAvailable && (
           <Alert className="py-2">
             <AlertDescription className="text-xs">
-              Voice features are not available in your current browser. Please use Chrome, Edge, or Safari for voice support.
+              Voice features are not available in your current browser. Please
+              use Chrome, Edge, or Safari for voice support.
             </AlertDescription>
           </Alert>
         )}
 
         {/* Permission Denied Alert */}
-        {micPermissionStatus === 'denied' && voiceFeaturesAvailable && (
+        {micPermissionStatus === "denied" && voiceFeaturesAvailable && (
           <Alert className="py-2">
             <AlertDescription className="text-xs">
-              Microphone access denied. Please enable it in your browser settings to use voice features.
+              Microphone access denied. Please enable it in your browser
+              settings to use voice features.
             </AlertDescription>
           </Alert>
         )}
@@ -306,39 +363,43 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
             <div key={message.id}>
               <div
                 className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                  message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 <div className="flex flex-col gap-2 max-w-[80%]">
                   <div
                     className={`rounded-lg px-4 py-2 ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content}
+                    </p>
                   </div>
-                  {message.role === 'assistant' && preferences.spokenRepliesEnabled && isTTSAvailable && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handlePlayMessage(message)}
-                      className="self-start h-6 px-2 text-xs"
-                    >
-                      {currentMessageId === message.id && isSpeaking ? (
-                        <>
-                          <VolumeX className="h-3 w-3 mr-1" />
-                          Stop
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 className="h-3 w-3 mr-1" />
-                          Play
-                        </>
-                      )}
-                    </Button>
-                  )}
+                  {message.role === "assistant" &&
+                    preferences.spokenRepliesEnabled &&
+                    isTTSAvailable && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePlayMessage(message)}
+                        className="self-start h-6 px-2 text-xs"
+                      >
+                        {currentMessageId === message.id && isSpeaking ? (
+                          <>
+                            <VolumeX className="h-3 w-3 mr-1" />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="h-3 w-3 mr-1" />
+                            Play
+                          </>
+                        )}
+                      </Button>
+                    )}
                 </div>
               </div>
               {message.showEscalation && (
@@ -346,11 +407,16 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
                   <Alert className="border-primary/50">
                     <Phone className="h-4 w-4" />
                     <AlertDescription className="text-sm">
-                      <p className="font-semibold mb-2">Need to speak with management?</p>
-                      <p className="mb-2">
-                        If you'd like to discuss this with a supervisor, please contact us at:
+                      <p className="font-semibold mb-2">
+                        Need to speak with management?
                       </p>
-                      <p className="font-mono font-bold text-base">352-480-9856</p>
+                      <p className="mb-2">
+                        If you'd like to discuss this with a supervisor, please
+                        contact us at:
+                      </p>
+                      <p className="font-mono font-bold text-base">
+                        352-480-9856
+                      </p>
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -379,10 +445,10 @@ export default function AssistantChatPanel({ isOpen }: AssistantChatPanelProps) 
           {voiceFeaturesAvailable && (
             <Button
               onClick={handleMicToggle}
-              disabled={isTyping || micPermissionStatus === 'unavailable'}
+              disabled={isTyping || micPermissionStatus === "unavailable"}
               size="icon"
-              variant={isListening ? 'default' : 'outline'}
-              className={isListening ? 'bg-primary animate-pulse' : ''}
+              variant={isListening ? "default" : "outline"}
+              className={isListening ? "bg-primary animate-pulse" : ""}
             >
               {isListening ? (
                 <MicOff className="h-4 w-4" />

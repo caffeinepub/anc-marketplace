@@ -1,9 +1,22 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Store, Image, Palette, Package, Settings as SettingsIcon, HelpCircle } from 'lucide-react';
-import SellerProfilePlaceholderCard from '../components/seller/SellerProfilePlaceholderCard';
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  HelpCircle,
+  Image,
+  Package,
+  Palette,
+  Settings as SettingsIcon,
+  Store,
+} from "lucide-react";
+import React from "react";
+import SellerProfilePlaceholderCard from "../components/seller/SellerProfilePlaceholderCard";
 
 export default function SellerProfilePage() {
   return (
@@ -13,10 +26,13 @@ export default function SellerProfilePage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Store className="h-8 w-8 text-slate-700" />
-            <h1 className="text-3xl font-bold text-slate-900">Seller Profile</h1>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Seller Profile
+            </h1>
           </div>
           <p className="text-slate-600">
-            Manage your seller account, customize your store, and access business tools
+            Manage your seller account, customize your store, and access
+            business tools
           </p>
         </div>
 
@@ -76,16 +92,20 @@ export default function SellerProfilePage() {
         {/* Info Card */}
         <Card className="mt-8 border-2 border-slate-200 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg text-slate-900">Building Your Seller Experience</CardTitle>
+            <CardTitle className="text-lg text-slate-900">
+              Building Your Seller Experience
+            </CardTitle>
             <CardDescription className="text-slate-600">
-              We're actively developing features to help you succeed as a seller on ANC Marketplace.
+              We're actively developing features to help you succeed as a seller
+              on ANC Marketplace.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-slate-600">
-              The sections above represent planned features that will be available soon. Each area will provide
-              powerful tools to help you manage your business, customize your presence, and grow your sales.
-              Stay tuned for updates as we roll out these capabilities.
+              The sections above represent planned features that will be
+              available soon. Each area will provide powerful tools to help you
+              manage your business, customize your presence, and grow your
+              sales. Stay tuned for updates as we roll out these capabilities.
             </p>
           </CardContent>
         </Card>

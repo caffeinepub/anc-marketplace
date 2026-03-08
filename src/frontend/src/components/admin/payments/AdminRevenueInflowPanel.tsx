@@ -1,29 +1,37 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DollarSign, AlertCircle, Loader2 } from 'lucide-react';
-import { useIsStripeConfigured } from '../../../hooks/useQueries';
-import { useCreateCheckoutSession } from '../../../hooks/useStripeCheckout';
-import { PRICING } from '../../../lib/pricingCopy';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle, DollarSign, Loader2 } from "lucide-react";
+import React from "react";
+import { useIsStripeConfigured } from "../../../hooks/useQueries";
+import { useCreateCheckoutSession } from "../../../hooks/useStripeCheckout";
+import { PRICING } from "../../../lib/pricingCopy";
 
 export default function AdminRevenueInflowPanel() {
-  const { data: isStripeConfigured, isLoading: isCheckingStripe } = useIsStripeConfigured();
+  const { data: isStripeConfigured, isLoading: isCheckingStripe } =
+    useIsStripeConfigured();
   const createCheckout = useCreateCheckoutSession();
 
   const handleChargeSaleFee = async () => {
     try {
       await createCheckout.mutateAsync([
         {
-          productName: 'Marketplace Sale Service Fee',
-          productDescription: 'Per-sale service fee for marketplace transaction',
+          productName: "Marketplace Sale Service Fee",
+          productDescription:
+            "Per-sale service fee for marketplace transaction",
           priceInCents: BigInt(PRICING.marketplace.perSaleFeeCents),
           quantity: BigInt(1),
-          currency: 'usd',
+          currency: "usd",
         },
       ]);
     } catch (error) {
-      console.error('Failed to create checkout session:', error);
+      console.error("Failed to create checkout session:", error);
     }
   };
 
@@ -31,15 +39,15 @@ export default function AdminRevenueInflowPanel() {
     try {
       await createCheckout.mutateAsync([
         {
-          productName: 'Store Builder Subscription',
+          productName: "Store Builder Subscription",
           productDescription: PRICING.storeBuilder.description,
           priceInCents: BigInt(PRICING.storeBuilder.monthlyCents),
           quantity: BigInt(1),
-          currency: 'usd',
+          currency: "usd",
         },
       ]);
     } catch (error) {
-      console.error('Failed to create checkout session:', error);
+      console.error("Failed to create checkout session:", error);
     }
   };
 
@@ -64,13 +72,16 @@ export default function AdminRevenueInflowPanel() {
             <DollarSign className="h-5 w-5" />
             Revenue Collection
           </CardTitle>
-          <CardDescription>Process marketplace fees and subscription charges</CardDescription>
+          <CardDescription>
+            Process marketplace fees and subscription charges
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Stripe must be configured before you can process revenue charges. Please configure Stripe in the Payments section above.
+              Stripe must be configured before you can process revenue charges.
+              Please configure Stripe in the Payments section above.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -85,14 +96,19 @@ export default function AdminRevenueInflowPanel() {
           <DollarSign className="h-5 w-5" />
           Revenue Collection
         </CardTitle>
-        <CardDescription>Process marketplace fees and subscription charges via Stripe</CardDescription>
+        <CardDescription>
+          Process marketplace fees and subscription charges via Stripe
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="border-slate-200 dark:border-slate-700">
             <CardHeader>
               <CardTitle className="text-base">Sale Service Fee</CardTitle>
-              <CardDescription>Charge the {PRICING.marketplace.perSaleFee} per-sale marketplace fee</CardDescription>
+              <CardDescription>
+                Charge the {PRICING.marketplace.perSaleFee} per-sale marketplace
+                fee
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
@@ -114,8 +130,13 @@ export default function AdminRevenueInflowPanel() {
 
           <Card className="border-slate-200 dark:border-slate-700">
             <CardHeader>
-              <CardTitle className="text-base">Store Builder Subscription</CardTitle>
-              <CardDescription>Charge the ${PRICING.storeBuilder.monthlyPrice}/month builder fee</CardDescription>
+              <CardTitle className="text-base">
+                Store Builder Subscription
+              </CardTitle>
+              <CardDescription>
+                Charge the ${PRICING.storeBuilder.monthlyPrice}/month builder
+                fee
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
@@ -140,7 +161,8 @@ export default function AdminRevenueInflowPanel() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Failed to create checkout session. Please try again or check your Stripe configuration.
+              Failed to create checkout session. Please try again or check your
+              Stripe configuration.
             </AlertDescription>
           </Alert>
         )}

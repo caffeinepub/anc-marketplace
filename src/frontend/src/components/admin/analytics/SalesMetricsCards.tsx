@@ -1,18 +1,36 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingCart, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
-import type { AdminCenterAnalytics } from '../../../types';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  ShoppingCart,
+  TrendingUp,
+} from "lucide-react";
+import React from "react";
+
+export interface AdminCenterAnalytics {
+  totalTransactions: number;
+  totalRevenueCents: number;
+  successfulPayments: number;
+  failedPayments: number;
+  pendingPayments: number;
+  averageTransactionAmountCents: number;
+  failedToSuccessRatio: number;
+  attemptsPerSuccessfulTransaction: number;
+}
 
 interface SalesMetricsCardsProps {
   analytics: AdminCenterAnalytics;
 }
 
-export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps) {
-  const formatCurrency = (cents: bigint | number): string => {
-    const dollars = Number(cents) / 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+export default function SalesMetricsCards({
+  analytics,
+}: SalesMetricsCardsProps) {
+  const formatCurrency = (cents: number): string => {
+    const dollars = cents / 100;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(dollars);
@@ -20,44 +38,44 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
 
   const metrics = [
     {
-      title: 'Total Revenue',
+      title: "Total Revenue",
       value: formatCurrency(analytics.totalRevenueCents),
       icon: DollarSign,
-      description: 'All-time successful transactions',
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-950',
+      description: "All-time successful transactions",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-50 dark:bg-emerald-950",
     },
     {
-      title: 'Total Sales',
-      value: Number(analytics.successfulPayments).toString(),
+      title: "Total Sales",
+      value: analytics.successfulPayments.toString(),
       icon: ShoppingCart,
-      description: 'Completed transactions',
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-950',
+      description: "Completed transactions",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
-      title: 'Pending Payments',
-      value: Number(analytics.pendingPayments).toString(),
+      title: "Pending Payments",
+      value: analytics.pendingPayments.toString(),
       icon: Clock,
-      description: 'Awaiting completion',
-      color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-50 dark:bg-amber-950',
+      description: "Awaiting completion",
+      color: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-50 dark:bg-amber-950",
     },
     {
-      title: 'Failed Payments',
-      value: Number(analytics.failedPayments).toString(),
+      title: "Failed Payments",
+      value: analytics.failedPayments.toString(),
       icon: AlertTriangle,
-      description: 'Unsuccessful transactions',
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-50 dark:bg-red-950',
+      description: "Unsuccessful transactions",
+      color: "text-red-600 dark:text-red-400",
+      bgColor: "bg-red-50 dark:bg-red-950",
     },
     {
-      title: 'Total Transactions',
-      value: Number(analytics.totalTransactions).toString(),
+      title: "Total Transactions",
+      value: analytics.totalTransactions.toString(),
       icon: TrendingUp,
-      description: 'All payment attempts',
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-950',
+      description: "All payment attempts",
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-950",
     },
   ];
 
@@ -68,14 +86,18 @@ export default function SalesMetricsCards({ analytics }: SalesMetricsCardsProps)
         return (
           <Card key={metric.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {metric.title}
+              </CardTitle>
               <div className={`p-2 rounded-lg ${metric.bgColor}`}>
                 <Icon className={`h-4 w-4 ${metric.color}`} />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metric.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{metric.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {metric.description}
+              </p>
             </CardContent>
           </Card>
         );

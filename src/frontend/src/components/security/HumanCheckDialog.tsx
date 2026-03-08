@@ -1,11 +1,18 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
+import { useState } from "react";
 
 interface HumanCheckDialogProps {
   open: boolean;
@@ -13,10 +20,14 @@ interface HumanCheckDialogProps {
   onVerified: () => void;
 }
 
-export default function HumanCheckDialog({ open, onOpenChange, onVerified }: HumanCheckDialogProps) {
+export default function HumanCheckDialog({
+  open,
+  onOpenChange,
+  onVerified,
+}: HumanCheckDialogProps) {
   const [isHuman, setIsHuman] = useState(false);
-  const [mathAnswer, setMathAnswer] = useState('');
-  const [error, setError] = useState('');
+  const [mathAnswer, setMathAnswer] = useState("");
+  const [error, setError] = useState("");
 
   const num1 = 7;
   const num2 = 3;
@@ -24,20 +35,20 @@ export default function HumanCheckDialog({ open, onOpenChange, onVerified }: Hum
 
   const handleVerify = () => {
     if (!isHuman) {
-      setError('Please confirm you are human');
+      setError("Please confirm you are human");
       return;
     }
 
-    if (parseInt(mathAnswer) !== correctAnswer) {
-      setError('Incorrect answer. Please try again.');
+    if (Number.parseInt(mathAnswer) !== correctAnswer) {
+      setError("Incorrect answer. Please try again.");
       return;
     }
 
     onVerified();
     onOpenChange(false);
     setIsHuman(false);
-    setMathAnswer('');
-    setError('');
+    setMathAnswer("");
+    setError("");
   };
 
   return (
@@ -46,7 +57,8 @@ export default function HumanCheckDialog({ open, onOpenChange, onVerified }: Hum
         <DialogHeader>
           <DialogTitle>Human Verification</DialogTitle>
           <DialogDescription>
-            Please complete this quick verification to continue with your payment.
+            Please complete this quick verification to continue with your
+            payment.
           </DialogDescription>
         </DialogHeader>
 
@@ -57,13 +69,18 @@ export default function HumanCheckDialog({ open, onOpenChange, onVerified }: Hum
               checked={isHuman}
               onCheckedChange={(checked) => setIsHuman(checked === true)}
             />
-            <Label htmlFor="human-check" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <Label
+              htmlFor="human-check"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               I am a human
             </Label>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="math-challenge">What is {num1} + {num2}?</Label>
+            <Label htmlFor="math-challenge">
+              What is {num1} + {num2}?
+            </Label>
             <Input
               id="math-challenge"
               type="number"

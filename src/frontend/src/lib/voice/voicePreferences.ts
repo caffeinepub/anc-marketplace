@@ -1,4 +1,4 @@
-const VOICE_PREFERENCES_KEY = 'anc_voice_preferences';
+const VOICE_PREFERENCES_KEY = "anc_voice_preferences";
 const PREFERENCES_VERSION = 1;
 
 export interface VoicePreferences {
@@ -19,7 +19,7 @@ export function getVoicePreferences(): VoicePreferences {
     if (!stored) return DEFAULT_PREFERENCES;
 
     const parsed = JSON.parse(stored) as VoicePreferences;
-    
+
     // Check version and migrate if needed
     if (parsed.version !== PREFERENCES_VERSION) {
       return DEFAULT_PREFERENCES;
@@ -27,12 +27,14 @@ export function getVoicePreferences(): VoicePreferences {
 
     return parsed;
   } catch (error) {
-    console.error('Failed to load voice preferences:', error);
+    console.error("Failed to load voice preferences:", error);
     return DEFAULT_PREFERENCES;
   }
 }
 
-export function setVoicePreferences(preferences: Partial<VoicePreferences>): void {
+export function setVoicePreferences(
+  preferences: Partial<VoicePreferences>,
+): void {
   try {
     const current = getVoicePreferences();
     const updated = {
@@ -42,7 +44,7 @@ export function setVoicePreferences(preferences: Partial<VoicePreferences>): voi
     };
     localStorage.setItem(VOICE_PREFERENCES_KEY, JSON.stringify(updated));
   } catch (error) {
-    console.error('Failed to save voice preferences:', error);
+    console.error("Failed to save voice preferences:", error);
   }
 }
 

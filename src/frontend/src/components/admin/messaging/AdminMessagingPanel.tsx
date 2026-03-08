@@ -1,15 +1,21 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Plus, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle, MessageSquare, Plus } from "lucide-react";
+import React from "react";
+import { toast } from "sonner";
 
 export default function AdminMessagingPanel() {
   const handleComposeMessage = () => {
-    toast.info('Message composer coming soon', {
-      description: 'The messaging system is currently under development.',
+    toast.info("Message composer coming soon", {
+      description: "The messaging system is currently under development.",
     });
   };
 
@@ -22,7 +28,9 @@ export default function AdminMessagingPanel() {
               <MessageSquare className="h-5 w-5" />
               Admin Messaging System
             </CardTitle>
-            <CardDescription>Internal communication with sellers and users</CardDescription>
+            <CardDescription>
+              Internal communication with sellers and users
+            </CardDescription>
           </div>
           <Button onClick={handleComposeMessage}>
             <Plus className="h-4 w-4 mr-2" />
@@ -36,8 +44,9 @@ export default function AdminMessagingPanel() {
           <AlertDescription className="text-blue-800 dark:text-blue-200">
             <strong>Messaging System - Coming Soon</strong>
             <p className="mt-2">
-              The admin messaging system will allow you to communicate directly with sellers, customers, and other
-              marketplace participants. Features will include:
+              The admin messaging system will allow you to communicate directly
+              with sellers, customers, and other marketplace participants.
+              Features will include:
             </p>
             <ul className="mt-2 ml-4 list-disc space-y-1">
               <li>Send and receive messages from users</li>
@@ -54,10 +63,14 @@ export default function AdminMessagingPanel() {
           <div>
             <h3 className="font-semibold text-lg">No Messages Yet</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              The messaging system is currently under development. Check back soon!
+              The messaging system is currently under development. Check back
+              soon!
             </p>
           </div>
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+          <Badge
+            variant="outline"
+            className="bg-amber-50 text-amber-700 border-amber-200"
+          >
             Coming Soon
           </Badge>
         </div>

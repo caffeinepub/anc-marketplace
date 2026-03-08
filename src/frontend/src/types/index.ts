@@ -1,17 +1,20 @@
 // Frontend type definitions for types not exported by backend
 export enum UserRole {
-  admin = 'admin',
-  user = 'user',
-  guest = 'guest',
+  admin = "admin",
+  user = "user",
+  guest = "guest",
 }
 
-export type AccessRole = {
-  __kind__: 'guest';
-} | {
-  __kind__: 'startUpMember';
-} | {
-  __kind__: 'b2bMember';
-};
+export type AccessRole =
+  | {
+      __kind__: "guest";
+    }
+  | {
+      __kind__: "startUpMember";
+    }
+  | {
+      __kind__: "b2bMember";
+    };
 
 export interface UserProfile {
   email: string;
@@ -38,15 +41,19 @@ export interface EcomOrder {
   customerPrincipal: string | null;
 }
 
-export type OrderStatus = {
-  __kind__: 'pending';
-} | {
-  __kind__: 'inProgress';
-} | {
-  __kind__: 'completed';
-} | {
-  __kind__: 'cancelled';
-};
+export type OrderStatus =
+  | {
+      __kind__: "pending";
+    }
+  | {
+      __kind__: "inProgress";
+    }
+  | {
+      __kind__: "completed";
+    }
+  | {
+      __kind__: "cancelled";
+    };
 
 export interface Lesson {
   id: string;
@@ -114,11 +121,13 @@ export interface DropshippingPartner {
   };
 }
 
-export type Variant_disconnected_connected = {
-  __kind__: 'connected';
-} | {
-  __kind__: 'disconnected';
-};
+export type Variant_disconnected_connected =
+  | {
+      __kind__: "connected";
+    }
+  | {
+      __kind__: "disconnected";
+    };
 
 export interface AppIntegration {
   id: string;
@@ -148,15 +157,19 @@ export interface AppIntegrationRecord {
   updatedAt: bigint;
 }
 
-export type Variant_active_inactive_error_syncing = {
-  __kind__: 'active';
-} | {
-  __kind__: 'inactive';
-} | {
-  __kind__: 'error';
-} | {
-  __kind__: 'syncing';
-};
+export type Variant_active_inactive_error_syncing =
+  | {
+      __kind__: "active";
+    }
+  | {
+      __kind__: "inactive";
+    }
+  | {
+      __kind__: "error";
+    }
+  | {
+      __kind__: "syncing";
+    };
 
 export interface StoreTemplate {
   id: string;
@@ -166,11 +179,13 @@ export interface StoreTemplate {
   type_: StoreTemplateType;
 }
 
-export type StoreTemplateType = {
-  __kind__: 'ecommerce';
-} | {
-  __kind__: 'service';
-};
+export type StoreTemplateType =
+  | {
+      __kind__: "ecommerce";
+    }
+  | {
+      __kind__: "service";
+    };
 
 export interface BrandingAsset {
   id: string;
@@ -178,17 +193,22 @@ export interface BrandingAsset {
   type_: AssetType;
 }
 
-export type AssetType = {
-  __kind__: 'logo';
-} | {
-  __kind__: 'productImage';
-} | {
-  __kind__: 'banner';
-} | {
-  __kind__: 'icon';
-} | {
-  __kind__: 'document';
-};
+export type AssetType =
+  | {
+      __kind__: "logo";
+    }
+  | {
+      __kind__: "productImage";
+    }
+  | {
+      __kind__: "banner";
+    }
+  | {
+      __kind__: "icon";
+    }
+  | {
+      __kind__: "document";
+    };
 
 export interface StoreCustomization {
   brandName: string;
@@ -213,13 +233,16 @@ export interface RoleApplication {
   status: RoleApplicationStatus;
 }
 
-export type RoleApplicationStatus = {
-  __kind__: 'pending';
-} | {
-  __kind__: 'approved';
-} | {
-  __kind__: 'rejected';
-};
+export type RoleApplicationStatus =
+  | {
+      __kind__: "pending";
+    }
+  | {
+      __kind__: "approved";
+    }
+  | {
+      __kind__: "rejected";
+    };
 
 export interface UserRoleSummary {
   adminCount: bigint;
@@ -228,10 +251,10 @@ export interface UserRoleSummary {
 }
 
 export enum TimeFrame {
-  today = 'today',
-  thisWeek = 'thisWeek',
-  thisMonth = 'thisMonth',
-  allTime = 'allTime',
+  today = "today",
+  thisWeek = "thisWeek",
+  thisMonth = "thisMonth",
+  allTime = "allTime",
 }
 
 export interface SellerEarningsSummary {
@@ -253,7 +276,7 @@ export interface AdminCenterAnalytics {
 
 // Helper functions for AccessRole
 export const AccessRole = {
-  guest: { __kind__: 'guest' as const },
-  startUpMember: { __kind__: 'startUpMember' as const },
-  b2bMember: { __kind__: 'b2bMember' as const },
+  guest: { __kind__: "guest" as const },
+  startUpMember: { __kind__: "startUpMember" as const },
+  b2bMember: { __kind__: "b2bMember" as const },
 };

@@ -1,13 +1,13 @@
 // Feature detection for Web Speech API
 export function isSpeechRecognitionSupported(): boolean {
   return !!(
-    typeof window !== 'undefined' &&
+    typeof window !== "undefined" &&
     (window.SpeechRecognition || window.webkitSpeechRecognition)
   );
 }
 
 export function isSpeechSynthesisSupported(): boolean {
-  return !!(typeof window !== 'undefined' && window.speechSynthesis);
+  return !!(typeof window !== "undefined" && window.speechSynthesis);
 }
 
 // Factory for creating SpeechRecognition instance
@@ -16,7 +16,8 @@ export function createSpeechRecognition(): SpeechRecognition | null {
     return null;
   }
 
-  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SpeechRecognitionAPI =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) {
     return null;
   }

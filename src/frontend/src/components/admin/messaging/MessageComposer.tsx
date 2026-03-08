@@ -1,21 +1,40 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, X } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, X } from "lucide-react";
+import React from "react";
 
 interface MessageComposerProps {
   onClose: () => void;
-  onSend: (message: { recipient: string; subject: string; body: string }) => void;
+  onSend: (message: {
+    recipient: string;
+    subject: string;
+    body: string;
+  }) => void;
 }
 
-export default function MessageComposer({ onClose, onSend }: MessageComposerProps) {
-  const [recipient, setRecipient] = React.useState('');
-  const [subject, setSubject] = React.useState('');
-  const [body, setBody] = React.useState('');
+export default function MessageComposer({
+  onClose,
+  onSend,
+}: MessageComposerProps) {
+  const [recipient, setRecipient] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [body, setBody] = React.useState("");
 
   const handleSend = () => {
     if (!recipient || !subject || !body) {
@@ -31,7 +50,9 @@ export default function MessageComposer({ onClose, onSend }: MessageComposerProp
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Compose Message</CardTitle>
-            <CardDescription>Send a message to a marketplace participant</CardDescription>
+            <CardDescription>
+              Send a message to a marketplace participant
+            </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -78,7 +99,10 @@ export default function MessageComposer({ onClose, onSend }: MessageComposerProp
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={!recipient || !subject || !body}>
+          <Button
+            onClick={handleSend}
+            disabled={!recipient || !subject || !body}
+          >
             <Send className="h-4 w-4 mr-2" />
             Send Message
           </Button>

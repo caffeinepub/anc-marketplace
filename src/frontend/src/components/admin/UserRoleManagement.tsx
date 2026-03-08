@@ -1,8 +1,14 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetUserRoleSummary } from '../../hooks/useQueries';
-import { Users, Shield, UserX, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2, Shield, UserX, Users } from "lucide-react";
+import React from "react";
+import { useGetUserRoleSummary } from "../../hooks/useQueries";
 
 export default function UserRoleManagement() {
   const { data: roleSummary, isLoading, error } = useGetUserRoleSummary();
@@ -83,7 +89,8 @@ export default function UserRoleManagement() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Use the "All User Accounts" panel below to view detailed user information and manage individual roles.
+            Use the "All User Accounts" panel below to view detailed user
+            information and manage individual roles.
           </p>
         </CardContent>
       </Card>

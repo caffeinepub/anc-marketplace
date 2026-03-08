@@ -1,22 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, ArrowRight, Home, CheckCircle2, Circle, Loader2 } from 'lucide-react';
-import { onboardingSteps, getStepIndex, getStepConfig } from './onboardingSteps';
-import { useGetOnboarding, useSaveOnboarding } from '../../hooks/useSellerOnboarding';
-import { SellerOnboardingStep } from '../../backend';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Home,
+  Loader2,
+} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import type { SellerOnboardingStep } from "../../backend";
+import {
+  useGetOnboarding,
+  useSaveOnboarding,
+} from "../../hooks/useSellerOnboarding";
+import {
+  getStepConfig,
+  getStepIndex,
+  onboardingSteps,
+} from "./onboardingSteps";
 
 export default function SellerOnboardingWizard() {
   const navigate = useNavigate();
-  const { data: savedProgress, isLoading: loadingProgress } = useGetOnboarding();
+  const { data: savedProgress, isLoading: loadingProgress } =
+    useGetOnboarding();
   const saveOnboarding = useSaveOnboarding();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<SellerOnboardingStep[]>([]);
+  const [completedSteps, setCompletedSteps] = useState<SellerOnboardingStep[]>(
+    [],
+  );
 
   // Initialize from saved progress
   useEffect(() => {
@@ -30,7 +53,8 @@ export default function SellerOnboardingWizard() {
   }, [savedProgress]);
 
   const currentStep = onboardingSteps[currentStepIndex];
-  const progressPercentage = ((currentStepIndex + 1) / onboardingSteps.length) * 100;
+  const progressPercentage =
+    ((currentStepIndex + 1) / onboardingSteps.length) * 100;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === onboardingSteps.length - 1;
 
@@ -77,7 +101,7 @@ export default function SellerOnboardingWizard() {
   };
 
   const handleExit = () => {
-    navigate({ to: '/' });
+    navigate({ to: "/" });
   };
 
   if (loadingProgress) {
@@ -85,7 +109,9 @@ export default function SellerOnboardingWizard() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading onboarding progress...</p>
+          <p className="text-muted-foreground">
+            Loading onboarding progress...
+          </p>
         </div>
       </div>
     );
@@ -136,7 +162,7 @@ export default function SellerOnboardingWizard() {
                   <div
                     key={step.id}
                     className={`flex items-start gap-2 p-2 rounded-md transition-colors ${
-                      isCurrent ? 'bg-primary/10' : ''
+                      isCurrent ? "bg-primary/10" : ""
                     }`}
                   >
                     <div className="mt-0.5">
@@ -149,7 +175,7 @@ export default function SellerOnboardingWizard() {
                     <div className="flex-1 min-w-0">
                       <p
                         className={`text-sm font-medium ${
-                          isCurrent ? 'text-primary' : 'text-foreground'
+                          isCurrent ? "text-primary" : "text-foreground"
                         }`}
                       >
                         {step.title}
@@ -168,8 +194,12 @@ export default function SellerOnboardingWizard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">{currentStep.title}</CardTitle>
-                  <CardDescription className="mt-2">{currentStep.description}</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {currentStep.title}
+                  </CardTitle>
+                  <CardDescription className="mt-2">
+                    {currentStep.description}
+                  </CardDescription>
                 </div>
                 {currentStep.isPlaceholder && (
                   <Badge variant="secondary">Coming Soon</Badge>
@@ -180,10 +210,13 @@ export default function SellerOnboardingWizard() {
               {/* Step Content */}
               {currentStepIndex === 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Welcome to ANC Marketplace!</h3>
+                  <h3 className="text-lg font-semibold">
+                    Welcome to ANC Marketplace!
+                  </h3>
                   <p className="text-muted-foreground">
-                    Thank you for choosing ANC Marketplace to grow your business. This onboarding
-                    process will guide you through setting up your seller account step by step.
+                    Thank you for choosing ANC Marketplace to grow your
+                    business. This onboarding process will guide you through
+                    setting up your seller account step by step.
                   </p>
                   <div className="bg-muted p-4 rounded-lg space-y-3">
                     <h4 className="font-semibold">What to expect:</h4>
@@ -191,35 +224,39 @@ export default function SellerOnboardingWizard() {
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Business & Identity Verification:</strong> Provide your business
-                          information and verify your identity for secure transactions.
+                          <strong>Business & Identity Verification:</strong>{" "}
+                          Provide your business information and verify your
+                          identity for secure transactions.
                         </span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Store Profile:</strong> Create your unique store profile with
-                          branding, logo, and business details.
+                          <strong>Store Profile:</strong> Create your unique
+                          store profile with branding, logo, and business
+                          details.
                         </span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Integration & Setup:</strong> Connect your store to external
-                          platforms and configure your storefront.
+                          <strong>Integration & Setup:</strong> Connect your
+                          store to external platforms and configure your
+                          storefront.
                         </span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Marketing Tools:</strong> Set up promotional campaigns and
-                          marketing integrations.
+                          <strong>Marketing Tools:</strong> Set up promotional
+                          campaigns and marketing integrations.
                         </span>
                       </li>
                     </ul>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    You can save your progress at any time and return later. Let's get started!
+                    You can save your progress at any time and return later.
+                    Let's get started!
                   </p>
                 </div>
               )}
@@ -228,14 +265,17 @@ export default function SellerOnboardingWizard() {
                 <div className="space-y-4">
                   <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
                     <p className="text-sm text-amber-800">
-                      <strong>Note:</strong> This step is currently under development and will be
-                      available in a future update. You can continue through the wizard to see the
-                      complete onboarding structure.
+                      <strong>Note:</strong> This step is currently under
+                      development and will be available in a future update. You
+                      can continue through the wizard to see the complete
+                      onboarding structure.
                     </p>
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-semibold">Planned Features:</h4>
-                    <p className="text-sm text-muted-foreground">{currentStep.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentStep.description}
+                    </p>
                   </div>
                 </div>
               )}

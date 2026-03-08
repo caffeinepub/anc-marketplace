@@ -1,7 +1,13 @@
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ShoppingCart, Shield, Package } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Package, Shield, ShoppingCart } from "lucide-react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 export default function CustomerPurchaseHistoryPage() {
   const { identity } = useInternetIdentity();
@@ -27,7 +33,9 @@ export default function CustomerPurchaseHistoryPage() {
             <ShoppingCart className="h-8 w-8 text-primary" />
             <h1 className="text-4xl font-bold">Purchase History</h1>
           </div>
-          <p className="text-muted-foreground">Track your orders and purchases</p>
+          <p className="text-muted-foreground">
+            Track your orders and purchases
+          </p>
         </div>
 
         <Card>
@@ -40,7 +48,8 @@ export default function CustomerPurchaseHistoryPage() {
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="font-medium mb-2">Purchase History Coming Soon</p>
               <p className="text-sm">
-                Full order tracking and purchase history features will be available once the marketplace order system is implemented.
+                Full order tracking and purchase history features will be
+                available once the marketplace order system is implemented.
               </p>
             </div>
           </CardContent>

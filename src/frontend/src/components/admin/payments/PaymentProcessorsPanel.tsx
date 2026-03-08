@@ -1,8 +1,14 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard } from 'lucide-react';
-import StripeSetupCard from './StripeSetupCard';
-import OwnerStripeConnectCard from './OwnerStripeConnectCard';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CreditCard } from "lucide-react";
+import React from "react";
+import OwnerStripeConnectCard from "./OwnerStripeConnectCard";
+import StripeSetupCard from "./StripeSetupCard";
 
 export default function PaymentProcessorsPanel() {
   return (
@@ -14,7 +20,8 @@ export default function PaymentProcessorsPanel() {
             Payment Processors
           </CardTitle>
           <CardDescription>
-            Configure payment processors for marketplace transactions and revenue collection
+            Configure payment processors for marketplace transactions and
+            revenue collection
           </CardDescription>
         </CardHeader>
         <CardContent>

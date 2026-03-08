@@ -16,6 +16,13 @@ export interface TransformationOutput {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export type Time = bigint;
+export interface StripeWebhookEvent {
+    eventId: string;
+    receivedAt: bigint;
+    payload: string;
+    eventType: StripeWebhookEventType;
+}
 export interface SellerPayoutTransferRecord {
     id: string;
     status: PayoutTransferStatus;
@@ -25,6 +32,15 @@ export interface SellerPayoutTransferRecord {
     amountCents: bigint;
     processedAt?: bigint;
     payoutAccount: string;
+}
+export interface DepositTransaction {
+    id: string;
+    status: DepositStatus;
+    completedAt?: Time;
+    createdAt: Time;
+    amountCents: bigint;
+    currency: string;
+    stripeSessionId: string;
 }
 export interface AdminPageSectionStatus {
     status: Variant_completed_comingSoon_inProgress;
@@ -49,13 +65,17 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
+export interface PayoutTransactionRecord {
+    id: string;
+    status: DepositStatus;
+    createdAt: Time;
+    description: string;
+    currency: string;
+    amount: bigint;
+}
 export interface AdminDashboardData {
     adminSections: Array<AdminPageSectionStatus>;
     marketplaceRoadmap: Array<MarketplaceRoadmap>;
-}
-export interface AdminPageStatusDetails {
-    version: string;
-    notes: string;
 }
 export type StripeSessionStatus = {
     __kind__: "completed";
@@ -77,6 +97,10 @@ export interface UserRoleSummary {
     guestCount: bigint;
     adminCount: bigint;
     userCount: bigint;
+}
+export interface AdminPageStatusDetails {
+    version: string;
+    notes: string;
 }
 export interface UserWithRole {
     principal: Principal;
@@ -155,6 +179,11 @@ export enum AdminPageSection {
     affiliate = "affiliate",
     funding = "funding"
 }
+export enum DepositStatus {
+    pending = "pending",
+    completed = "completed",
+    failed = "failed"
+}
 export enum OrderStatus {
     cancelled = "cancelled",
     pending = "pending",
@@ -173,6 +202,15 @@ export enum SellerOnboardingStep {
     storeSetup = "storeSetup",
     websiteIntegration = "websiteIntegration",
     companyDetails = "companyDetails"
+}
+export enum StripeWebhookEventType {
+    customerSubscriptionCreated = "customerSubscriptionCreated",
+    customerSubscriptionDeleted = "customerSubscriptionDeleted",
+    checkoutSessionCompleted = "checkoutSessionCompleted",
+    invoicePaid = "invoicePaid",
+    customerSubscriptionUpdated = "customerSubscriptionUpdated",
+    invoicePaymentFailed = "invoicePaymentFailed",
+    unknown_ = "unknown"
 }
 export enum UserRole {
     admin = "admin",
@@ -203,29 +241,38 @@ export enum Variant_successful_failed {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
+    completeDepositSession(sessionId: string): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    createDepositCheckoutSession(amountCents: bigint, currency: string): Promise<string>;
     getAdminFinancialState(): Promise<AdminFinancialState>;
     getAllOrders(): Promise<Array<EcomOrder>>;
     getAllPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getAllSellerPayoutProfiles(): Promise<Array<SellerPayoutProfile>>;
     getAllUsers(): Promise<Array<UserWithRole>>;
+    getCallerDepositTransactions(): Promise<Array<DepositTransaction>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCustomerOrders(): Promise<Array<EcomOrder>>;
+    getDepositLedger(): Promise<Array<DepositTransaction>>;
     getFinancialOverview(): Promise<AdminDashboardData>;
     getKnowledgeBase(): Promise<Array<AssistantKnowledgeEntry>>;
     getOnboarding(): Promise<SellerOnboardingProgress | null>;
+    getSellerBalance(): Promise<bigint>;
     getSellerOrders(): Promise<Array<EcomOrder>>;
     getSellerPayoutProfile(): Promise<SellerPayoutProfile | null>;
     getSellerPayoutTransfers(): Promise<Array<SellerPayoutTransferRecord>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getTransactionLedger(): Promise<Array<TransactionRecord>>;
     getTransactionRecordById(transactionId: string): Promise<TransactionRecord | null>;
+    getTransactions(): Promise<Array<PayoutTransactionRecord>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUserRoleSummary(): Promise<UserRoleSummary>;
+    handleStripeWebhook(event: StripeWebhookEvent): Promise<void>;
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    recordDepositSession(sessionId: string, amountCents: bigint, currency: string): Promise<void>;
+    recordTransaction(transaction: PayoutTransactionRecord): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;

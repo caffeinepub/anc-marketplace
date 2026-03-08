@@ -1,4 +1,9 @@
-export type PolicyIdentifier = 'privacy' | 'shipping' | 'returns' | 'terms' | 'marketplaceWide';
+export type PolicyIdentifier =
+  | "privacy"
+  | "shipping"
+  | "returns"
+  | "terms"
+  | "marketplaceWide";
 
 export interface PolicyMetadata {
   identifier: PolicyIdentifier;
@@ -10,39 +15,39 @@ export interface PolicyMetadata {
 
 export const POLICY_METADATA: Record<PolicyIdentifier, PolicyMetadata> = {
   privacy: {
-    identifier: 'privacy',
-    displayName: 'Privacy Policy',
-    route: '/privacy-policy',
-    version: '1.0',
-    lastUpdated: '2026-02-13',
+    identifier: "privacy",
+    displayName: "Privacy Policy",
+    route: "/privacy-policy",
+    version: "1.0",
+    lastUpdated: "2026-02-13",
   },
   shipping: {
-    identifier: 'shipping',
-    displayName: 'Shipping Policy',
-    route: '/shipping-policy',
-    version: '1.0',
-    lastUpdated: '2026-02-13',
+    identifier: "shipping",
+    displayName: "Shipping Policy",
+    route: "/shipping-policy",
+    version: "1.0",
+    lastUpdated: "2026-02-13",
   },
   returns: {
-    identifier: 'returns',
-    displayName: 'Returns Policy',
-    route: '/returns-policy',
-    version: '1.0',
-    lastUpdated: '2026-02-13',
+    identifier: "returns",
+    displayName: "Returns Policy",
+    route: "/returns-policy",
+    version: "1.0",
+    lastUpdated: "2026-02-13",
   },
   terms: {
-    identifier: 'terms',
-    displayName: 'Terms & Conditions',
-    route: '/terms-and-conditions',
-    version: '1.0',
-    lastUpdated: '2026-02-13',
+    identifier: "terms",
+    displayName: "Terms & Conditions",
+    route: "/terms-and-conditions",
+    version: "1.0",
+    lastUpdated: "2026-02-13",
   },
   marketplaceWide: {
-    identifier: 'marketplaceWide',
-    displayName: 'Marketplace Policy',
-    route: '/marketplace-policy',
-    version: '1.0',
-    lastUpdated: '2026-02-13',
+    identifier: "marketplaceWide",
+    displayName: "Marketplace Policy",
+    route: "/marketplace-policy",
+    version: "1.0",
+    lastUpdated: "2026-02-13",
   },
 };
 

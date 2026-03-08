@@ -1,10 +1,16 @@
-import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { XCircle, AlertCircle } from 'lucide-react';
-import AdminConsoleLayout from '../components/admin/AdminConsoleLayout';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Link } from "@tanstack/react-router";
+import { AlertCircle, XCircle } from "lucide-react";
+import React from "react";
+import AdminConsoleLayout from "../components/admin/AdminConsoleLayout";
 
 export default function PaymentFailure() {
   return (
@@ -29,7 +35,8 @@ export default function PaymentFailure() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                No charges were made to your account. You can try again or contact support if the issue persists.
+                No charges were made to your account. You can try again or
+                contact support if the issue persists.
               </AlertDescription>
             </Alert>
 

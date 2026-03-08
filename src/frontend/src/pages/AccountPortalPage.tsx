@@ -1,11 +1,17 @@
-import React from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
-import RequireAuthenticatedRegisteredUser from '../components/auth/RequireAuthenticatedRegisteredUser';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { User, Settings, CreditCard, FileText, ArrowRight } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowRight, FileText, Settings, User } from "lucide-react";
+import React from "react";
+import RequireAuthenticatedRegisteredUser from "../components/auth/RequireAuthenticatedRegisteredUser";
+import { useGetCallerUserProfile } from "../hooks/useQueries";
 
 export default function AccountPortalPage() {
   return (
@@ -32,10 +38,10 @@ function AccountPortalContent() {
   }
 
   const formatDate = (timestamp: bigint) => {
-    return new Date(Number(timestamp) / 1_000_000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(Number(timestamp) / 1_000_000).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -43,8 +49,12 @@ function AccountPortalContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Account Portal</h1>
-          <p className="text-slate-600 dark:text-slate-400">Manage your account settings and preferences</p>
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            Account Portal
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            Manage your account settings and preferences
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -57,7 +67,9 @@ function AccountPortalContent() {
                 </div>
                 <div>
                   <CardTitle>Account Overview</CardTitle>
-                  <CardDescription>Your account information and status</CardDescription>
+                  <CardDescription>
+                    Your account information and status
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -73,24 +85,35 @@ function AccountPortalContent() {
                     <p className="font-medium">{userProfile.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Account Created</p>
-                    <p className="font-medium">{formatDate(userProfile.accountCreated)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Account Created
+                    </p>
+                    <p className="font-medium">
+                      {formatDate(userProfile.accountCreated)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Active Role</p>
                     <p className="font-medium capitalize">
-                      {userProfile.activeRole.replace(/([A-Z])/g, ' $1').trim()}
+                      {String(userProfile.activeRole)
+                        .replace(/([A-Z])/g, " $1")
+                        .trim()}
                     </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">No profile information available.</p>
+                <p className="text-muted-foreground">
+                  No profile information available.
+                </p>
               )}
             </CardContent>
           </Card>
 
           {/* Settings */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/settings' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: "/settings" })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -104,7 +127,8 @@ function AccountPortalContent() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Configure voice settings, permissions, and other account preferences.
+                Configure voice settings, permissions, and other account
+                preferences.
               </p>
               <Button variant="outline" className="w-full">
                 Go to Settings
@@ -114,7 +138,10 @@ function AccountPortalContent() {
           </Card>
 
           {/* Seller Profile */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/seller/profile' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: "/seller-profile" })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
@@ -128,7 +155,8 @@ function AccountPortalContent() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Manage your store branding, dashboard customization, and business apps.
+                Manage your store branding, dashboard customization, and
+                business apps.
               </p>
               <Button variant="outline" className="w-full">
                 View Profile
@@ -138,7 +166,10 @@ function AccountPortalContent() {
           </Card>
 
           {/* Policies */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: '/privacy-policy' })}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate({ to: "/privacy-policy" })}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/10 rounded-lg">
@@ -152,7 +183,8 @@ function AccountPortalContent() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Review privacy policy, terms of service, and other legal documents.
+                Review privacy policy, terms of service, and other legal
+                documents.
               </p>
               <Button variant="outline" className="w-full">
                 View Policies

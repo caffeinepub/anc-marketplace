@@ -1,5 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { createTTSController, isSpeechSynthesisSupported } from '../lib/voice/browserVoice';
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createTTSController,
+  isSpeechSynthesisSupported,
+} from "../lib/voice/browserVoice";
 
 export function useTextToSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -28,22 +31,25 @@ export function useTextToSpeech() {
     };
   }, [isSupported]);
 
-  const speak = useCallback((text: string, messageId?: string) => {
-    if (!isSupported || !controllerRef.current) {
-      console.warn('Text-to-speech not supported');
-      return;
-    }
+  const speak = useCallback(
+    (text: string, messageId?: string) => {
+      if (!isSupported || !controllerRef.current) {
+        console.warn("Text-to-speech not supported");
+        return;
+      }
 
-    // Stop any current speech
-    controllerRef.current.stop();
+      // Stop any current speech
+      controllerRef.current.stop();
 
-    // Start new speech
-    controllerRef.current.speak(text);
-    setIsSpeaking(true);
-    if (messageId) {
-      setCurrentMessageId(messageId);
-    }
-  }, [isSupported]);
+      // Start new speech
+      controllerRef.current.speak(text);
+      setIsSpeaking(true);
+      if (messageId) {
+        setCurrentMessageId(messageId);
+      }
+    },
+    [isSupported],
+  );
 
   const stop = useCallback(() => {
     if (!controllerRef.current) return;

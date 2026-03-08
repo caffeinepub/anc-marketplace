@@ -28,7 +28,7 @@
     --chart-1: oklch(60% 0.15 250);
     --chart-2: oklch(70% 0.12 200);
     --chart-3: oklch(65% 0.14 150);
-    --chart-4: oklch(75% 0.10 100);
+    --chart-4: oklch(75% 0.1 100);
     --chart-5: oklch(68% 0.13 50);
 
     /* Menu-specific tokens - fully opaque, high contrast */
@@ -95,7 +95,12 @@
 
 /* Animated gradient logo text */
 .logo-text {
-  background: linear-gradient(135deg, oklch(40% 0.15 250), oklch(50% 0.18 270), oklch(45% 0.16 230));
+  background: linear-gradient(
+    135deg,
+    oklch(40% 0.15 250),
+    oklch(50% 0.18 270),
+    oklch(45% 0.16 230)
+  );
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -104,7 +109,8 @@
 }
 
 @keyframes gradient-shift {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -118,7 +124,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

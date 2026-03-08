@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Cookie } from 'lucide-react';
-import { getCookieConsent, setCookieConsent } from '../../lib/cookieConsent';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "@tanstack/react-router";
+import { Cookie } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { getCookieConsent, setCookieConsent } from "../../lib/cookieConsent";
 
 export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -38,18 +38,27 @@ export default function CookieConsentBanner() {
             <div className="flex-1 space-y-3">
               <h3 className="font-semibold text-lg">Cookie Consent</h3>
               <p className="text-sm text-muted-foreground">
-                We use cookies to enhance your browsing experience and analyze site traffic. By clicking "Accept", you
-                consent to our use of cookies.
+                We use cookies to enhance your browsing experience and analyze
+                site traffic. By clicking "Accept", you consent to our use of
+                cookies.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button onClick={handleAccept} size="sm" className="flex-1">
                   Accept
                 </Button>
-                <Button onClick={handleReject} variant="outline" size="sm" className="flex-1">
+                <Button
+                  onClick={handleReject}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
                   Reject
                 </Button>
               </div>
-              <Link to="/privacy-policy" className="text-xs text-primary hover:underline block">
+              <Link
+                to="/privacy-policy"
+                className="text-xs text-primary hover:underline block"
+              >
                 Learn more in our Privacy Policy
               </Link>
             </div>

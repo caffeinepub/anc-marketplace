@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { Lesson } from '../../types';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import type { Lesson } from "../../types";
 
 interface LessonDetailProps {
   lesson: Lesson;
@@ -35,6 +35,7 @@ export default function LessonDetail({ lesson, onBack }: LessonDetailProps) {
           )}
 
           <div className="prose prose-sm max-w-none dark:prose-invert">
+            {/* biome-ignore lint/security/noDangerouslySetInnerHtml: lesson content is internal/trusted */}
             <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
           </div>
 

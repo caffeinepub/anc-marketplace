@@ -1,7 +1,13 @@
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MessageSquare, Shield, Inbox } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Inbox, MessageSquare, Shield } from "lucide-react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 export default function CustomerMessagesPage() {
   const { identity } = useInternetIdentity();
@@ -40,10 +46,12 @@ export default function CustomerMessagesPage() {
               <Inbox className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="font-medium mb-2">Messaging System Coming Soon</p>
               <p className="text-sm">
-                Customer-to-seller messaging will be available once the marketplace messaging system is implemented.
+                Customer-to-seller messaging will be available once the
+                marketplace messaging system is implemented.
               </p>
               <p className="text-sm mt-2">
-                This will be an inbox-style messaging system (no real-time chat).
+                This will be an inbox-style messaging system (no real-time
+                chat).
               </p>
             </div>
           </CardContent>

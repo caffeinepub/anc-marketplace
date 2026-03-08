@@ -1,26 +1,41 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Copy, ExternalLink, Link as LinkIcon, Shield } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Copy, ExternalLink, Link as LinkIcon, Shield } from "lucide-react";
+import React from "react";
+import { toast } from "sonner";
 
 export default function AdminAccessLinksPanel() {
-  const appLink = typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://your-app.com/';
-  const adminLink = typeof window !== 'undefined' ? `${window.location.origin}/admin` : 'https://your-app.com/admin';
-  const ownerEmail = 'ancelectronicsnservices@gmail.com';
+  const appLink =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/`
+      : "https://your-app.com/";
+  const adminLink =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/admin`
+      : "https://your-app.com/admin";
+  const ownerEmail = "ancelectronicsnservices@gmail.com";
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success(`${label} copied to clipboard!`);
-    }).catch(() => {
-      toast.error('Failed to copy to clipboard');
-    });
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toast.success(`${label} copied to clipboard!`);
+      })
+      .catch(() => {
+        toast.error("Failed to copy to clipboard");
+      });
   };
 
   const openInNewTab = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -32,7 +47,10 @@ export default function AdminAccessLinksPanel() {
           </div>
           <div>
             <CardTitle>Admin Access Links</CardTitle>
-            <CardDescription>Quick access URLs and contact information for administrative purposes</CardDescription>
+            <CardDescription>
+              Quick access URLs and contact information for administrative
+              purposes
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -53,7 +71,7 @@ export default function AdminAccessLinksPanel() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(appLink, 'App Link')}
+              onClick={() => copyToClipboard(appLink, "App Link")}
               title="Copy to clipboard"
             >
               <Copy className="h-4 w-4" />
@@ -88,7 +106,7 @@ export default function AdminAccessLinksPanel() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(adminLink, 'Admin Link')}
+              onClick={() => copyToClipboard(adminLink, "Admin Link")}
               title="Copy to clipboard"
             >
               <Copy className="h-4 w-4" />
@@ -122,7 +140,7 @@ export default function AdminAccessLinksPanel() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(ownerEmail, 'Owner Email')}
+              onClick={() => copyToClipboard(ownerEmail, "Owner Email")}
               title="Copy to clipboard"
             >
               <Copy className="h-4 w-4" />
@@ -136,7 +154,9 @@ export default function AdminAccessLinksPanel() {
         {/* Info Box */}
         <div className="bg-muted/50 rounded-lg p-4 mt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Share these links securely. The admin link should only be shared with authorized administrators who have been granted access through Internet Identity.
+            <strong>Note:</strong> Share these links securely. The admin link
+            should only be shared with authorized administrators who have been
+            granted access through Internet Identity.
           </p>
         </div>
       </CardContent>

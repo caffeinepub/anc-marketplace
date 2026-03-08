@@ -1,19 +1,40 @@
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Settings, Shield, Lock, Bell, User, Mic, Volume2, Radio, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useVoiceSettings } from '../contexts/VoiceSettingsContext';
-import { isSpeechRecognitionSupported, isSpeechSynthesisSupported } from '../lib/voice/browserVoice';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertCircle,
+  Bell,
+  CheckCircle,
+  Lock,
+  Mic,
+  Radio,
+  Settings,
+  Shield,
+  User,
+  Volume2,
+  XCircle,
+} from "lucide-react";
+import { useVoiceSettings } from "../contexts/VoiceSettingsContext";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+} from "../lib/voice/browserVoice";
 
 export default function CustomerSettingsPage() {
   const { identity } = useInternetIdentity();
   const {
     micPermissionStatus,
     isRequestingPermission,
-    isMicSupported,
+    isMicSupported: _isMicSupported,
     requestMicPermission,
     retryMicPermission,
     preferences,
@@ -34,7 +55,8 @@ export default function CustomerSettingsPage() {
     );
   }
 
-  const voiceFeaturesSupported = isSpeechRecognitionSupported() && isSpeechSynthesisSupported();
+  const voiceFeaturesSupported =
+    isSpeechRecognitionSupported() && isSpeechSynthesisSupported();
 
   const handleRequestPermission = async () => {
     await requestMicPermission();
@@ -45,7 +67,7 @@ export default function CustomerSettingsPage() {
   };
 
   const handleVoiceActivationToggle = async (enabled: boolean) => {
-    if (enabled && micPermissionStatus !== 'granted') {
+    if (enabled && micPermissionStatus !== "granted") {
       const granted = await requestMicPermission();
       if (!granted) return;
     }
@@ -54,21 +76,21 @@ export default function CustomerSettingsPage() {
 
   const getPermissionStatusDisplay = () => {
     switch (micPermissionStatus) {
-      case 'granted':
+      case "granted":
         return (
           <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
             <CheckCircle className="h-5 w-5" />
             <span className="font-medium">Granted</span>
           </div>
         );
-      case 'denied':
+      case "denied":
         return (
           <div className="flex items-center gap-2 text-destructive">
             <XCircle className="h-5 w-5" />
             <span className="font-medium">Denied</span>
           </div>
         );
-      case 'unavailable':
+      case "unavailable":
         return (
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertCircle className="h-5 w-5" />
@@ -93,7 +115,9 @@ export default function CustomerSettingsPage() {
             <Settings className="h-8 w-8 text-primary" />
             <h1 className="text-4xl font-bold">Settings</h1>
           </div>
-          <p className="text-muted-foreground">Manage your account preferences</p>
+          <p className="text-muted-foreground">
+            Manage your account preferences
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-6xl">
@@ -104,14 +128,17 @@ export default function CustomerSettingsPage() {
                 <Mic className="h-5 w-5" />
                 Voice & Permissions
               </CardTitle>
-              <CardDescription>Configure voice features and microphone access</CardDescription>
+              <CardDescription>
+                Configure voice features and microphone access
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {!voiceFeaturesSupported && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Voice features are not supported in your browser. Please use Chrome, Edge, or Safari.
+                    Voice features are not supported in your browser. Please use
+                    Chrome, Edge, or Safari.
                   </AlertDescription>
                 </Alert>
               )}
@@ -120,42 +147,54 @@ export default function CustomerSettingsPage() {
                 <>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Microphone Permission</Label>
+                      <Label className="text-sm font-medium">
+                        Microphone Permission
+                      </Label>
                       {getPermissionStatusDisplay()}
                     </div>
 
-                    {micPermissionStatus === 'prompt' && (
+                    {micPermissionStatus === "prompt" && (
                       <Button
                         onClick={handleRequestPermission}
                         disabled={isRequestingPermission}
                         className="w-full"
                         variant="outline"
                       >
-                        {isRequestingPermission ? 'Requesting...' : 'Request Microphone Access'}
+                        {isRequestingPermission
+                          ? "Requesting..."
+                          : "Request Microphone Access"}
                       </Button>
                     )}
 
-                    {micPermissionStatus === 'denied' && (
+                    {micPermissionStatus === "denied" && (
                       <div className="space-y-2">
                         <Alert variant="destructive">
                           <AlertDescription className="text-sm">
-                            Microphone access was denied. Please enable it in your browser settings.
+                            Microphone access was denied. Please enable it in
+                            your browser settings.
                           </AlertDescription>
                         </Alert>
-                        <Button onClick={handleRetryPermission} variant="outline" className="w-full">
+                        <Button
+                          onClick={handleRetryPermission}
+                          variant="outline"
+                          className="w-full"
+                        >
                           Retry Permission Request
                         </Button>
                       </div>
                     )}
                   </div>
 
-                  {micPermissionStatus === 'granted' && (
+                  {micPermissionStatus === "granted" && (
                     <>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
                             <Radio className="h-4 w-4 text-primary" />
-                            <Label htmlFor="voice-activation" className="cursor-pointer">
+                            <Label
+                              htmlFor="voice-activation"
+                              className="cursor-pointer"
+                            >
                               Voice Activation
                             </Label>
                           </div>
@@ -174,7 +213,10 @@ export default function CustomerSettingsPage() {
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
                             <Volume2 className="h-4 w-4 text-primary" />
-                            <Label htmlFor="spoken-replies" className="cursor-pointer">
+                            <Label
+                              htmlFor="spoken-replies"
+                              className="cursor-pointer"
+                            >
                               Spoken Replies
                             </Label>
                           </div>
@@ -218,7 +260,9 @@ export default function CustomerSettingsPage() {
                 <Shield className="h-5 w-5" />
                 Privacy & Security
               </CardTitle>
-              <CardDescription>Control your data and security preferences</CardDescription>
+              <CardDescription>
+                Control your data and security preferences
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
@@ -250,7 +294,9 @@ export default function CustomerSettingsPage() {
                 <Lock className="h-5 w-5" />
                 Account Settings
               </CardTitle>
-              <CardDescription>Manage your account and authentication</CardDescription>
+              <CardDescription>
+                Manage your account and authentication
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">

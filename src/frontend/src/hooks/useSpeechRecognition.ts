@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { createSpeechRecognition, isSpeechRecognitionSupported } from '../lib/voice/browserVoice';
-import { MicrophonePermissionStatus } from './useMicrophonePermission';
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createSpeechRecognition,
+  isSpeechRecognitionSupported,
+} from "../lib/voice/browserVoice";
+import type { MicrophonePermissionStatus } from "./useMicrophonePermission";
 
 interface UseSpeechRecognitionOptions {
   continuous?: boolean;
@@ -12,26 +15,28 @@ interface UseSpeechRecognitionOptions {
   permissionStatus?: MicrophonePermissionStatus;
 }
 
-export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) {
+export function useSpeechRecognition(
+  options: UseSpeechRecognitionOptions = {},
+) {
   const {
     continuous = false,
     interimResults = true,
-    lang = 'en-US',
+    lang = "en-US",
     onResult,
     onError,
     restartOnEnd = false,
-    permissionStatus = 'prompt',
+    permissionStatus = "prompt",
   } = options;
 
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
+  const [transcript, setTranscript] = useState("");
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const shouldRestartRef = useRef(false);
 
   const isSupported = isSpeechRecognitionSupported();
-  const canStart = isSupported && permissionStatus === 'granted';
+  const canStart = isSupported && permissionStatus === "granted";
 
   // Initialize recognition
   useEffect(() => {
@@ -45,8 +50,8 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
     recognition.lang = lang;
 
     recognition.onresult = (event) => {
-      let interimText = '';
-      let finalText = '';
+      let interimText = "";
+      let finalText = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
@@ -79,7 +84,7 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
 
     recognition.onend = () => {
       setIsListening(false);
-      setInterimTranscript('');
+      setInterimTranscript("");
 
       // Restart if continuous mode and shouldRestart flag is set
       if (shouldRestartRef.current && restartOnEnd) {
@@ -87,7 +92,7 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
           recognition.start();
           setIsListening(true);
         } catch (err) {
-          console.error('Failed to restart recognition:', err);
+          console.error("Failed to restart recognition:", err);
         }
       }
     };
@@ -98,28 +103,38 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (err) {
+        } catch {
           // Ignore errors on cleanup
         }
       }
     };
-  }, [isSupported, continuous, interimResults, lang, onResult, onError, restartOnEnd]);
+  }, [
+    isSupported,
+    continuous,
+    interimResults,
+    lang,
+    onResult,
+    onError,
+    restartOnEnd,
+  ]);
 
   const start = useCallback(() => {
     if (!canStart || !recognitionRef.current) {
-      setError('Cannot start: microphone permission not granted or not supported');
+      setError(
+        "Cannot start: microphone permission not granted or not supported",
+      );
       return;
     }
 
     try {
       setError(null);
-      setTranscript('');
-      setInterimTranscript('');
+      setTranscript("");
+      setInterimTranscript("");
       shouldRestartRef.current = true;
       recognitionRef.current.start();
       setIsListening(true);
     } catch (err: any) {
-      if (err.name !== 'InvalidStateError') {
+      if (err.name !== "InvalidStateError") {
         setError(`Failed to start recognition: ${err.message}`);
       }
     }
@@ -133,13 +148,13 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       recognitionRef.current.stop();
       setIsListening(false);
     } catch (err) {
-      console.error('Failed to stop recognition:', err);
+      console.error("Failed to stop recognition:", err);
     }
   }, []);
 
   const reset = useCallback(() => {
-    setTranscript('');
-    setInterimTranscript('');
+    setTranscript("");
+    setInterimTranscript("");
     setError(null);
   }, []);
 

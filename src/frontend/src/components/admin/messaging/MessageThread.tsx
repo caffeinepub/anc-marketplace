@@ -1,9 +1,15 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Send } from "lucide-react";
+import React from "react";
 
 interface Message {
   id: string;
@@ -21,13 +27,18 @@ interface MessageThreadProps {
   onReply: (content: string) => void;
 }
 
-export default function MessageThread({ recipientName, messages, onBack, onReply }: MessageThreadProps) {
-  const [replyContent, setReplyContent] = React.useState('');
+export default function MessageThread({
+  recipientName,
+  messages,
+  onBack,
+  onReply,
+}: MessageThreadProps) {
+  const [replyContent, setReplyContent] = React.useState("");
 
   const handleReply = () => {
     if (!replyContent.trim()) return;
     onReply(replyContent);
-    setReplyContent('');
+    setReplyContent("");
   };
 
   return (
@@ -48,21 +59,27 @@ export default function MessageThread({ recipientName, messages, onBack, onReply
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.isAdmin ? 'flex-row-reverse' : 'flex-row'}`}
+              className={`flex gap-3 ${message.isAdmin ? "flex-row-reverse" : "flex-row"}`}
             >
               <Avatar className="h-8 w-8">
                 <AvatarFallback>{message.senderName.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div className={`flex-1 space-y-1 ${message.isAdmin ? 'text-right' : 'text-left'}`}>
+              <div
+                className={`flex-1 space-y-1 ${message.isAdmin ? "text-right" : "text-left"}`}
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{message.senderName}</span>
-                  <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                  <span className="text-sm font-medium">
+                    {message.senderName}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {message.timestamp}
+                  </span>
                 </div>
                 <div
                   className={`inline-block p-3 rounded-lg ${
                     message.isAdmin
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>

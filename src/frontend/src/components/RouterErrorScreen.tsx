@@ -1,32 +1,32 @@
-import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { AlertCircle, Home, RefreshCw } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Link } from "@tanstack/react-router";
+import React from "react";
 
-export default function RouterErrorScreen() {
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
+export function RouterErrorScreen({ error }: { error?: Error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="max-w-md w-full bg-card border border-border rounded-lg p-6 shadow-lg text-center">
-        <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Page Error</h1>
-        <p className="text-muted-foreground mb-6">
-          We encountered an error while loading this page. This could be due to a routing issue or missing content. Please try refreshing the page or return to the home page.
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+        <div className="text-5xl mb-4">🔍</div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Page Not Found
+        </h1>
+        <p className="text-gray-600 mb-4">
+          {error?.message ??
+            "The page you're looking for doesn't exist or an error occurred."}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button onClick={handleRefresh} variant="outline" className="flex-1">
-            <RefreshCw className="mr-2 h-4 w-4" />
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
             Refresh
-          </Button>
-          <Button asChild className="flex-1">
-            <Link to="/">
-              <Home className="mr-2 h-4 w-4" />
-              Go to Home
-            </Link>
-          </Button>
+          </button>
+          <Link
+            to="/"
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            Go Home
+          </Link>
         </div>
       </div>
     </div>
