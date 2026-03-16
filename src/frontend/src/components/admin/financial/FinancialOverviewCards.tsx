@@ -10,7 +10,10 @@ import {
 import { DollarSign, Info, Lock, PiggyBank, TrendingUp } from "lucide-react";
 import React from "react";
 import type { AdminFinancialState } from "../../../backend";
-import { useAdminBalance } from "../../../hooks/useAdminBalance";
+import {
+  CREDIT_LIMIT_CENTS,
+  useAdminBalance,
+} from "../../../hooks/useAdminBalance";
 
 // Correct financial constants (in cents)
 // Deposit: $77,957.38 = 7,795,738 cents
@@ -37,7 +40,7 @@ export default function FinancialOverviewCards({
   financialState,
   isLoading,
 }: FinancialOverviewCardsProps) {
-  const { availableCents, payrollCents } = useAdminBalance();
+  const { availableCents, payrollCents, creditCents } = useAdminBalance();
 
   if (isLoading) {
     return (
@@ -56,13 +59,24 @@ export default function FinancialOverviewCards({
     );
   }
 
-  // Use reactive balance from useAdminBalance hook
+  // Available balance from reconciled hook (excludes failed transactions)
   const availableFunds = availableCents;
 
+  // Credit: use backend if available and non-zero, else fall back to the
+  // canonical $10,000 limit stored in the hook.
+  const backendCreditLimit = Number(
+    financialState?.creditAccount.creditLimitCents ?? BigInt(0),
+  );
+  const backendCreditUsed = Number(
+    financialState?.creditAccount.usedAmountCents ?? BigInt(0),
+  );
+  const backendCreditAvailable = backendCreditLimit - backendCreditUsed;
+
+  // If backend returned 0 (not yet synced), show the local tracked credit
+  const creditAvailable =
+    backendCreditLimit > 0 ? backendCreditAvailable : creditCents;
   const creditLimit =
-    financialState?.creditAccount.creditLimitCents ?? BigInt(0);
-  const creditUsed = financialState?.creditAccount.usedAmountCents ?? BigInt(0);
-  const creditAvailable = Number(creditLimit) - Number(creditUsed);
+    backendCreditLimit > 0 ? backendCreditLimit : CREDIT_LIMIT_CENTS;
 
   return (
     <TooltipProvider>
@@ -83,7 +97,8 @@ export default function FinancialOverviewCards({
                     Gross deposit of {formatCents(CORRECT_DEPOSIT_CENTS)} minus
                     Payroll Savings allocation of{" "}
                     {formatCents(CORRECT_PAYROLL_SAVINGS_CENTS)} ={" "}
-                    {formatCents(CORRECT_AVAILABLE_BALANCE_CENTS)}
+                    {formatCents(CORRECT_AVAILABLE_BALANCE_CENTS)}. Only
+                    successfully completed transactions reduce this balance.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -118,6 +133,7 @@ export default function FinancialOverviewCards({
               {formatCents(CORRECT_DEPOSIT_CENTS)}
             </div>
             <p className="text-xs text-slate-500 mt-1">Gross deposit total</p>
+            <p className="text-xs text-slate-400 mt-0.5">TXN-00586559512</p>
           </CardContent>
         </Card>
 
@@ -134,10 +150,10 @@ export default function FinancialOverviewCards({
               {formatCents(creditAvailable)}
             </div>
             <Badge className="mt-1 bg-amber-100 text-amber-700 border-amber-200 text-xs">
-              Non-Withdrawable Spending Credit
+              Non-Withdrawable
             </Badge>
             <p className="text-xs text-slate-500 mt-1">
-              of {formatCents(creditLimit)} limit
+              of {formatCents(creditLimit)} limit · TXN-678500061865
             </p>
           </CardContent>
         </Card>

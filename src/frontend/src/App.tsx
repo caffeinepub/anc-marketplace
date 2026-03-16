@@ -28,6 +28,7 @@ import CustomerBlogPost from "./pages/CustomerBlogPost";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import CustomerFAQ from "./pages/CustomerFAQ";
 import CustomerSettingsPage from "./pages/CustomerSettingsPage";
+import DropshippingPage from "./pages/DropshippingPage";
 import EmployeeDashboardPage from "./pages/EmployeeDashboardPage";
 import FunnelsPage from "./pages/FunnelsPage";
 import HomePage from "./pages/HomePage";
@@ -307,6 +308,12 @@ const cartRoute = createRoute({
   component: CartPage,
 });
 
+const dropshippingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dropshipping",
+  component: DropshippingPage,
+});
+
 const storeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/store",
@@ -354,6 +361,7 @@ const routeTree = rootRoute.addChildren([
   marketplaceProductRoute,
   cartRoute,
   storeRoute,
+  dropshippingRoute,
 ]);
 
 const router = createRouter({

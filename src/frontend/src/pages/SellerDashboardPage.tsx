@@ -246,6 +246,15 @@ export default function SellerDashboardPage() {
                 bg: "bg-indigo-50",
               },
               {
+                to: "/dropshipping",
+                icon: Package,
+                title: "Dropshipping",
+                description:
+                  "Manage suppliers, forwarding, and commission payments",
+                color: "text-teal-600",
+                bg: "bg-teal-50",
+              },
+              {
                 to: "/funnels",
                 icon: TrendingUp,
                 title: "Funnels",

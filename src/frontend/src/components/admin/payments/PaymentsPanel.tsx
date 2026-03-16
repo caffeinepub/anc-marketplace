@@ -20,17 +20,22 @@ import { useAdminBalance } from "@/hooks/useAdminBalance";
 import { useGetAdminFinancialState } from "@/hooks/useQueries";
 import { useStripeBalance } from "@/hooks/useStripeBalance";
 import { useStripePayout } from "@/hooks/useStripePayout";
+import { createAuthNetECheckTransaction } from "@/lib/authorizeNet";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
+  ArrowRight,
+  Building2,
   CheckCircle,
   Clock,
   Copy,
   DollarSign,
   ExternalLink,
+  Info,
   Loader2,
   RefreshCw,
   Send,
+  ShieldCheck,
   Webhook,
   XCircle,
 } from "lucide-react";
@@ -38,6 +43,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+const STRIPE_ACCOUNT = "acct_1T1h2A2O0Lbig83v";
 const ZAPIER_WEBHOOK_URL =
   "https://hooks.zapier.com/hooks/catch/26632326/u0i6cx6/";
 
@@ -48,6 +54,8 @@ interface PaymentFormData {
   recipientName: string;
   accountNumber: string;
   routingNumber: string;
+  accountHolderName: string;
+  accountType: "checking" | "savings";
   paymentMethod: string;
   amount: string;
   note: string;
@@ -62,6 +70,8 @@ interface LocalPaymentRecord {
   timestamp: string;
   status: "successful" | "failed" | "pending";
   stripePayoutId?: string;
+  authNetTransId?: string;
+  achStatus?: string;
 }
 
 const RECIPIENT_LABELS: Record<RecipientType, string> = {
@@ -87,18 +97,92 @@ function StatusBadge({ status }: { status: LocalPaymentRecord["status"] }) {
         Successful
       </Badge>
     );
-  if (status === "failed")
+  if (status === "pending")
     return (
-      <Badge variant="destructive">
-        <XCircle className="w-3 h-3 mr-1" />
-        Failed
+      <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+        <Clock className="w-3 h-3 mr-1" />
+        Pending
       </Badge>
     );
   return (
-    <Badge variant="secondary">
-      <Clock className="w-3 h-3 mr-1" />
-      Pending
+    <Badge variant="destructive">
+      <XCircle className="w-3 h-3 mr-1" />
+      Failed
     </Badge>
+  );
+}
+
+interface CheckoutSummaryCardProps {
+  amount: number;
+  note: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isProcessing: boolean;
+}
+
+function CheckoutSummaryCard({
+  amount,
+  note,
+  onConfirm,
+  onCancel,
+  isProcessing,
+}: CheckoutSummaryCardProps) {
+  return (
+    <Card
+      className="border-2 border-blue-200 bg-blue-50"
+      data-ocid="payments.dialog"
+    >
+      <CardHeader>
+        <CardTitle className="text-base text-blue-800 flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5" />
+          Confirm Stripe Payout
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-slate-600">Amount</span>
+            <span className="font-bold text-slate-800">
+              {formatCents(amount)}
+            </span>
+          </div>
+          {note && (
+            <div className="flex justify-between">
+              <span className="text-slate-600">Note</span>
+              <span className="text-slate-700 max-w-[60%] text-right">
+                {note}
+              </span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-slate-600">Destination</span>
+            <span className="text-slate-700">Stripe Account → Bank</span>
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={onCancel}
+            disabled={isProcessing}
+            data-ocid="payments.cancel_button"
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            onClick={onConfirm}
+            disabled={isProcessing}
+            data-ocid="payments.confirm_button"
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : null}
+            Confirm & Send
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -106,17 +190,24 @@ export default function PaymentsPanel() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   useGetAdminFinancialState();
-  const stripePayout = useStripePayout();
   const { availableCents, deductFromAvailable } = useAdminBalance();
+  const availableBalance = availableCents;
+  const stripePayout = useStripePayout();
   const {
     data: stripeBalance,
     isLoading: stripeBalanceLoading,
+    isFetching: stripeBalanceFetching,
     isError: stripeBalanceError,
     refetch: refetchStripeBalance,
-    isFetching: stripeBalanceFetching,
   } = useStripeBalance();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [recipientType, setRecipientType] = useState<RecipientType>("stripe");
+  const [reviewData, setReviewData] = useState<{
+    amountCents: number;
+    note: string;
+  } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [transactions, setTransactions] = useState<LocalPaymentRecord[]>(() => {
     try {
       const stored = localStorage.getItem("admin_payment_transactions");
@@ -135,20 +226,25 @@ export default function PaymentsPanel() {
   } = useForm<PaymentFormData>({
     defaultValues: {
       recipientType: "stripe",
-      amount: "",
-      note: "",
       recipientName: "",
       accountNumber: "",
       routingNumber: "",
+      accountHolderName: "",
+      accountType: "checking",
       paymentMethod: "",
+      amount: "",
+      note: "",
     },
   });
 
-  // Use reactive balance from useAdminBalance hook
-  const availableBalance = availableCents;
-
   const recentTransactions = transactions.slice(-10).reverse();
   const isNonStripe = recipientType !== "stripe";
+  const needsBankDetails = [
+    "billpay",
+    "employee",
+    "partner",
+    "supplier",
+  ].includes(recipientType);
 
   const persistTransactions = (updated: LocalPaymentRecord[]) => {
     localStorage.setItem("admin_payment_transactions", JSON.stringify(updated));
@@ -158,12 +254,119 @@ export default function PaymentsPanel() {
   const handleCopyWebhook = () => {
     navigator.clipboard
       .writeText(ZAPIER_WEBHOOK_URL)
-      .then(() => {
-        toast.success("Webhook URL copied to clipboard");
-      })
-      .catch(() => {
-        toast.error("Failed to copy URL");
+      .then(() => toast.success("Webhook URL copied to clipboard"))
+      .catch(() => toast.error("Failed to copy URL"));
+  };
+
+  // Authorize.net eCheck payment
+  const processAuthNetPayment = async (
+    data: PaymentFormData,
+    amountCents: number,
+  ) => {
+    const result = await createAuthNetECheckTransaction({
+      amountDollars: (amountCents / 100).toFixed(2),
+      routingNumber: data.routingNumber,
+      accountNumber: data.accountNumber,
+      nameOnAccount:
+        data.accountHolderName || data.recipientName || "Account Holder",
+      accountType: data.accountType || "checking",
+      description:
+        data.note || `Payment to ${data.recipientName || "recipient"}`,
+    });
+
+    const responseCode = result.transactionResponse?.responseCode;
+    const transId = result.transactionResponse?.transId;
+    const errorText = result.transactionResponse?.errors?.error?.[0]?.errorText;
+    const msgCode = result.messages?.resultCode;
+
+    if (msgCode === "Ok" && responseCode === "1") {
+      return { transId: transId || "" };
+    }
+    if (responseCode === "2") {
+      throw new Error(
+        errorText || "Payment was declined. Please check account details.",
+      );
+    }
+    const reason =
+      errorText ||
+      result.messages?.message?.[0]?.text ||
+      "Payment failed. Please try again.";
+    throw new Error(reason);
+  };
+
+  // Notify Zapier
+  const notifyZapier = async (payload: Record<string, unknown>) => {
+    try {
+      await fetch(ZAPIER_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_type: "checkout.session.admin_transfer",
+          platform: "ANC Marketplace",
+          account: STRIPE_ACCOUNT,
+          ...payload,
+        }),
       });
+    } catch {
+      // Non-fatal
+    }
+  };
+
+  // Stripe Payout
+  const executeStripePayout = async (amountCents: number, note: string) => {
+    setIsSubmitting(true);
+    try {
+      const result = await stripePayout.mutateAsync({
+        amountCents,
+        currency: "usd",
+        description: note || "ANC Marketplace owner payout",
+      });
+
+      await notifyZapier({
+        amount_cents: amountCents,
+        amount_usd: (amountCents / 100).toFixed(2),
+        note,
+        payout_id: result.payout.id,
+        session_type: "checkout_session",
+        admin_initiated: true,
+        timestamp: new Date().toISOString(),
+      });
+
+      const newRecord: LocalPaymentRecord = {
+        id: `pay_${Date.now()}`,
+        recipientType: "stripe",
+        recipientName: "Stripe Payout",
+        amount: amountCents,
+        note: note || "ANC Marketplace owner payout",
+        timestamp: new Date().toISOString(),
+        status: "successful",
+        stripePayoutId: result.payout.id,
+      };
+
+      deductFromAvailable(amountCents);
+      persistTransactions([...transactions, newRecord]);
+      setReviewData(null);
+      reset();
+      toast.success(
+        `Stripe payout of ${formatCents(amountCents)} initiated successfully!`,
+      );
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Unknown error";
+      const newRecord: LocalPaymentRecord = {
+        id: `pay_${Date.now()}`,
+        recipientType: "stripe",
+        recipientName: "Stripe Payout",
+        amount: amountCents,
+        note,
+        timestamp: new Date().toISOString(),
+        status: "failed",
+      };
+      persistTransactions([...transactions, newRecord]);
+      setReviewData(null);
+      toast.error(`Stripe payout failed: ${errMsg}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onSubmit = async (data: PaymentFormData) => {
@@ -172,8 +375,6 @@ export default function PaymentsPanel() {
       toast.error("Please enter a valid amount.");
       return;
     }
-
-    // Validate against the correct available balance ($73,681.16)
     if (amountCents > availableBalance) {
       toast.error(
         `Insufficient available balance. Available: ${formatCents(availableBalance)}`,
@@ -181,102 +382,83 @@ export default function PaymentsPanel() {
       return;
     }
 
+    if (recipientType === "stripe") {
+      setReviewData({ amountCents, note: data.note });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Handle Stripe Payout via the Stripe API
-    if (recipientType === "stripe") {
+    // Authorize.net eCheck for bill pay, employee, partner, supplier
+    if (needsBankDetails) {
       try {
-        const result = await stripePayout.mutateAsync({
-          amountCents,
-          currency: "usd",
-          description: data.note || "ANC Marketplace owner payout",
-        });
+        const authResult = await processAuthNetPayment(data, amountCents);
+
+        if (actor) {
+          const txRecord = {
+            id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            amount: BigInt(amountCents),
+            currency: "usd",
+            description: `${RECIPIENT_LABELS[recipientType]} payment via Authorize.net to ${data.recipientName || "recipient"}: ${data.note || ""}`,
+            status: DepositStatus.completed,
+            createdAt: BigInt(Date.now()) * BigInt(1_000_000),
+          };
+          await actor.recordTransaction(txRecord);
+          queryClient.invalidateQueries({ queryKey: ["payoutTransactions"] });
+        }
 
         const newRecord: LocalPaymentRecord = {
           id: `pay_${Date.now()}`,
-          recipientType: "stripe",
-          recipientName: "Stripe Payout",
+          recipientType,
+          recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
           amount: amountCents,
-          note: data.note || "ANC Marketplace owner payout",
+          note: data.note,
           timestamp: new Date().toISOString(),
           status: "successful",
-          stripePayoutId: result.payout.id,
+          authNetTransId: authResult.transId,
+          achStatus: `Authorize.net eCheck approved — Trans ID: ${authResult.transId}`,
         };
-
         deductFromAvailable(amountCents);
         persistTransactions([...transactions, newRecord]);
-        toast.success(
-          `Stripe payout of ${formatCents(amountCents)} initiated successfully!`,
-        );
+
+        await notifyZapier({
+          event_type: "checkout.session.authnet_payment",
+          amount_cents: amountCents,
+          recipient_type: recipientType,
+          recipient: data.recipientName,
+          authnet_trans_id: authResult.transId,
+          timestamp: new Date().toISOString(),
+        });
+
         reset();
-      } catch (err: any) {
+        toast.success(
+          `Payment of ${formatCents(amountCents)} processed via Authorize.net! Trans ID: ${authResult.transId}`,
+        );
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : "Unknown error";
         const newRecord: LocalPaymentRecord = {
           id: `pay_${Date.now()}`,
-          recipientType: "stripe",
-          recipientName: "Stripe Payout",
+          recipientType,
+          recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
           amount: amountCents,
           note: data.note,
           timestamp: new Date().toISOString(),
           status: "failed",
         };
         persistTransactions([...transactions, newRecord]);
-        toast.error(`Stripe payout failed: ${err?.message || "Unknown error"}`);
+        toast.error(errMsg);
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
 
-    // Handle non-Stripe payments (employee, partner, supplier, billpay)
-    try {
-      if (actor) {
-        const txRecord = {
-          id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          amount: BigInt(amountCents),
-          currency: "usd",
-          description: `${RECIPIENT_LABELS[recipientType]} payment to ${data.recipientName || "recipient"}: ${data.note || ""}`,
-          status: DepositStatus.completed,
-          createdAt: BigInt(Date.now()) * BigInt(1_000_000),
-        };
-        await actor.recordTransaction(txRecord);
-        queryClient.invalidateQueries({ queryKey: ["payoutTransactions"] });
-      }
-
-      const newRecord: LocalPaymentRecord = {
-        id: `pay_${Date.now()}`,
-        recipientType,
-        recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
-        amount: amountCents,
-        note: data.note,
-        timestamp: new Date().toISOString(),
-        status: "successful",
-      };
-      deductFromAvailable(amountCents);
-      persistTransactions([...transactions, newRecord]);
-      toast.success(
-        `Payment of ${formatCents(amountCents)} to ${data.recipientName || RECIPIENT_LABELS[recipientType]} recorded.`,
-      );
-      reset();
-    } catch (err: any) {
-      const newRecord: LocalPaymentRecord = {
-        id: `pay_${Date.now()}`,
-        recipientType,
-        recipientName: data.recipientName || RECIPIENT_LABELS[recipientType],
-        amount: amountCents,
-        note: data.note,
-        timestamp: new Date().toISOString(),
-        status: "failed",
-      };
-      persistTransactions([...transactions, newRecord]);
-      toast.error(`Payment failed: ${err?.message || "Unknown error"}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitting(false);
   };
 
   return (
     <div className="space-y-6">
-      {/* Payment Webhook Endpoint Info */}
+      {/* Zapier Webhook Info */}
       <Alert className="border-blue-200 bg-blue-50">
         <Webhook className="h-4 w-4 text-blue-600" />
         <AlertTitle className="text-blue-800 font-semibold">
@@ -284,8 +466,8 @@ export default function PaymentsPanel() {
         </AlertTitle>
         <AlertDescription className="mt-2">
           <p className="text-blue-700 text-xs mb-2">
-            All payment events (checkout, deposit, payout, fee) are
-            automatically forwarded to this Zapier webhook endpoint.
+            All payment events are automatically forwarded to this Zapier
+            webhook endpoint.
           </p>
           <div className="flex items-center gap-2 p-2 bg-white border border-blue-200 rounded-md">
             <code className="flex-1 text-xs font-mono text-slate-700 break-all select-all">
@@ -316,7 +498,7 @@ export default function PaymentsPanel() {
         </AlertDescription>
       </Alert>
 
-      {/* Balance Info */}
+      {/* Available Balance */}
       <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
         <DollarSign className="w-5 h-5 text-emerald-600 shrink-0" />
         <div>
@@ -326,191 +508,300 @@ export default function PaymentsPanel() {
           <p className="text-lg font-bold text-emerald-700">
             {formatCents(availableBalance)}
           </p>
+          <p className="text-xs text-emerald-600">Acct #: 736811620</p>
         </div>
       </div>
 
+      {/* Authorize.net Info Banner */}
+      <Alert className="border-green-200 bg-green-50">
+        <ShieldCheck className="h-4 w-4 text-green-600" />
+        <AlertTitle className="text-green-800 font-semibold text-sm">
+          Powered by Authorize.net
+        </AlertTitle>
+        <AlertDescription className="text-green-700 text-xs mt-1">
+          External payments (Bill Pay, Employee, Partner, Supplier) are
+          processed via Authorize.net eCheck directly from your available
+          balance. Funds are transferred to the destination bank account.
+        </AlertDescription>
+      </Alert>
+
+      {/* Checkout Review Card (Stripe only) */}
+      {reviewData && recipientType === "stripe" && (
+        <CheckoutSummaryCard
+          amount={reviewData.amountCents}
+          note={reviewData.note}
+          onConfirm={() =>
+            executeStripePayout(reviewData.amountCents, reviewData.note)
+          }
+          onCancel={() => setReviewData(null)}
+          isProcessing={isSubmitting}
+        />
+      )}
+
       {/* Payment Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label>Recipient Type</Label>
-          <Select
-            value={recipientType}
-            onValueChange={(val) => {
-              setRecipientType(val as RecipientType);
-              setValue("recipientType", val as RecipientType);
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select recipient type" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(RECIPIENT_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {isNonStripe && (
-          <>
-            <div className="space-y-1.5">
-              <Label htmlFor="recipientName">Recipient Name</Label>
-              <Input
-                id="recipientName"
-                placeholder="Enter recipient name"
-                {...register("recipientName")}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="accountNumber">Account Number</Label>
-                <Input
-                  id="accountNumber"
-                  placeholder="Account number"
-                  {...register("accountNumber")}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="routingNumber">Routing Number</Label>
-                <Input
-                  id="routingNumber"
-                  placeholder="Routing number"
-                  {...register("routingNumber")}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {recipientType === "stripe" && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-3">
-            {/* Stripe balance display */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-                Live Stripe Account Balance
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-blue-500 hover:text-blue-700"
-                onClick={() => refetchStripeBalance()}
-                disabled={stripeBalanceFetching}
-                title="Refresh Stripe balance"
-                data-ocid="payments.stripe_balance.button"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${stripeBalanceFetching ? "animate-spin" : ""}`}
-                />
-              </Button>
-            </div>
-
-            {stripeBalanceLoading ? (
-              <Skeleton
-                className="h-7 w-32"
-                data-ocid="payments.stripe_balance.loading_state"
-              />
-            ) : stripeBalanceError ? (
-              <div
-                className="flex items-center gap-1.5 text-red-600"
-                data-ocid="payments.stripe_balance.error_state"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span className="text-xs">
-                  Unable to fetch Stripe balance. Check your connection.
-                </span>
-              </div>
-            ) : (stripeBalance?.availableCents ?? 0) === 0 ? (
-              <div data-ocid="payments.stripe_balance_zero.error_state">
-                <p className="text-lg font-bold text-blue-800">$0.00</p>
-                <p className="text-xs text-amber-700 mt-1 bg-amber-50 border border-amber-200 rounded p-2">
-                  <AlertCircle className="w-3.5 h-3.5 inline mr-1 text-amber-600" />
-                  Your Stripe balance is currently <strong>$0</strong>. Payouts
-                  require real Stripe funds. Use the{" "}
-                  <strong>Financial tab → Deposit via Stripe Checkout</strong>{" "}
-                  to add funds first.
-                </p>
-              </div>
-            ) : (
-              <div data-ocid="payments.stripe_balance.success_state">
-                <p className="text-lg font-bold text-blue-800">
-                  {formatCents(stripeBalance!.availableCents)}
-                </p>
-                {(stripeBalance?.pendingCents ?? 0) > 0 && (
-                  <p className="text-xs text-blue-500 mt-0.5">
-                    + {formatCents(stripeBalance!.pendingCents)} pending
-                  </p>
-                )}
-                <p className="text-xs text-emerald-700 mt-1">
-                  <CheckCircle className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
-                  Available Stripe balance:{" "}
-                  {formatCents(stripeBalance!.availableCents)} — you can pay
-                  this out to your linked bank account.
-                </p>
-              </div>
-            )}
-
-            <p className="text-xs text-blue-600">
-              Stripe payouts go directly to the bank account linked to your
-              Stripe account (1–2 business days).
-            </p>
+      {!reviewData && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Recipient Type */}
+          <div className="space-y-1.5">
+            <Label>Recipient Type</Label>
+            <Select
+              value={recipientType}
+              onValueChange={(val) => {
+                setRecipientType(val as RecipientType);
+                setValue("recipientType", val as RecipientType);
+              }}
+            >
+              <SelectTrigger data-ocid="payments.select">
+                <SelectValue placeholder="Select recipient type" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(RECIPIENT_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="amount">Amount (USD)</Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-              $
-            </span>
-            <Input
-              id="amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              placeholder="0.00"
-              className="pl-7"
-              {...register("amount", { required: true, min: 0.01 })}
+          {/* Authorize.net notice for external payments */}
+          {needsBankDetails && (
+            <Alert className="border-amber-200 bg-amber-50">
+              <Building2 className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800 font-semibold text-sm">
+                Authorize.net Payment
+              </AlertTitle>
+              <AlertDescription className="text-amber-700 text-xs mt-1">
+                Processed via Authorize.net eCheck directly from your available
+                balance (Acct #: 736811620). Requires recipient routing and
+                account number.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Non-Stripe fields */}
+          {isNonStripe && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="recipientName">Recipient Name</Label>
+                <Input
+                  id="recipientName"
+                  placeholder="Enter recipient name"
+                  {...register("recipientName")}
+                  data-ocid="payments.input"
+                />
+              </div>
+
+              {needsBankDetails && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="accountHolderName">
+                      Account Holder Name
+                    </Label>
+                    <Input
+                      id="accountHolderName"
+                      placeholder="Name on bank account"
+                      {...register("accountHolderName", {
+                        required: needsBankDetails,
+                      })}
+                      data-ocid="payments.input"
+                    />
+                    {errors.accountHolderName && (
+                      <p className="text-xs text-destructive">
+                        Account holder name required.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Account Type</Label>
+                    <Select
+                      defaultValue="checking"
+                      onValueChange={(val) =>
+                        setValue("accountType", val as "checking" | "savings")
+                      }
+                    >
+                      <SelectTrigger data-ocid="payments.select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="checking">Checking</SelectItem>
+                        <SelectItem value="savings">Savings</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="routingNumber">Routing Number</Label>
+                      <Input
+                        id="routingNumber"
+                        placeholder="9-digit routing #"
+                        maxLength={9}
+                        {...register("routingNumber", {
+                          required: needsBankDetails,
+                          pattern: /^[0-9]{9}$/,
+                        })}
+                        data-ocid="payments.input"
+                      />
+                      {errors.routingNumber && (
+                        <p className="text-xs text-destructive">
+                          9-digit routing number required.
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="accountNumber">Account Number</Label>
+                      <Input
+                        id="accountNumber"
+                        placeholder="Account number"
+                        {...register("accountNumber", {
+                          required: needsBankDetails,
+                        })}
+                        data-ocid="payments.input"
+                      />
+                      {errors.accountNumber && (
+                        <p className="text-xs text-destructive">
+                          Account number required.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Stripe live balance */}
+          {recipientType === "stripe" && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                  Live Stripe Account Balance
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-blue-500 hover:text-blue-700"
+                  onClick={() => refetchStripeBalance()}
+                  disabled={stripeBalanceFetching}
+                  title="Refresh Stripe balance"
+                  data-ocid="payments.stripe_balance.button"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${stripeBalanceFetching ? "animate-spin" : ""}`}
+                  />
+                </Button>
+              </div>
+
+              {stripeBalanceLoading ? (
+                <Skeleton
+                  className="h-7 w-32"
+                  data-ocid="payments.stripe_balance.loading_state"
+                />
+              ) : stripeBalanceError ? (
+                <div
+                  className="flex items-center gap-1.5 text-red-600"
+                  data-ocid="payments.stripe_balance.error_state"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span className="text-xs">
+                    Unable to fetch Stripe balance.
+                  </span>
+                </div>
+              ) : (stripeBalance?.availableCents ?? 0) === 0 ? (
+                <div data-ocid="payments.stripe_balance_zero.error_state">
+                  <p className="text-lg font-bold text-blue-800">$0.00</p>
+                  <p className="text-xs text-amber-700 mt-1 bg-amber-50 border border-amber-200 rounded p-2">
+                    <AlertCircle className="w-3.5 h-3.5 inline mr-1 text-amber-600" />
+                    Your Stripe balance is <strong>$0</strong>. Use{" "}
+                    <strong>Financial tab → Deposit via Stripe Checkout</strong>{" "}
+                    to fund your Stripe account first.
+                  </p>
+                </div>
+              ) : (
+                <div data-ocid="payments.stripe_balance.success_state">
+                  <p className="text-lg font-bold text-blue-800">
+                    {formatCents(stripeBalance!.availableCents)}
+                  </p>
+                  {(stripeBalance?.pendingCents ?? 0) > 0 && (
+                    <p className="text-xs text-blue-500 mt-0.5">
+                      + {formatCents(stripeBalance!.pendingCents)} pending
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-blue-600">
+                Stripe payouts go to your linked bank account (1–2 business
+                days).
+              </p>
+            </div>
+          )}
+
+          {/* Amount */}
+          <div className="space-y-1.5">
+            <Label htmlFor="amount">Amount (USD)</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                $
+              </span>
+              <Input
+                id="amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
+                className="pl-7"
+                {...register("amount", { required: true, min: 0.01 })}
+                data-ocid="payments.input"
+              />
+            </div>
+            {errors.amount && (
+              <p className="text-xs text-destructive">
+                Please enter a valid amount.
+              </p>
+            )}
+          </div>
+
+          {/* Note */}
+          <div className="space-y-1.5">
+            <Label htmlFor="note">Note / Description (optional)</Label>
+            <Textarea
+              id="note"
+              placeholder="Payment description or memo..."
+              rows={2}
+              {...register("note")}
+              data-ocid="payments.textarea"
             />
           </div>
-          {errors.amount && (
-            <p className="text-xs text-destructive">
-              Please enter a valid amount.
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="note">Note / Description</Label>
-          <Textarea
-            id="note"
-            placeholder="Payment description or memo..."
-            rows={2}
-            {...register("note")}
-          />
-        </div>
-
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-emerald-600 hover:bg-emerald-700"
-          data-ocid="payments.submit_button"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4 mr-2" />
-              Send Payment
-            </>
-          )}
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            data-ocid="payments.submit_button"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : recipientType === "stripe" ? (
+              <>
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Review Payment
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                Send via Authorize.net
+              </>
+            )}
+          </Button>
+        </form>
+      )}
 
       {/* Recent Transactions */}
       {recentTransactions.length > 0 && (
@@ -521,10 +812,11 @@ export default function PaymentsPanel() {
               Recent Payments
             </h3>
             <div className="space-y-2">
-              {recentTransactions.map((txn) => (
+              {recentTransactions.map((txn, idx) => (
                 <div
                   key={txn.id}
-                  className="flex items-center justify-between p-2.5 border rounded-lg text-sm"
+                  className="flex items-start justify-between p-2.5 border rounded-lg text-sm"
+                  data-ocid={`payments.item.${idx + 1}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -538,6 +830,17 @@ export default function PaymentsPanel() {
                     {txn.note && (
                       <p className="text-xs text-slate-500 truncate mt-0.5">
                         {txn.note}
+                      </p>
+                    )}
+                    {txn.achStatus && (
+                      <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        {txn.achStatus}
+                      </p>
+                    )}
+                    {txn.authNetTransId && (
+                      <p className="text-xs text-slate-400">
+                        Authorize.net Trans ID: {txn.authNetTransId}
                       </p>
                     )}
                     <p className="text-xs text-slate-400">

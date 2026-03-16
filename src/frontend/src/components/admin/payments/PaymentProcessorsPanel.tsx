@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/card";
 import { CreditCard } from "lucide-react";
 import React from "react";
+import AuthorizeNetCard from "./AuthorizeNetCard";
+import FinixProcessorCard from "./FinixProcessorCard";
 import OwnerStripeConnectCard from "./OwnerStripeConnectCard";
 import StripeSetupCard from "./StripeSetupCard";
 
@@ -28,6 +30,8 @@ export default function PaymentProcessorsPanel() {
           <div className="space-y-4">
             <StripeSetupCard />
             <OwnerStripeConnectCard />
+            <AuthorizeNetCard />
+            <FinixProcessorCard />
           </div>
         </CardContent>
       </Card>

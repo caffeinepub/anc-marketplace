@@ -13,12 +13,12 @@ import UserRoleManagement from "../components/admin/UserRoleManagement";
 import AllAccountsPanel from "../components/admin/accounts/AllAccountsPanel";
 import SalesReportsPanel from "../components/admin/analytics/SalesReportsPanel";
 import AssistantKnowledgeBaseAdmin from "../components/admin/assistant/AssistantKnowledgeBaseAdmin";
+import VirtualCardsPanel from "../components/admin/cards/VirtualCardsPanel";
 import EmployeePaymentsPanel from "../components/admin/employees/EmployeePaymentsPanel";
 import FeeConfigurationPanel from "../components/admin/fees/FeeConfigurationPanel";
 import FinancialOverviewCards from "../components/admin/financial/FinancialOverviewCards";
 import StripeDepositCard from "../components/admin/financial/StripeDepositCard";
 import AdminMessagingPanel from "../components/admin/messaging/AdminMessagingPanel";
-// Admin panel components
 import PaymentProcessorsPanel from "../components/admin/payments/PaymentProcessorsPanel";
 import PaymentsPanel from "../components/admin/payments/PaymentsPanel";
 import AdminSettingsPanel from "../components/admin/settings/AdminSettingsPanel";
@@ -35,12 +35,7 @@ export default function AdminCenterPage() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const isAuthenticated = !!identity;
-
-  // Show loading while actor is initializing or admin check is in progress
   const showLoading = adminLoading;
-
-  // Only show lock screen after we've confirmed the user is NOT admin
-  // (isFetched ensures we don't flash the lock screen prematurely)
   const showLockScreen = isAuthenticated && adminFetched && !isAdmin;
 
   return (
@@ -74,6 +69,7 @@ export default function AdminCenterPage() {
               <TabsTrigger value="financial">Financial</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="transfer">Transfer</TabsTrigger>
+              <TabsTrigger value="virtual-cards">Virtual Cards</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="accounts">Accounts</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -108,6 +104,10 @@ export default function AdminCenterPage() {
 
             <TabsContent value="transfer">
               <TransferPanel />
+            </TabsContent>
+
+            <TabsContent value="virtual-cards">
+              <VirtualCardsPanel />
             </TabsContent>
 
             <TabsContent value="transactions">

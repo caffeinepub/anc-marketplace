@@ -1,8 +1,7 @@
 import { DepositStatus } from "@/backend";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,12 +15,12 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
 import { useAdminBalance } from "@/hooks/useAdminBalance";
+import { CREDIT_LIMIT_CENTS } from "@/hooks/useAdminBalance";
 import { useGetAdminFinancialState, useGetAllUsers } from "@/hooks/useQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRightLeft,
   CheckCircle,
-  Clock,
   ExternalLink,
   Info,
   Loader2,
@@ -104,6 +103,7 @@ export default function TransferPanel() {
     deductFromPayroll,
     deductFromCredit,
     addToPayroll,
+    addToCredit,
   } = useAdminBalance();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [source, setSource] = useState<TransferSource>("available");
@@ -135,18 +135,22 @@ export default function TransferPanel() {
     },
   });
 
-  // Use reactive balances from useAdminBalance hook
   const availableBalance = availableCents;
   const payrollSavings = payrollCents;
-  const creditLimit = Number(
+
+  // Credit: backend data takes precedence if non-zero; otherwise use hook value
+  const backendCreditLimit = Number(
     financialState?.creditAccount.creditLimitCents ?? BigInt(0),
   );
-  const creditUsed = Number(
+  const backendCreditUsed = Number(
     financialState?.creditAccount.usedAmountCents ?? BigInt(0),
   );
-  // Use hook's creditCents if financial state is not loaded yet
   const creditAvailable =
-    creditLimit > 0 ? creditLimit - creditUsed : creditCents;
+    backendCreditLimit > 0
+      ? backendCreditLimit - backendCreditUsed
+      : creditCents > 0
+        ? creditCents
+        : CREDIT_LIMIT_CENTS;
 
   const getSourceBalance = (src: TransferSource): number => {
     if (src === "available") return availableBalance;
@@ -204,16 +208,16 @@ export default function TransferPanel() {
             "Platform User"
           : DEST_LABELS[data.destination];
 
-      // Deduct from source balance
+      // Update balances (only on success)
       if (data.source === "available") deductFromAvailable(amountCents);
       else if (data.source === "payroll") deductFromPayroll(amountCents);
       else if (data.source === "credit") deductFromCredit(amountCents);
 
-      // Add to destination if payroll savings
       if (data.destination === "payroll_savings") addToPayroll(amountCents);
+      if (data.destination === "credit_payback") addToCredit(amountCents);
 
-      const newRecord: LocalTransferRecord = {
-        id: `transfer_${Date.now()}`,
+      const newTransfer: LocalTransferRecord = {
+        id: `txfr_${Date.now()}`,
         source: data.source,
         destination: data.destination,
         destinationLabel,
@@ -222,14 +226,16 @@ export default function TransferPanel() {
         timestamp: new Date().toISOString(),
         status: "successful",
       };
-      persistTransfers([...transfers, newRecord]);
-      toast.success(
-        `Transfer of ${formatCents(amountCents)} from ${SOURCE_LABELS[data.source]} to ${destinationLabel} completed.`,
-      );
+      persistTransfers([...transfers, newTransfer]);
       reset();
-    } catch (err: any) {
-      const newRecord: LocalTransferRecord = {
-        id: `transfer_${Date.now()}`,
+      toast.success(
+        `Transferred ${formatCents(amountCents)} from ${SOURCE_LABELS[data.source]} to ${destinationLabel}`,
+      );
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Unknown error";
+      // Do NOT deduct balance for failed transfers
+      const newTransfer: LocalTransferRecord = {
+        id: `txfr_${Date.now()}`,
         source: data.source,
         destination: data.destination,
         destinationLabel: DEST_LABELS[data.destination],
@@ -238,8 +244,8 @@ export default function TransferPanel() {
         timestamp: new Date().toISOString(),
         status: "failed",
       };
-      persistTransfers([...transfers, newRecord]);
-      toast.error(`Transfer failed: ${err?.message || "Unknown error"}`);
+      persistTransfers([...transfers, newTransfer]);
+      toast.error(`Transfer failed: ${errMsg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -247,57 +253,25 @@ export default function TransferPanel() {
 
   return (
     <div className="space-y-6">
-      {/* Stripe vs Platform Info Card */}
-      <Alert className="border-blue-200 bg-blue-50">
-        <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-        <div>
-          <AlertTitle className="text-blue-800 font-semibold text-sm">
-            About Stripe vs Platform Transfers
-          </AlertTitle>
-          <AlertDescription className="text-xs text-blue-700 mt-1 space-y-2">
-            <p>
-              The platform ledger balance (shown below) is{" "}
-              <strong>separate</strong> from your Stripe account balance. To
-              move money <em>into</em> Stripe, use{" "}
-              <strong>Deposit via Stripe Checkout</strong> on the Financial tab
-              — this creates a real Stripe payment. To move money <em>out</em>{" "}
-              of Stripe (to your bank), use the{" "}
-              <strong>Payments tab → Stripe Payout</strong>. Internal transfers
-              below only move funds between platform accounts (Available
-              Balance, Credit, Payroll Savings).
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900"
-                onClick={() => {
-                  window.location.href = "/admin?tab=financial";
-                }}
-                data-ocid="transfer.financial_tab.button"
-              >
-                Go to Financial Tab
-              </Button>
-              <a
-                href="https://dashboard.stripe.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-ocid="transfer.stripe_dashboard.link"
-              >
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900"
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Open Stripe Dashboard
-                </Button>
-              </a>
-            </div>
-          </AlertDescription>
-        </div>
+      {/* Info banner */}
+      <Alert className="border-slate-200 bg-slate-50">
+        <Info className="h-4 w-4 text-slate-500" />
+        <AlertDescription className="text-slate-600 text-sm">
+          <p className="font-semibold mb-1">Internal Platform Transfers</p>
+          <p className="text-xs">
+            Transfer funds between your platform accounts (Available Balance,
+            Business Credit, Payroll Savings). For external bank payments, use
+            the <strong>Payments tab</strong>.
+          </p>
+          <a
+            href="https://dashboard.stripe.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
+          >
+            <ExternalLink className="h-3 w-3" /> Open Stripe Dashboard
+          </a>
+        </AlertDescription>
       </Alert>
 
       {/* Balance Summary */}
@@ -309,6 +283,7 @@ export default function TransferPanel() {
           <p className="text-lg font-bold text-emerald-800">
             {formatCents(availableBalance)}
           </p>
+          <p className="text-xs text-emerald-600 mt-0.5">Acct #: 736811620</p>
         </div>
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
@@ -317,6 +292,7 @@ export default function TransferPanel() {
           <p className="text-lg font-bold text-amber-800">
             {formatCents(creditAvailable)}
           </p>
+          <p className="text-xs text-amber-600 mt-0.5">TXN-678500061865</p>
         </div>
         <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
           <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
@@ -340,7 +316,7 @@ export default function TransferPanel() {
                 setValue("source", val as TransferSource);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger data-ocid="transfer.source.select">
                 <SelectValue placeholder="Select source" />
               </SelectTrigger>
               <SelectContent>
@@ -363,7 +339,7 @@ export default function TransferPanel() {
                 setValue("destination", val as TransferDestination);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger data-ocid="transfer.destination.select">
                 <SelectValue placeholder="Select destination" />
               </SelectTrigger>
               <SelectContent>
@@ -377,46 +353,52 @@ export default function TransferPanel() {
           </div>
         </div>
 
+        {/* Platform user selector */}
         {destination === "platform_user" && (
           <div className="space-y-1.5">
-            <Label>Platform User</Label>
+            <Label>Select Recipient</Label>
             <Select onValueChange={(val) => setValue("platformUserId", val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a user" />
+              <SelectTrigger data-ocid="transfer.user.select">
+                <SelectValue placeholder="Select platform user" />
               </SelectTrigger>
               <SelectContent>
-                {allUsers.map((u) => (
-                  <SelectItem
-                    key={u.principal.toString()}
-                    value={u.principal.toString()}
-                  >
-                    {u.profile.fullName} ({u.profile.email})
-                  </SelectItem>
-                ))}
-                {allUsers.length === 0 && (
-                  <SelectItem value="none" disabled>
+                {allUsers.length === 0 ? (
+                  <SelectItem value="_none" disabled>
                     No users found
                   </SelectItem>
+                ) : (
+                  allUsers.map((u) => (
+                    <SelectItem
+                      key={u.principal.toString()}
+                      value={u.principal.toString()}
+                    >
+                      {u.profile.fullName ||
+                        u.profile.email ||
+                        u.principal.toString()}
+                    </SelectItem>
+                  ))
                 )}
               </SelectContent>
             </Select>
           </div>
         )}
 
+        {/* Amount */}
         <div className="space-y-1.5">
-          <Label htmlFor="transfer-amount">Amount (USD)</Label>
+          <Label htmlFor="transferAmount">Amount (USD)</Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
               $
             </span>
             <Input
-              id="transfer-amount"
+              id="transferAmount"
               type="number"
               min="0.01"
               step="0.01"
               placeholder="0.00"
               className="pl-7"
               {...register("amount", { required: true, min: 0.01 })}
+              data-ocid="transfer.input"
             />
           </div>
           {errors.amount && (
@@ -426,34 +408,28 @@ export default function TransferPanel() {
           )}
         </div>
 
+        {/* Note */}
         <div className="space-y-1.5">
-          <Label htmlFor="transfer-note">Note</Label>
+          <Label htmlFor="transferNote">Note (optional)</Label>
           <Textarea
-            id="transfer-note"
-            placeholder="Transfer description or memo..."
+            id="transferNote"
+            placeholder="Transfer description..."
             rows={2}
             {...register("note")}
+            data-ocid="transfer.textarea"
           />
-        </div>
-
-        <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-3">
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>
-            Internal transfers move funds between your platform accounts. They
-            are recorded in the transaction ledger.
-          </span>
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-emerald-600 hover:bg-emerald-700"
+          className="w-full bg-blue-600 hover:bg-blue-700"
           data-ocid="transfer.submit_button"
         >
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing Transfer...
+              Processing...
             </>
           ) : (
             <>
@@ -473,23 +449,24 @@ export default function TransferPanel() {
               Recent Transfers
             </h3>
             <div className="space-y-2">
-              {recentTransfers.map((txn) => (
+              {recentTransfers.map((txn, idx) => (
                 <div
                   key={txn.id}
-                  className="flex items-center justify-between p-2.5 border rounded-lg text-sm"
+                  className="flex items-start justify-between p-2.5 border rounded-lg text-sm"
+                  data-ocid={`transfer.item.${idx + 1}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className="text-xs">
+                      <span className="font-medium text-slate-700">
                         {SOURCE_LABELS[txn.source]}
-                      </Badge>
-                      <ArrowRightLeft className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="font-medium text-slate-700 truncate">
+                      </span>
+                      <ArrowRightLeft className="w-3 h-3 text-slate-400" />
+                      <span className="text-slate-700">
                         {txn.destinationLabel}
                       </span>
                     </div>
                     {txn.note && (
-                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5 truncate">
                         {txn.note}
                       </p>
                     )}
